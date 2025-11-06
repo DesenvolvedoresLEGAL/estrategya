@@ -53,6 +53,39 @@ export type Database = {
         }
         Relationships: []
       }
+      execution_plan: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          mci: string
+          review_cadence: Json | null
+          scoreboard: Json | null
+          updated_at: string
+          weekly_actions: Json | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          mci: string
+          review_cadence?: Json | null
+          scoreboard?: Json | null
+          updated_at?: string
+          weekly_actions?: Json | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          mci?: string
+          review_cadence?: Json | null
+          scoreboard?: Json | null
+          updated_at?: string
+          weekly_actions?: Json | null
+        }
+        Relationships: []
+      }
       initiatives: {
         Row: {
           created_at: string
@@ -63,6 +96,7 @@ export type Database = {
           impact: number | null
           objective_id: string
           owner: string | null
+          priority_quadrant: string | null
           status: string | null
           suggested_by_ai: boolean | null
           title: string
@@ -77,6 +111,7 @@ export type Database = {
           impact?: number | null
           objective_id: string
           owner?: string | null
+          priority_quadrant?: string | null
           status?: string | null
           suggested_by_ai?: boolean | null
           title: string
@@ -91,6 +126,7 @@ export type Database = {
           impact?: number | null
           objective_id?: string
           owner?: string | null
+          priority_quadrant?: string | null
           status?: string | null
           suggested_by_ai?: boolean | null
           title?: string
@@ -150,6 +186,165 @@ export type Database = {
           },
         ]
       }
+      ogsm: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          objective: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          objective: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          objective?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ogsm_goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          mensuravel: string | null
+          ogsm_id: string
+          order_position: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          mensuravel?: string | null
+          ogsm_id: string
+          order_position?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          mensuravel?: string | null
+          ogsm_id?: string
+          order_position?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ogsm_measures: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          o_que_medir: string | null
+          strategy_id: string
+          target: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          o_que_medir?: string | null
+          strategy_id: string
+          target?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          o_que_medir?: string | null
+          strategy_id?: string
+          target?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ogsm_strategies: {
+        Row: {
+          created_at: string
+          description: string | null
+          goal_id: string | null
+          id: string
+          ogsm_id: string
+          order_position: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          goal_id?: string | null
+          id?: string
+          ogsm_id: string
+          order_position?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          goal_id?: string | null
+          id?: string
+          ogsm_id?: string
+          order_position?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pestel_analysis: {
+        Row: {
+          company_id: string
+          created_at: string
+          economic: string | null
+          environmental: string | null
+          id: string
+          legal: string | null
+          political: string | null
+          social: string | null
+          technological: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          economic?: string | null
+          environmental?: string | null
+          id?: string
+          legal?: string | null
+          political?: string | null
+          social?: string | null
+          technological?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          economic?: string | null
+          environmental?: string | null
+          id?: string
+          legal?: string | null
+          political?: string | null
+          social?: string | null
+          technological?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       strategic_context: {
         Row: {
           company_id: string
@@ -157,6 +352,7 @@ export type Database = {
           ia_analysis: string | null
           id: string
           opportunities: string[] | null
+          pestel_factors: Json | null
           strengths: string[] | null
           threats: string[] | null
           updated_at: string
@@ -168,6 +364,7 @@ export type Database = {
           ia_analysis?: string | null
           id?: string
           opportunities?: string[] | null
+          pestel_factors?: Json | null
           strengths?: string[] | null
           threats?: string[] | null
           updated_at?: string
@@ -179,6 +376,7 @@ export type Database = {
           ia_analysis?: string | null
           id?: string
           opportunities?: string[] | null
+          pestel_factors?: Json | null
           strengths?: string[] | null
           threats?: string[] | null
           updated_at?: string

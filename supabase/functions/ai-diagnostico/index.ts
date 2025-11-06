@@ -20,41 +20,53 @@ serve(async (req) => {
 
     console.log('Generating strategic diagnosis for:', company.name);
 
-    const systemPrompt = `Você é um estrategista corporativo de classe mundial. Receberá o contexto de uma empresa (segmento, modelo de negócio, desafio principal) e um diagnóstico SWOT (forças, fraquezas, oportunidades, ameaças).
-Com base nisso, produza:
+    const systemPrompt = `Você é um estrategista corporativo de classe mundial, atuando como Chief Strategy Officer de uma big tech.
+Sua missão é analisar o diagnóstico SWOT de uma empresa brasileira e produzir uma análise estratégica executiva.
 
-1. Uma leitura executiva curta (5 a 8 linhas) explicando o momento da empresa.
-2. Entre 4 e 6 linhas estratégicas possíveis que a empresa pode seguir nos próximos 12 meses.
-3. Para cada linha estratégica, indique em quais perspectivas do Balanced Scorecard ela mais impacta (Finanças, Clientes, Processos Internos, Aprendizado & Crescimento).
+IMPORTANTE: Escreva em português do Brasil, de forma clara e direta para donos de negócio e líderes.
+Use números, verbos de ação e zero teoria. Foco em execução.`;
 
-Use linguagem simples, direta e voltada para dono de empresa brasileiro.
-Use as melhores práticas de OKR, OGSM e BSC, mas não precisa citar o nome dos frameworks.
+    const userPrompt = `Analise a empresa e produza um diagnóstico estratégico completo.
 
-Retorne em JSON com a estrutura:
-{
-  "leitura_executiva": "texto aqui",
-  "linhas_estrategicas": [
-    {
-      "titulo": "Nome da linha estratégica",
-      "perspectivas": ["financeira", "clientes"]
-    }
-  ]
-}`;
-
-    const userPrompt = `Empresa: ${company.name}
+DADOS DA EMPRESA:
+Nome: ${company.name}
 Segmento: ${company.segment}
-Modelo: ${company.model}
-Tamanho do time: ${company.size_team} pessoas
-Região: ${company.region}
-Principal desafio: ${company.main_challenge}
+Modelo de negócio: ${company.model}
+Região: ${company.region || 'Brasil'}
+Desafio principal: ${company.main_challenge}
+Tamanho do time: ${company.size_team || 'não informado'}
 
-SWOT:
-Forças: ${swot.strengths?.join(', ') || 'Não informado'}
-Fraquezas: ${swot.weaknesses?.join(', ') || 'Não informado'}
-Oportunidades: ${swot.opportunities?.join(', ') || 'Não informado'}
-Ameaças: ${swot.threats?.join(', ') || 'Não informado'}
+ANÁLISE SWOT:
+Forças: ${swot.strengths?.join(', ') || 'não informadas'}
+Fraquezas: ${swot.weaknesses?.join(', ') || 'não informadas'}
+Oportunidades: ${swot.opportunities?.join(', ') || 'não informadas'}
+Ameaças: ${swot.threats?.join(', ') || 'não informadas'}
 
-Gere a análise estratégica.`;
+PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
+{
+  "leitura_executiva": "Texto de até 8 linhas explicando o momento atual da empresa, seu contexto competitivo e as principais forças que impactam seu futuro nos próximos 12 meses. Seja direto e executivo.",
+  "swot_resumido": {
+    "forcas": ["item 1", "item 2", "item 3", "item 4"],
+    "fraquezas": ["item 1", "item 2", "item 3", "item 4"],
+    "oportunidades": ["item 1", "item 2", "item 3", "item 4"],
+    "ameacas": ["item 1", "item 2", "item 3", "item 4"]
+  },
+  "pestel": {
+    "politico": "Texto sobre fatores políticos QUE REALMENTE IMPACTAM o segmento. Se não houver impacto relevante, retorne null",
+    "economico": "Texto sobre fatores econômicos relevantes ao segmento. Se não houver, retorne null",
+    "social": "Texto sobre fatores sociais/comportamentais relevantes. Se não houver, retorne null",
+    "tecnologico": "Texto sobre fatores tecnológicos relevantes. Se não houver, retorne null",
+    "ambiental": "Texto sobre fatores ambientais/sustentabilidade relevantes. Se não houver, retorne null",
+    "legal": "Texto sobre fatores legais/regulatórios relevantes. Se não houver, retorne null"
+  }
+}
+
+REGRAS:
+- Se não houver fator PESTEL relevante para uma dimensão, use null
+- Mantenha cada item do SWOT resumido com no máximo 10 palavras
+- A leitura executiva deve ter entre 6 e 8 linhas
+- Use linguagem executiva, números quando possível
+- Foco no que afeta os próximos 12 meses`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
