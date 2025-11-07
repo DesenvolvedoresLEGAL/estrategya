@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useInsightNotifications } from "@/hooks/useInsightNotifications";
 import { HealthScore } from "@/components/dashboard/HealthScore";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { ObjectiveCard } from "@/components/dashboard/ObjectiveCard";
@@ -23,6 +24,9 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
   const [quickWins, setQuickWins] = useState<any[]>([]);
+
+  // Enable insight notifications
+  useInsightNotifications(companyId);
 
   useEffect(() => {
     checkAuthAndLoadData();
@@ -286,6 +290,14 @@ export default function Dashboard() {
               >
                 <TrendingUp className="mr-2 h-4 w-4" />
                 Métricas
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/insights")}
+              >
+                <Lightbulb className="mr-2 h-4 w-4" />
+                Insights
               </Button>
               <Button 
                 onClick={generateInsights}
