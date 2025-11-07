@@ -105,7 +105,7 @@ export const PricingSection = () => {
             buttonText="Começar grátis"
             onButtonClick={handleFreePlan}
             price={null}
-            currentTier={tier}
+            currentTier={user ? tier : undefined}
           />
 
           <PricingCard
@@ -128,7 +128,7 @@ export const PricingSection = () => {
             onButtonClick={handleProPlan}
             isRecommended
             price={{ monthly: 199.90, annual: 1990 }}
-            currentTier={tier}
+            currentTier={user ? tier : undefined}
           />
 
           <PricingCard
@@ -150,7 +150,7 @@ export const PricingSection = () => {
             buttonText="Falar com a LEGAL"
             onButtonClick={handleEnterprisePlan}
             price={{ monthly: 999.90, annual: 9990 }}
-            currentTier={tier}
+            currentTier={user ? tier : undefined}
           />
         </div>
       </div>
