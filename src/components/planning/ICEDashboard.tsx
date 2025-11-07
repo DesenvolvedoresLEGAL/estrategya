@@ -8,7 +8,7 @@ import { ICEScoreChart } from "./ICEScoreChart";
 import { ICERankingList } from "./ICERankingList";
 import { ICEEvolutionChart } from "./ICEEvolutionChart";
 import { InitiativeComparison } from "./InitiativeComparison";
-import { BarChart3, TrendingUp, ArrowLeftRight, Filter } from "lucide-react";
+import { BarChart3, TrendingUp, ArrowLeftRight, Filter, Lock } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface ICEDashboardProps {
   companyId: string;
@@ -25,6 +27,9 @@ interface ICEDashboardProps {
 export const ICEDashboard = ({ companyId, initiatives }: ICEDashboardProps) => {
   const [selectedPerspective, setSelectedPerspective] = useState<string>("todas");
   const [filteredInitiatives, setFilteredInitiatives] = useState(initiatives);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { hasFeature } = useSubscriptionLimits(companyId);
 
   useEffect(() => {
     filterInitiatives();
@@ -103,6 +108,65 @@ export const ICEDashboard = ({ companyId, initiatives }: ICEDashboardProps) => {
     Processos: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
     Aprendizado: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
   };
+
+  const hasICEFeature = hasFeature('ice_score');
+
+  // Se não tiver acesso, mostrar card bloqueado
+  if (!hasICEFeature) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+          <CardHeader className="text-center pb-8">
+            <div className="flex justify-center mb-4">
+              <div className="p-4 bg-primary/10 rounded-full">
+                <Lock className="h-12 w-12 text-primary" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl mb-2">ICE Score Dashboard</CardTitle>
+            <CardDescription className="text-base">
+              Priorize suas iniciativas com critérios de Impacto, Confiança e Facilidade
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-card border rounded-lg p-6">
+              <h4 className="font-semibold mb-3">Recursos disponíveis no plano PRO:</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  Dashboard visual com scatter plot e rankings
+                </li>
+                <li className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  Análise de evolução de scores ao longo do tempo
+                </li>
+                <li className="flex items-center gap-2">
+                  <ArrowLeftRight className="h-4 w-4 text-primary" />
+                  Comparação entre iniciativas com filtros avançados
+                </li>
+                <li className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-primary" />
+                  Filtros por perspectiva BSC e priorização automática
+                </li>
+              </ul>
+            </div>
+            <Button 
+              onClick={() => setShowUpgradePrompt(true)} 
+              className="w-full" 
+              size="lg"
+            >
+              Fazer Upgrade para PRO
+            </Button>
+          </CardContent>
+        </Card>
+
+        <UpgradePrompt
+          open={showUpgradePrompt}
+          onOpenChange={setShowUpgradePrompt}
+          feature="ICE Score Dashboard"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

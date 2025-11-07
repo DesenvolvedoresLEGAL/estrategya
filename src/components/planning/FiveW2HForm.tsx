@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Save, Loader2 } from "lucide-react";
+import { Sparkles, Save, Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { Badge } from "@/components/ui/badge";
 
 interface FiveW2HFormProps {
   initiativeId: string;
@@ -14,6 +17,7 @@ interface FiveW2HFormProps {
   initiativeDescription?: string;
   objectiveTitle?: string;
   companyData?: any;
+  companyId?: string;
   initialData?: {
     what?: string;
     why?: string;
@@ -32,11 +36,15 @@ export const FiveW2HForm = ({
   initiativeDescription,
   objectiveTitle,
   companyData,
+  companyId,
   initialData,
   onSave,
 }: FiveW2HFormProps) => {
   const [loading, setLoading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { hasFeature } = useSubscriptionLimits(companyId);
   
   const [what, setWhat] = useState(initialData?.what || "");
   const [why, setWhy] = useState(initialData?.why || "");
@@ -45,6 +53,73 @@ export const FiveW2HForm = ({
   const [whereLocation, setWhereLocation] = useState(initialData?.where_location || "");
   const [how, setHow] = useState(initialData?.how || "");
   const [howMuch, setHowMuch] = useState(initialData?.how_much?.toString() || "");
+
+  const has5W2HFeature = hasFeature('5w2h');
+
+  if (!has5W2HFeature) {
+    return (
+      <>
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
+          <div className="absolute top-4 right-4">
+            <Badge className="bg-primary text-primary-foreground">PRO</Badge>
+          </div>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              <CardTitle>5W2H - Plano de Ação - Recurso PRO</CardTitle>
+            </div>
+            <CardDescription>
+              Transforme iniciativas em planos de ação executáveis
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              O método 5W2H responde 7 perguntas fundamentais para estruturar qualquer iniciativa:
+            </p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="p-3 bg-card border rounded-lg">
+                <strong className="text-primary">What</strong> - O que será feito?
+              </div>
+              <div className="p-3 bg-card border rounded-lg">
+                <strong className="text-primary">Why</strong> - Por que é importante?
+              </div>
+              <div className="p-3 bg-card border rounded-lg">
+                <strong className="text-primary">Who</strong> - Quem é o responsável?
+              </div>
+              <div className="p-3 bg-card border rounded-lg">
+                <strong className="text-primary">When</strong> - Quando? (Prazo)
+              </div>
+              <div className="p-3 bg-card border rounded-lg">
+                <strong className="text-primary">Where</strong> - Onde será executado?
+              </div>
+              <div className="p-3 bg-card border rounded-lg">
+                <strong className="text-primary">How</strong> - Como será feito?
+              </div>
+              <div className="p-3 bg-card border rounded-lg col-span-2">
+                <strong className="text-primary">How Much</strong> - Quanto custará?
+              </div>
+            </div>
+            <div className="bg-primary/10 p-4 rounded-lg text-sm mt-4">
+              <strong>Bônus PRO:</strong> Geração automática com IA baseada na iniciativa e objetivo estratégico
+            </div>
+            <Button 
+              onClick={() => setShowUpgradePrompt(true)} 
+              className="w-full" 
+              size="lg"
+            >
+              Fazer Upgrade para PRO
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <UpgradePrompt
+          open={showUpgradePrompt}
+          onOpenChange={setShowUpgradePrompt}
+          feature="5W2H"
+        />
+      </>
+    );
+  }
 
   const handleGenerateWithAI = async () => {
     setAiGenerating(true);

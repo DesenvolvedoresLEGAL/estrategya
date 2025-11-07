@@ -2,10 +2,14 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, TrendingUp, ThumbsUp, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, TrendingUp, ThumbsUp, Zap, Lock } from "lucide-react";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface ICEScoreFormProps {
   initiativeId: string;
+  companyId?: string;
   initialImpact?: number;
   initialConfidence?: number;
   initialEase?: number;
@@ -14,6 +18,7 @@ interface ICEScoreFormProps {
 
 export const ICEScoreForm = ({
   initiativeId,
+  companyId,
   initialImpact = 5,
   initialConfidence = 5,
   initialEase = 5,
@@ -23,6 +28,9 @@ export const ICEScoreForm = ({
   const [confidence, setConfidence] = useState(initialConfidence);
   const [ease, setEase] = useState(initialEase);
   const [iceScore, setIceScore] = useState(0);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { hasFeature } = useSubscriptionLimits(companyId);
 
   useEffect(() => {
     const newIceScore = impact * confidence * ease;
@@ -43,6 +51,60 @@ export const ICEScoreForm = ({
   };
 
   const scoreBadge = getScoreBadge(iceScore);
+  const hasICEFeature = hasFeature('ice_score');
+
+  if (!hasICEFeature) {
+    return (
+      <>
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
+          <div className="absolute top-4 right-4">
+            <Badge className="bg-primary text-primary-foreground">PRO</Badge>
+          </div>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              <CardTitle>ICE Score - Recurso PRO</CardTitle>
+            </div>
+            <CardDescription>
+              Priorize iniciativas com critérios quantitativos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              O método ICE Score permite avaliar iniciativas através de 3 dimensões:
+            </p>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-blue-500" />
+                <span><strong>Impact:</strong> Qual o impacto no objetivo estratégico?</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <ThumbsUp className="h-4 w-4 text-green-500" />
+                <span><strong>Confidence:</strong> Quão confiante você está na estimativa?</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-yellow-500" />
+                <span><strong>Ease:</strong> Quão fácil é implementar?</span>
+              </li>
+            </ul>
+            <Button 
+              onClick={() => setShowUpgradePrompt(true)} 
+              className="w-full" 
+              size="lg"
+            >
+              Fazer Upgrade para Desbloquear
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <UpgradePrompt
+          open={showUpgradePrompt}
+          onOpenChange={setShowUpgradePrompt}
+          feature="ICE Score"
+        />
+      </>
+    );
+  }
 
   return (
     <Card>

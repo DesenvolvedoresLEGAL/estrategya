@@ -5,12 +5,15 @@ import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, TrendingUp, ThumbsUp, Zap, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Sparkles, TrendingUp, ThumbsUp, Zap, ArrowRight, ArrowLeft, CheckCircle2, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface ICEScoreWizardProps {
   initiativeTitle: string;
   initiativeDescription?: string;
+  companyId?: string;
   onComplete: (scores: { impact: number; confidence: number; ease: number; iceScore: number }) => void;
   onCancel: () => void;
 }
@@ -125,11 +128,15 @@ const easeQuestions: Question[] = [
 export const ICEScoreWizard = ({
   initiativeTitle,
   initiativeDescription,
+  companyId,
   onComplete,
   onCancel,
 }: ICEScoreWizardProps) => {
   const [currentStep, setCurrentStep] = useState<WizardStep>('impact');
   const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { hasFeature } = useSubscriptionLimits(companyId);
 
   const getCurrentQuestions = () => {
     switch (currentStep) {
@@ -223,6 +230,69 @@ export const ICEScoreWizard = ({
   };
 
   const StepIcon = getStepIcon(currentStep);
+  const hasICEFeature = hasFeature('ice_score');
+
+  if (!hasICEFeature) {
+    return (
+      <>
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-primary" />
+                <CardTitle>ICE Score Wizard - Recurso PRO</CardTitle>
+              </div>
+              <Badge className="bg-primary text-primary-foreground">PRO</Badge>
+            </div>
+            <CardDescription>
+              Questionário guiado para calcular ICE Score de forma precisa
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              O ICE Score Wizard oferece um processo estruturado de 9 perguntas divididas em 3 etapas para avaliar suas iniciativas:
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-3 bg-card border rounded-lg">
+                <TrendingUp className="h-5 w-5 text-blue-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Impact (3 perguntas)</h4>
+                  <p className="text-xs text-muted-foreground">Alinhamento estratégico, impacto em clientes e resultados financeiros</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-card border rounded-lg">
+                <ThumbsUp className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Confidence (3 perguntas)</h4>
+                  <p className="text-xs text-muted-foreground">Dados disponíveis, capacidade da equipe e validação da abordagem</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-card border rounded-lg">
+                <Zap className="h-5 w-5 text-yellow-500 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Ease (3 perguntas)</h4>
+                  <p className="text-xs text-muted-foreground">Complexidade técnica, dependências e tempo de implementação</p>
+                </div>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setShowUpgradePrompt(true)} 
+              className="w-full" 
+              size="lg"
+            >
+              Fazer Upgrade para PRO
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <UpgradePrompt
+          open={showUpgradePrompt}
+          onOpenChange={setShowUpgradePrompt}
+          feature="ICE Score Wizard"
+        />
+      </>
+    );
+  }
 
   // Result view
   if (currentStep === 'result') {

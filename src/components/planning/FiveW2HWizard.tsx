@@ -15,11 +15,15 @@ import {
   CheckCircle,
   AlertCircle,
   DollarSign,
-  Calculator
+  Calculator,
+  Lock
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { Badge } from "@/components/ui/badge";
 
 interface FiveW2HWizardProps {
   initiativeId: string;
@@ -27,6 +31,7 @@ interface FiveW2HWizardProps {
   initiativeDescription?: string;
   objectiveTitle?: string;
   companyData?: any;
+  companyId?: string;
   initialData?: {
     what?: string;
     why?: string;
@@ -67,6 +72,7 @@ export const FiveW2HWizard = ({
   initiativeDescription,
   objectiveTitle,
   companyData,
+  companyId,
   initialData,
   onSave,
 }: FiveW2HWizardProps) => {
@@ -75,6 +81,9 @@ export const FiveW2HWizard = ({
   const [aiGenerating, setAiGenerating] = useState(false);
   const [estimatingBudget, setEstimatingBudget] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { hasFeature } = useSubscriptionLimits(companyId);
   
   const [what, setWhat] = useState(initialData?.what || "");
   const [why, setWhy] = useState(initialData?.why || "");
@@ -83,6 +92,68 @@ export const FiveW2HWizard = ({
   const [whereLocation, setWhereLocation] = useState(initialData?.where_location || "");
   const [how, setHow] = useState(initialData?.how || "");
   const [howMuch, setHowMuch] = useState(initialData?.how_much?.toString() || "");
+
+  const has5W2HFeature = hasFeature('5w2h');
+
+  if (!has5W2HFeature) {
+    return (
+      <>
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">
+          <div className="absolute top-4 right-4">
+            <Badge className="bg-primary text-primary-foreground">PRO</Badge>
+          </div>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-primary" />
+              <CardTitle>5W2H Wizard - Recurso PRO</CardTitle>
+            </div>
+            <CardDescription>
+              Guia passo-a-passo para criar planos de ação completos
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              O 5W2H Wizard divide o planejamento em 4 etapas estruturadas com validação e sugestões inteligentes:
+            </p>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-2 bg-card border rounded">
+                <Badge variant="outline">1</Badge>
+                <span className="text-sm">What & Why - Definir escopo e justificativa</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-card border rounded">
+                <Badge variant="outline">2</Badge>
+                <span className="text-sm">Who & When - Responsável e prazo</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-card border rounded">
+                <Badge variant="outline">3</Badge>
+                <span className="text-sm">Where & How - Local e método de execução</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-card border rounded">
+                <Badge variant="outline">4</Badge>
+                <span className="text-sm">How Much - Estimativa de investimento com IA</span>
+              </div>
+            </div>
+            <div className="bg-primary/10 p-4 rounded-lg text-sm">
+              <strong>Recursos PRO:</strong> Validação em tempo real, geração com IA, estimativa de budget automática, papéis sugeridos
+            </div>
+            <Button 
+              onClick={() => setShowUpgradePrompt(true)} 
+              className="w-full" 
+              size="lg"
+            >
+              Fazer Upgrade para PRO
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <UpgradePrompt
+          open={showUpgradePrompt}
+          onOpenChange={setShowUpgradePrompt}
+          feature="5W2H Wizard"
+        />
+      </>
+    );
+  }
 
   const calculateProgress = () => {
     const fields = { what, why, who, when_deadline: whenDeadline, where_location: whereLocation, how, how_much: howMuch };
