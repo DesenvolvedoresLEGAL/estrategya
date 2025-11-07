@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ObjectiveDetailCard } from "@/components/objectives/ObjectiveDetailCard";
-import { Target, ArrowLeft, RefreshCw } from "lucide-react";
+import { Target, ArrowLeft, RefreshCw, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Objetivos() {
@@ -147,10 +147,20 @@ export default function Objetivos() {
                 <h1 className="text-2xl font-bold">Gestão de Objetivos</h1>
               </div>
             </div>
-            <Button onClick={loadObjectives}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Atualizar
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/metricas')}
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Métricas
+              </Button>
+              <Button onClick={loadObjectives}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Atualizar
+              </Button>
+            </div>
           </div>
         </div>
       </header>

@@ -270,13 +270,31 @@ export default function Dashboard() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Dashboard Executivo</h1>
-            <Button 
-              onClick={generateInsights}
-              disabled={generatingInsights}
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${generatingInsights ? 'animate-spin' : ''}`} />
-              {generatingInsights ? 'Analisando...' : 'Atualizar Insights'}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/objetivos")}
+              >
+                <Target className="mr-2 h-4 w-4" />
+                Objetivos
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/metricas")}
+              >
+                <TrendingUp className="mr-2 h-4 w-4" />
+                Métricas
+              </Button>
+              <Button 
+                onClick={generateInsights}
+                disabled={generatingInsights}
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${generatingInsights ? 'animate-spin' : ''}`} />
+                {generatingInsights ? 'Analisando...' : 'Atualizar Insights'}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
