@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Grid3x3, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Grid3x3, Sparkles, Save } from "lucide-react";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
 import { ICERankingList } from "@/components/planning/ICERankingList";
 import { FrameworkInfo } from "./FrameworkInfo";
@@ -15,9 +15,10 @@ interface Props {
   initialData: any;
   onNext: (data: any) => void;
   onBack: () => void;
+  onSaveAndExit?: () => Promise<void>;
 }
 
-export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext, onBack }: Props) => {
+export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [prioritizationData, setPrioritizationData] = useState(initialData);
   const { toast } = useToast();
@@ -238,12 +239,23 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        {prioritizationData && (
-          <Button onClick={handleNext} size="lg">
-            Próximo
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {onSaveAndExit && (
+            <Button 
+              variant="ghost" 
+              onClick={onSaveAndExit}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar e Sair
+            </Button>
+          )}
+          {prioritizationData && (
+            <Button onClick={handleNext} size="lg">
+              Próximo
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

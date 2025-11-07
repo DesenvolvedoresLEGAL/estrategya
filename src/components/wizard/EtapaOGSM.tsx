@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Target, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Target, Sparkles, Save } from "lucide-react";
 import { OGSMCard } from "@/components/planning/OGSMCard";
 import { FrameworkInfo } from "./FrameworkInfo";
 
@@ -14,9 +14,10 @@ interface Props {
   initialData: any;
   onNext: (data: any) => void;
   onBack: () => void;
+  onSaveAndExit?: () => Promise<void>;
 }
 
-export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBack }: Props) => {
+export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [ogsmData, setOgsmData] = useState(initialData);
 
@@ -188,12 +189,23 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        {ogsmData && (
-          <Button onClick={handleNext} size="lg">
-            Próximo
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {onSaveAndExit && (
+            <Button 
+              variant="ghost" 
+              onClick={onSaveAndExit}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar e Sair
+            </Button>
+          )}
+          {ogsmData && (
+            <Button onClick={handleNext} size="lg">
+              Próximo
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

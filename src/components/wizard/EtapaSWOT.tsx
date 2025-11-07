@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Target, TrendingDown, Zap, ShieldAlert, AlertCircle, Lightbulb } from "lucide-react";
+import { ArrowLeft, ArrowRight, Target, TrendingDown, Zap, ShieldAlert, AlertCircle, Lightbulb, Save } from "lucide-react";
 import { swotSchema } from "@/lib/validations/wizard";
 import { z } from "zod";
 import { SegmentExamplesModal } from "./SegmentExamplesModal";
@@ -16,9 +16,10 @@ interface Props {
   initialData: any;
   onNext: (data: any) => void;
   onBack: () => void;
+  onSaveAndExit?: () => Promise<void>;
 }
 
-export const EtapaSWOT = ({ companyData, initialData, onNext, onBack }: Props) => {
+export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
@@ -268,11 +269,24 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack }: Props) =
               <ArrowLeft className="mr-2 w-4 h-4" />
               Voltar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Salvando..." : "Próximo"}
-              <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        </div>
+            <div className="flex gap-2">
+              {onSaveAndExit && (
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  onClick={onSaveAndExit}
+                  disabled={loading}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar e Sair
+                </Button>
+              )}
+              <Button type="submit" disabled={loading}>
+                {loading ? "Salvando..." : "Próximo"}
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+            </div>
+          </div>
       </form>
     </CardContent>
 

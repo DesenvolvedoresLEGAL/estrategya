@@ -15,9 +15,11 @@ import { EtapaPriorizacao } from "@/components/wizard/EtapaPriorizacao";
 import { EtapaExecucao } from "@/components/wizard/EtapaExecucao";
 import { EtapaMetricas } from "@/components/wizard/EtapaMetricas";
 import { useWizardProgress } from "@/hooks/useWizardProgress";
+import { useAutoSave } from "@/hooks/useAutoSave";
 import { ErrorBoundary } from "@/components/wizard/ErrorBoundary";
 import { LoadingSkeleton } from "@/components/wizard/LoadingSkeleton";
 import { StepTransition } from "@/components/wizard/StepTransition";
+import { SaveIndicator } from "@/components/wizard/SaveIndicator";
 
 const steps = [
   { 
@@ -75,6 +77,7 @@ const Planejamento = () => {
   const [user, setUser] = useState<User | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   // Dados do wizard
   const [companyData, setCompanyData] = useState<any>(null);
@@ -93,6 +96,27 @@ const Planejamento = () => {
     saveProgress,
     markStepCompleted,
   } = useWizardProgress(user?.id || null, companyData?.id || null);
+
+  // Auto-save a cada 30 segundos
+  const { isSaving } = useAutoSave({
+    data: {
+      companyData,
+      swotData,
+      analysisData,
+      ogsmData,
+      okrsBscData,
+      prioritizationData,
+      executionData,
+    },
+    onSave: async (data) => {
+      if (companyData?.id && user?.id) {
+        await saveProgress(currentStep, data);
+        setLastSavedAt(new Date());
+      }
+    },
+    delay: 30000, // 30 segundos
+    enabled: !!companyData?.id && !!user?.id,
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -239,6 +263,29 @@ const Planejamento = () => {
     }
   };
 
+  const handleSaveAndExit = async () => {
+    try {
+      if (companyData?.id) {
+        await saveProgress(currentStep, {
+          companyData,
+          swotData,
+          analysisData,
+          ogsmData,
+          okrsBscData,
+          prioritizationData,
+          executionData,
+        });
+        setLastSavedAt(new Date());
+      }
+      
+      toast.success('Progresso salvo com sucesso!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error saving progress:', error);
+      toast.error('Erro ao salvar progresso');
+    }
+  };
+
   if (loading || progressLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -270,18 +317,10 @@ const Planejamento = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {completedSteps.length > 0 && (
-                <div 
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary animate-fade-in"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <Save className="w-4 h-4" />
-                  <span className="text-xs font-medium">
-                    Progresso salvo
-                  </span>
-                </div>
-              )}
+              <SaveIndicator 
+                lastSavedAt={lastSavedAt}
+                isSaving={isSaving}
+              />
               <Button 
                 variant="outline" 
                 onClick={handleLogout} 
@@ -323,6 +362,7 @@ const Planejamento = () => {
                 <EtapaContexto
                   initialData={companyData}
                   onNext={handleNext}
+                  onSaveAndExit={handleSaveAndExit}
                   userId={user!.id}
                 />
               )}
@@ -333,6 +373,7 @@ const Planejamento = () => {
                   initialData={swotData}
                   onNext={handleNext}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
 
@@ -343,6 +384,7 @@ const Planejamento = () => {
                   initialData={analysisData}
                   onNext={handleNext}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
 
@@ -353,6 +395,7 @@ const Planejamento = () => {
                   initialData={ogsmData}
                   onNext={handleNext}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
 
@@ -363,6 +406,7 @@ const Planejamento = () => {
                   initialData={okrsBscData}
                   onNext={handleNext}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
 
@@ -373,6 +417,7 @@ const Planejamento = () => {
                   initialData={prioritizationData}
                   onNext={handleNext}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
 
@@ -383,6 +428,7 @@ const Planejamento = () => {
                   initialData={executionData}
                   onNext={handleNext}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
 
@@ -391,6 +437,7 @@ const Planejamento = () => {
                   companyData={companyData}
                   okrsBscData={okrsBscData}
                   onBack={handleBack}
+                  onSaveAndExit={handleSaveAndExit}
                 />
               )}
             </StepTransition>

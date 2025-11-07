@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Sparkles, Brain } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Brain, Save } from "lucide-react";
 import { PESTELDisplay } from "@/components/planning/PESTELDisplay";
 
 interface Props {
@@ -13,9 +13,10 @@ interface Props {
   initialData: any;
   onNext: (data: any) => void;
   onBack: () => void;
+  onSaveAndExit?: () => Promise<void>;
 }
 
-export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBack }: Props) => {
+export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(initialData);
   const [pestelData, setPestelData] = useState<any>(null);
@@ -240,12 +241,23 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        {analysis && (
-          <Button onClick={handleNext} size="lg">
-            Próximo
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {onSaveAndExit && (
+            <Button 
+              variant="ghost" 
+              onClick={onSaveAndExit}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar e Sair
+            </Button>
+          )}
+          {analysis && (
+            <Button onClick={handleNext} size="lg">
+              Próximo
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

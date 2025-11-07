@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowRight, FileUp, AlertCircle } from "lucide-react";
+import { ArrowRight, FileUp, AlertCircle, Save } from "lucide-react";
 import { FileUploadZone } from "./FileUploadZone";
 import { SegmentQuestionsSection } from "./SegmentQuestionsSection";
 import { Sparkles } from "lucide-react";
@@ -33,10 +33,11 @@ const modelos = ["B2B", "B2C", "Híbrido"];
 interface Props {
   initialData: any;
   onNext: (data: any) => void;
+  onSaveAndExit?: () => Promise<void>;
   userId: string;
 }
 
-export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
+export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Props) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
@@ -369,7 +370,20 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
             )}
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <div>
+              {onSaveAndExit && (
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  onClick={onSaveAndExit}
+                  disabled={loading}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar e Sair
+                </Button>
+              )}
+            </div>
             <Button type="submit" disabled={loading} size="lg">
               {loading ? "Salvando..." : "Próximo"}
               <ArrowRight className="ml-2 w-4 h-4" />

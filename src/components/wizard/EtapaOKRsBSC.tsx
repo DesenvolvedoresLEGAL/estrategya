@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Target, Sparkles, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Target, Sparkles, CheckCircle2, Save } from "lucide-react";
 import { OKRCard } from "@/components/planning/OKRCard";
 import { BSCBalance } from "@/components/planning/BSCBalance";
 import { FrameworkInfo } from "./FrameworkInfo";
@@ -15,9 +15,10 @@ interface Props {
   initialData: any;
   onNext: (data: any) => void;
   onBack: () => void;
+  onSaveAndExit?: () => Promise<void>;
 }
 
-export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBack }: Props) => {
+export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'idle' | 'okrs-generated' | 'bsc-validated'>('idle');
   const [okrsData, setOkrsData] = useState<any>(null);
@@ -225,12 +226,23 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        {step === 'bsc-validated' && (
-          <Button onClick={handleSaveAndNext} disabled={loading} size="lg">
-            {loading ? "Salvando..." : "Próximo"}
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {onSaveAndExit && (
+            <Button 
+              variant="ghost" 
+              onClick={onSaveAndExit}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar e Sair
+            </Button>
+          )}
+          {step === 'bsc-validated' && (
+            <Button onClick={handleSaveAndNext} disabled={loading} size="lg">
+              {loading ? "Salvando..." : "Próximo"}
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

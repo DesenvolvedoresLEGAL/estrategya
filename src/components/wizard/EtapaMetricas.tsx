@@ -6,16 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Check, TrendingUp, Plus, X } from "lucide-react";
+import { ArrowLeft, Check, TrendingUp, Plus, X, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
   companyData: any;
   okrsBscData: any;
   onBack: () => void;
+  onSaveAndExit?: () => Promise<void>;
 }
 
-export const EtapaMetricas = ({ companyData, okrsBscData, onBack }: Props) => {
+export const EtapaMetricas = ({ companyData, okrsBscData, onBack, onSaveAndExit }: Props) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [objectives, setObjectives] = useState<any[]>([]);
@@ -255,14 +256,26 @@ export const EtapaMetricas = ({ companyData, okrsBscData, onBack }: Props) => {
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        <Button onClick={handleFinish} size="lg" disabled={loading}>
-          {loading ? "Salvando..." : (
-            <>
-              <Check className="mr-2 w-4 h-4" />
-              Concluir Planejamento
-            </>
+        <div className="flex gap-2">
+          {onSaveAndExit && (
+            <Button 
+              variant="ghost" 
+              onClick={onSaveAndExit}
+              disabled={loading}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              Salvar e Sair
+            </Button>
           )}
-        </Button>
+          <Button onClick={handleFinish} size="lg" disabled={loading}>
+            {loading ? "Salvando..." : (
+              <>
+                <Check className="mr-2 w-4 h-4" />
+                Concluir Planejamento
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
