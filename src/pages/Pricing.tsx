@@ -13,7 +13,7 @@ export default function Pricing() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { trackPricingViewed, trackUpgradeClicked } = useAnalytics();
-  const [currentTier, setCurrentTier] = useState<string>("free");
+  const [currentTier, setCurrentTier] = useState<string | null>(null);
   const [companyId, setCompanyId] = useState<string | undefined>();
 
   useEffect(() => {
@@ -24,7 +24,10 @@ export default function Pricing() {
   const loadCurrentPlan = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setCurrentTier(null);
+        return;
+      }
 
       const { data: companies } = await supabase
         .from('companies')
@@ -93,11 +96,11 @@ export default function Pricing() {
   };
 
   const featureComparison = [
-    { name: "Empresas", free: "1", pro: "Ilimitadas", enterprise: "Ilimitadas" },
+    { name: "Empresas", free: "1", pro: "1", enterprise: "Ilimitadas" },
     { name: "Objetivos Estratégicos", free: "3", pro: "Ilimitados", enterprise: "Ilimitados" },
     { name: "Iniciativas por Objetivo", free: "3", pro: "Ilimitadas", enterprise: "Ilimitadas" },
     { name: "Planos OGSM Ativos", free: "1", pro: "3", enterprise: "Ilimitados" },
-    { name: "Membros da Equipe", free: "3", pro: "10", enterprise: "Ilimitados" },
+    { name: "Membros da Equipe", free: "1", pro: "3", enterprise: "Ilimitados" },
     { name: "Exportação PDF", free: "Com marca d'água", pro: "Sem marca d'água", enterprise: "Premium" },
     { name: "ICE Score Dashboard", free: false, pro: true, enterprise: true },
     { name: "5W2H Wizard", free: false, pro: true, enterprise: true },
@@ -125,9 +128,11 @@ export default function Pricing() {
           </Button>
           
           <div className="text-center">
-            <Badge className="mb-4" variant="secondary">
-              Plano Atual: {currentTier.toUpperCase()}
-            </Badge>
+            {currentTier && (
+              <Badge className="mb-4" variant="secondary">
+                Plano Atual: {currentTier.toUpperCase()}
+              </Badge>
+            )}
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Escolha o Plano Ideal
             </h1>

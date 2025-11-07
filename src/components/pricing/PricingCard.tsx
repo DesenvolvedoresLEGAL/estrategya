@@ -54,11 +54,19 @@ export const PricingCard = ({
         {price !== null ? (
           <div className="py-4">
             {price?.monthly !== undefined ? (
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-bold text-foreground">
-                  R$ {price.monthly}
-                </span>
-                <span className="text-muted-foreground">/mês</span>
+              <div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-foreground">
+                    R$ {price.monthly.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-muted-foreground">/mês</span>
+                </div>
+                {price.annual && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    ou R$ {price.annual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/ano
+                    <span className="text-primary font-medium ml-1">(2 meses grátis)</span>
+                  </p>
+                )}
               </div>
             ) : (
               <div className="text-2xl font-bold text-foreground">

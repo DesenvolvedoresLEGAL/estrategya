@@ -115,6 +115,7 @@ export const PricingSection = () => {
             features={[
               "1 empresa",
               "Até 3 planos estratégicos ativos",
+              "3 membros da equipe",
               "IA avançada (insights, 5W2H, sugestões)",
               "Templates prontos por área",
               "Dashboard completo",
@@ -126,7 +127,7 @@ export const PricingSection = () => {
             buttonText="Liberar PRO"
             onButtonClick={handleProPlan}
             isRecommended
-            price={{ monthly: 97 }}
+            price={{ monthly: 199.90, annual: 1990 }}
             currentTier={tier}
           />
 
@@ -137,6 +138,7 @@ export const PricingSection = () => {
             features={[
               "Múltiplas empresas/workspaces",
               "Planos ilimitados",
+              "Time ilimitado",
               "Múltiplos usuários e permissões",
               "Integrações externas",
               "Histórico e log de mudanças",
@@ -147,7 +149,7 @@ export const PricingSection = () => {
             ]}
             buttonText="Falar com a LEGAL"
             onButtonClick={handleEnterprisePlan}
-            price={{ monthly: undefined }}
+            price={{ monthly: 999.90, annual: 9990 }}
             currentTier={tier}
           />
         </div>
