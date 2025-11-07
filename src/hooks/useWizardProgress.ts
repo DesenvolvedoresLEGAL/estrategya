@@ -71,7 +71,7 @@ export const useWizardProgress = (userId: string | null, companyId: string | nul
         current_step: currentStep,
         completed_steps: newCompletedSteps,
         step_data: stepData || {},
-        last_updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       if (progressId) {

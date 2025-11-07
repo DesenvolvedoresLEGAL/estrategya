@@ -698,8 +698,8 @@ export type Database = {
           created_at: string | null
           current_step: number
           id: string
-          last_updated_at: string | null
           step_data: Json | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -708,8 +708,8 @@ export type Database = {
           created_at?: string | null
           current_step?: number
           id?: string
-          last_updated_at?: string | null
           step_data?: Json | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -718,8 +718,8 @@ export type Database = {
           created_at?: string | null
           current_step?: number
           id?: string
-          last_updated_at?: string | null
           step_data?: Json | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
