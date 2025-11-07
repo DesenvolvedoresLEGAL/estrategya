@@ -53,7 +53,11 @@ export default function Objetivos() {
             id,
             title,
             status,
-            priority_quadrant
+            priority_quadrant,
+            ice_score,
+            impact_score,
+            confidence_score,
+            ease_score
           ),
           metrics (
             id,

@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { ChevronDown, ChevronUp, Edit, Target, Zap, TrendingUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Edit, Target, Zap, TrendingUp, ExternalLink, Sparkles } from "lucide-react";
 import { UpdateObjectiveModal } from "./UpdateObjectiveModal";
 import { ObjectiveHistoryList } from "./ObjectiveHistoryList";
 
@@ -13,6 +14,7 @@ interface Initiative {
   title: string;
   status: string;
   priority_quadrant?: string;
+  ice_score?: number;
 }
 
 interface Metric {
@@ -53,6 +55,7 @@ const perspectiveColors: Record<string, string> = {
 };
 
 export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCardProps) => {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -152,20 +155,37 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
                   <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                     <Zap className="h-4 w-4" />
                     Iniciativas
+                    <Badge variant="outline" className="ml-auto text-xs">
+                      Clique para ver ICE Score e 5W2H
+                    </Badge>
                   </h4>
                   <div className="space-y-2">
                     {objective.initiatives.map((initiative) => (
-                      <div 
+                      <button
                         key={initiative.id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                        onClick={() => navigate(`/iniciativa/${initiative.id}`)}
+                        className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-accent transition-colors border border-transparent hover:border-primary/50 cursor-pointer group"
                       >
-                        <span className="text-sm">{initiative.title}</span>
-                        {initiative.priority_quadrant && (
-                          <Badge variant="outline" className="text-xs">
-                            {initiative.priority_quadrant}
-                          </Badge>
-                        )}
-                      </div>
+                        <div className="flex items-center gap-2 flex-1">
+                          <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                            {initiative.title}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {initiative.ice_score && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Sparkles className="h-3 w-3 mr-1" />
+                              ICE: {initiative.ice_score}
+                            </Badge>
+                          )}
+                          {initiative.priority_quadrant && (
+                            <Badge variant="outline" className="text-xs">
+                              {initiative.priority_quadrant}
+                            </Badge>
+                          )}
+                        </div>
+                      </button>
                     ))}
                   </div>
                 </div>
