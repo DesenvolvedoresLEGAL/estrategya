@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Calendar, Sparkles, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Calendar, Sparkles, Save, Target, Clock, Plus } from "lucide-react";
 import { WBRPlan } from "@/components/planning/WBRPlan";
+import { LiveScoreboard } from "@/components/planning/LiveScoreboard";
+import { WeeklyCheckinModal } from "@/components/planning/WeeklyCheckinModal";
+import { CheckinHistory } from "@/components/planning/CheckinHistory";
 import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
@@ -20,6 +24,9 @@ interface Props {
 export const EtapaExecucao = ({ companyData, prioritizationData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [executionData, setExecutionData] = useState(initialData);
+  const [executionPlanId, setExecutionPlanId] = useState<string | null>(null);
+  const [checkinModalOpen, setCheckinModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleGenerateExecutionPlan = async () => {
     setLoading(true);
@@ -67,7 +74,7 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
       if (error) throw error;
 
       // Salvar execution_plan no banco
-      const { error: saveError } = await supabase
+      const { data: savedPlan, error: saveError } = await supabase
         .from('execution_plan')
         .upsert({
           company_id: companyData.id,
@@ -75,9 +82,15 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
           weekly_actions: data.weekly_actions || [],
           scoreboard: data.scoreboard || {},
           review_cadence: data.review_cadence || {},
-        });
+        }, { onConflict: 'company_id' })
+        .select()
+        .single();
 
       if (saveError) throw saveError;
+
+      if (savedPlan) {
+        setExecutionPlanId(savedPlan.id);
+      }
 
       setExecutionData(data);
       toast.success("Plano de execução 4DX gerado baseado nas top 3 iniciativas ICE!");
@@ -136,33 +149,109 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
                 )}
               </Button>
             </div>
-          ) : (
+           ) : (
             <div className="space-y-6">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center justify-between mb-4">
                 <Badge variant="default">Plano 4DX Gerado</Badge>
+                {executionPlanId && (
+                  <Button onClick={() => setCheckinModalOpen(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Novo Check-in Semanal
+                  </Button>
+                )}
               </div>
 
-              <WBRPlan wbr={{
-                mci: executionData.mci,
-                acoes_semanais: executionData.weekly_actions || [],
-                placar: executionData.scoreboard || { metricas: [] },
-                cadencia: executionData.review_cadence || {
-                  reuniao_tipo: '',
-                  frequencia: '',
-                  participantes_sugeridos: '',
-                  pauta: ''
-                }
-              }} />
+              <Tabs defaultValue="plano" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="plano">Plano WBR</TabsTrigger>
+                  <TabsTrigger value="placar">
+                    <Target className="h-4 w-4 mr-2" />
+                    Placar Visível
+                  </TabsTrigger>
+                  <TabsTrigger value="checkin">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Check-ins
+                  </TabsTrigger>
+                  <TabsTrigger value="historico">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Histórico
+                  </TabsTrigger>
+                </TabsList>
 
-              <div className="bg-muted p-4 rounded-lg">
-                <h4 className="font-semibold mb-2">As 4 Disciplinas da Execução:</h4>
-                <ul className="space-y-2 text-sm">
-                  <li><strong>1. Foco no Crucialmente Importante:</strong> Sua MCI define onde concentrar energia</li>
-                  <li><strong>2. Atuar nas Medidas de Direção:</strong> Ações que você pode controlar</li>
-                  <li><strong>3. Manter um Placar Visível:</strong> Todos sabem o score em tempo real</li>
-                  <li><strong>4. Criar Cadência de Responsabilização:</strong> Reuniões semanais de progresso</li>
-                </ul>
-              </div>
+                <TabsContent value="plano" className="space-y-6">
+                  <WBRPlan wbr={{
+                    mci: executionData.mci,
+                    acoes_semanais: executionData.weekly_actions || [],
+                    placar: executionData.scoreboard || { metricas: [] },
+                    cadencia: executionData.review_cadence || {
+                      reuniao_tipo: '',
+                      frequencia: '',
+                      participantes_sugeridos: '',
+                      pauta: ''
+                    }
+                  }} />
+
+                  <div className="bg-muted p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">As 4 Disciplinas da Execução:</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li><strong>1. Foco no Crucialmente Importante:</strong> Sua MCI define onde concentrar energia</li>
+                      <li><strong>2. Atuar nas Medidas de Direção:</strong> Ações que você pode controlar</li>
+                      <li><strong>3. Manter um Placar Visível:</strong> Todos sabem o score em tempo real</li>
+                      <li><strong>4. Criar Cadência de Responsabilização:</strong> Reuniões semanais de progresso</li>
+                    </ul>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="placar">
+                  <LiveScoreboard 
+                    companyId={companyData.id}
+                    executionPlanId={executionPlanId || undefined}
+                    key={refreshKey}
+                  />
+                </TabsContent>
+
+                <TabsContent value="checkin">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-primary" />
+                        Check-ins Semanais WBR
+                      </CardTitle>
+                      <CardDescription>
+                        Registre seus check-ins semanais para acompanhar o progresso
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {executionPlanId ? (
+                        <Button onClick={() => setCheckinModalOpen(true)} className="w-full">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Registrar Novo Check-in
+                        </Button>
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-8">
+                          Configure o plano de execução primeiro
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="historico">
+                  {executionPlanId ? (
+                    <CheckinHistory 
+                      executionPlanId={executionPlanId}
+                      key={refreshKey}
+                    />
+                  ) : (
+                    <Card>
+                      <CardContent className="py-8 text-center text-muted-foreground">
+                        <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                        <p>Configure o plano de execução primeiro</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              </Tabs>
 
               <div className="bg-success/10 border border-success/20 rounded-lg p-4">
                 <p className="text-sm text-foreground font-medium">
@@ -173,6 +262,20 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Check-in */}
+      {executionPlanId && (
+        <WeeklyCheckinModal
+          open={checkinModalOpen}
+          onOpenChange={setCheckinModalOpen}
+          companyId={companyData.id}
+          executionPlanId={executionPlanId}
+          onSuccess={() => {
+            setRefreshKey(prev => prev + 1);
+            toast.success('Check-in registrado!');
+          }}
+        />
+      )}
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>

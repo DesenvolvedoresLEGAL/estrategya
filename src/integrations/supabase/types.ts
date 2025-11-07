@@ -152,6 +152,50 @@ export type Database = {
         }
         Relationships: []
       }
+      execution_reminders: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          recipient_ids: string[] | null
+          reminder_type: string
+          scheduled_for: string
+          sent: boolean | null
+          sent_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_ids?: string[] | null
+          reminder_type: string
+          scheduled_for: string
+          sent?: boolean | null
+          sent_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_ids?: string[] | null
+          reminder_type?: string
+          scheduled_for?: string
+          sent?: boolean | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "execution_reminders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_data: {
         Row: {
           company_id: string
@@ -687,6 +731,72 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      weekly_checkins: {
+        Row: {
+          attendees: string[] | null
+          blockers: string | null
+          company_id: string
+          completed_actions: string[] | null
+          conducted_at: string | null
+          conducted_by: string | null
+          created_at: string | null
+          execution_plan_id: string
+          id: string
+          mci_progress: number | null
+          next_week_commitments: string | null
+          notes: string | null
+          week_number: number
+          week_start_date: string
+        }
+        Insert: {
+          attendees?: string[] | null
+          blockers?: string | null
+          company_id: string
+          completed_actions?: string[] | null
+          conducted_at?: string | null
+          conducted_by?: string | null
+          created_at?: string | null
+          execution_plan_id: string
+          id?: string
+          mci_progress?: number | null
+          next_week_commitments?: string | null
+          notes?: string | null
+          week_number: number
+          week_start_date: string
+        }
+        Update: {
+          attendees?: string[] | null
+          blockers?: string | null
+          company_id?: string
+          completed_actions?: string[] | null
+          conducted_at?: string | null
+          conducted_by?: string | null
+          created_at?: string | null
+          execution_plan_id?: string
+          id?: string
+          mci_progress?: number | null
+          next_week_commitments?: string | null
+          notes?: string | null
+          week_number?: number
+          week_start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weekly_checkins_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "weekly_checkins_execution_plan_id_fkey"
+            columns: ["execution_plan_id"]
+            isOneToOne: false
+            referencedRelation: "execution_plan"
             referencedColumns: ["id"]
           },
         ]
