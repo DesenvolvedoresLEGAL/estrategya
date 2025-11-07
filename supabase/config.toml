@@ -38,3 +38,15 @@ verify_jwt = false
 
 [functions.ai-smart-suggestions]
 verify_jwt = false
+
+[functions.ai-pestel]
+verify_jwt = false
+
+[functions.ai-porter]
+verify_jwt = false
+
+[functions.generate-insights]
+verify_jwt = false
+
+[functions.predictive-alerts]
+verify_jwt = false

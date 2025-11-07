@@ -14,10 +14,12 @@ import { UpcomingDeadlines } from "@/components/dashboard/UpcomingDeadlines";
 import { TeamPerformance } from "@/components/dashboard/TeamPerformance";
 import { BurndownChart } from "@/components/dashboard/BurndownChart";
 import { StrategicHealthScore } from "@/components/dashboard/StrategicHealthScore";
+import { InsightsPanel } from "@/components/dashboard/InsightsPanel";
+import { PredictiveAlerts } from "@/components/dashboard/PredictiveAlerts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText, Download } from "lucide-react";
+import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText, Download, Brain } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { exportStrategicPlanToExcel } from "@/utils/excelExport";
 import { formatStrategicPlanForPPT, openPresentation } from "@/utils/pptExport";
@@ -495,64 +497,21 @@ export default function Dashboard() {
 
         {/* Advanced Analytics Tabs */}
         <Tabs defaultValue="insights" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="insights">Insights & Quick Wins</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="insights">Insights IA</TabsTrigger>
+            <TabsTrigger value="predictive">Alertas Preditivos</TabsTrigger>
             <TabsTrigger value="team">Equipe & Prazos</TabsTrigger>
             <TabsTrigger value="charts">Gráficos</TabsTrigger>
             <TabsTrigger value="health">Saúde Estratégica</TabsTrigger>
           </TabsList>
 
           <TabsContent value="insights" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Insights */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold">Insights de IA</h2>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/insights')}>
-                    Ver Todos
-                  </Button>
-                </div>
-                <div className="space-y-4">
-                  {insights.length === 0 ? (
-                    <Card>
-                      <CardContent className="pt-6 text-center py-12">
-                        <Lightbulb className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          Nenhum insight novo no momento
-                        </p>
-                        <Button 
-                          className="mt-4"
-                          onClick={generateInsights}
-                          disabled={generatingInsights}
-                        >
-                          Gerar Insights
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    insights.map((insight) => (
-                      <InsightCard
-                        key={insight.id}
-                        type={insight.insight_type}
-                        title={insight.title}
-                        description={insight.description}
-                        priority={insight.priority}
-                        status={insight.status}
-                        onMarkAsViewed={() => updateInsightStatus(insight.id, 'visualizado')}
-                        onResolve={() => updateInsightStatus(insight.id, 'resolvido')}
-                        onIgnore={() => updateInsightStatus(insight.id, 'ignorado')}
-                      />
-                    ))
-                  )}
-                </div>
-              </div>
+            {companyId && <InsightsPanel companyId={companyId} />}
+            <QuickWinList quickWins={quickWins} onGenerateMore={generateQuickWins} />
+          </TabsContent>
 
-              {/* Quick Wins */}
-              <QuickWinList 
-                quickWins={quickWins}
-                onGenerateMore={generateQuickWins}
-              />
-            </div>
+          <TabsContent value="predictive" className="space-y-4">
+            {companyId && <PredictiveAlerts companyId={companyId} />}
           </TabsContent>
 
           <TabsContent value="team" className="space-y-4">
