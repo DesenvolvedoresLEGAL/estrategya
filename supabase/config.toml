@@ -1,5 +1,8 @@
 project_id = "phunnvywhrvylzsyvonx"
 
+[functions.ai-health-check]
+verify_jwt = false
+
 [functions.ai-diagnostico]
 verify_jwt = false
 

@@ -11,14 +11,25 @@ serve(async (req) => {
   }
 
   try {
-    const { objectives } = await req.json();
+    const body = await req.json();
+    const { objectives } = body || {};
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
 
     if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
       throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    console.log('Generating metrics for objectives');
+    // Validação detalhada
+    if (!objectives || !Array.isArray(objectives) || objectives.length === 0) {
+      console.error('Invalid objectives data:', objectives);
+      return new Response(
+        JSON.stringify({ error: 'Lista de objetivos não fornecida ou vazia. Por favor, crie objetivos estratégicos primeiro.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Generating metrics for ${objectives.length} objectives`);
 
     const systemPrompt = `Você receberá uma lista de Objetivos Estratégicos de uma empresa.
 Para cada objetivo, sugira de 2 a 4 métricas/KRs que permitam medir o progresso.
@@ -51,58 +62,96 @@ ${objectivesText}
 
 Gere as métricas para cada objetivo.`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        response_format: { type: "json_object" }
-      }),
-    });
+    let retryCount = 0;
+    const maxRetries = 3;
+    let lastError;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em instantes.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Créditos insuficientes. Adicione créditos no workspace Lovable.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+    while (retryCount < maxRetries) {
+      try {
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            response_format: { type: "json_object" }
+          }),
+        });
 
-      throw new Error(`AI Gateway error: ${response.status}`);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('AI Gateway error:', response.status, errorText);
+          
+          if (response.status === 429) {
+            return new Response(
+              JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em instantes.' }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          if (response.status === 402) {
+            return new Response(
+              JSON.stringify({ error: 'Créditos insuficientes. Adicione créditos no workspace Lovable.' }),
+              { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          throw new Error(`AI Gateway error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+          console.error('Invalid AI response structure:', data);
+          throw new Error('Resposta da IA inválida');
+        }
+
+        const result = JSON.parse(data.choices[0].message.content);
+
+        // Validação da estrutura do resultado
+        if (!result.metricas_por_objetivo) {
+          console.error('Missing metricas_por_objetivo in AI response:', result);
+          throw new Error('Resposta da IA incompleta');
+        }
+
+        console.log('Metrics generated successfully');
+
+        return new Response(
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (error) {
+        lastError = error;
+        retryCount++;
+        console.error(`Attempt ${retryCount} failed:`, error);
+        
+        if (retryCount < maxRetries) {
+          console.log(`Retrying... (${retryCount}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+      }
     }
 
-    const data = await response.json();
-    const result = JSON.parse(data.choices[0].message.content);
-
-    console.log('Metrics generated successfully');
-
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Se todas as tentativas falharem
+    throw lastError;
 
   } catch (error) {
     console.error('Error in ai-indicadores:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar indicadores';
+    const statusCode = error instanceof Error && error.message.includes('não fornecida') ? 400 : 500;
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Erro ao gerar indicadores' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      }),
+      { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
