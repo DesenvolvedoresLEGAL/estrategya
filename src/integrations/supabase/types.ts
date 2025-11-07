@@ -477,6 +477,65 @@ export type Database = {
           },
         ]
       }
+      maturity_assessment: {
+        Row: {
+          company_id: string
+          created_at: string
+          evolution_roadmap: Json | null
+          id: string
+          overall_maturity_level: string | null
+          people_analysis: string | null
+          people_score: number | null
+          processes_analysis: string | null
+          processes_score: number | null
+          strategy_analysis: string | null
+          strategy_score: number | null
+          technology_analysis: string | null
+          technology_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          evolution_roadmap?: Json | null
+          id?: string
+          overall_maturity_level?: string | null
+          people_analysis?: string | null
+          people_score?: number | null
+          processes_analysis?: string | null
+          processes_score?: number | null
+          strategy_analysis?: string | null
+          strategy_score?: number | null
+          technology_analysis?: string | null
+          technology_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          evolution_roadmap?: Json | null
+          id?: string
+          overall_maturity_level?: string | null
+          people_analysis?: string | null
+          people_score?: number | null
+          processes_analysis?: string | null
+          processes_score?: number | null
+          strategy_analysis?: string | null
+          strategy_score?: number | null
+          technology_analysis?: string | null
+          technology_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maturity_assessment_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metric_updates: {
         Row: {
           created_at: string
@@ -755,6 +814,71 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      porter_analysis: {
+        Row: {
+          buyer_power_analysis: string | null
+          buyer_power_score: number | null
+          company_id: string
+          created_at: string
+          id: string
+          new_entrants_analysis: string | null
+          new_entrants_score: number | null
+          overall_competitiveness: string | null
+          recommendations: string | null
+          rivalry_analysis: string | null
+          rivalry_score: number | null
+          substitutes_analysis: string | null
+          substitutes_score: number | null
+          supplier_power_analysis: string | null
+          supplier_power_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          buyer_power_analysis?: string | null
+          buyer_power_score?: number | null
+          company_id: string
+          created_at?: string
+          id?: string
+          new_entrants_analysis?: string | null
+          new_entrants_score?: number | null
+          overall_competitiveness?: string | null
+          recommendations?: string | null
+          rivalry_analysis?: string | null
+          rivalry_score?: number | null
+          substitutes_analysis?: string | null
+          substitutes_score?: number | null
+          supplier_power_analysis?: string | null
+          supplier_power_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          buyer_power_analysis?: string | null
+          buyer_power_score?: number | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          new_entrants_analysis?: string | null
+          new_entrants_score?: number | null
+          overall_competitiveness?: string | null
+          recommendations?: string | null
+          rivalry_analysis?: string | null
+          rivalry_score?: number | null
+          substitutes_analysis?: string | null
+          substitutes_score?: number | null
+          supplier_power_analysis?: string | null
+          supplier_power_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "porter_analysis_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       segment_templates: {
         Row: {
