@@ -10,6 +10,7 @@ import { BSCBalance } from "@/components/planning/BSCBalance";
 import { FrameworkInfo } from "./FrameworkInfo";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface Props {
   companyData: any;
@@ -28,6 +29,7 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
   const { canCreateObjective, canCreateInitiative } = useSubscriptionLimits(companyData?.id);
+  const { trackLimitReached, trackFeatureBlocked } = useAnalytics();
 
   const handleGenerateOKRs = async () => {
     setLoading(true);
@@ -111,6 +113,8 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
           const canCreateInit = await canCreateInitiative(objectiveRecord.id);
           
           if (!canCreateInit) {
+            trackLimitReached("initiatives", "free", "initiatives_creation");
+            trackFeatureBlocked("unlimited_initiatives", "free", "pro");
             setShowUpgradePrompt(true);
             // Delete the objective we just created since we can't add initiatives
             await supabase.from('strategic_objectives').delete().eq('id', objectiveRecord.id);

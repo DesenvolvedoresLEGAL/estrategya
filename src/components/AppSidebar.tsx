@@ -7,7 +7,8 @@ import {
   FileText, 
   Settings,
   LogOut,
-  Users
+  Users,
+  Sparkles
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,6 +145,19 @@ export function AppSidebar() {
       {/* Footer */}
       <SidebarFooter>
         <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink 
+                to="/pricing" 
+                end 
+                className="hover:bg-primary/10 hover:text-primary transition-colors"
+                activeClassName="bg-primary/10 text-primary font-medium"
+              >
+                <Sparkles className="h-4 w-4" />
+                {open && <span>Ver Planos</span>}
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
               <LogOut className="h-4 w-4" />

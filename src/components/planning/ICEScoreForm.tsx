@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, TrendingUp, ThumbsUp, Zap, Lock } from "lucide-react";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface ICEScoreFormProps {
   initiativeId: string;
@@ -52,8 +53,10 @@ export const ICEScoreForm = ({
 
   const scoreBadge = getScoreBadge(iceScore);
   const hasICEFeature = hasFeature('ice_score');
+  const { trackFeatureBlocked } = useAnalytics();
 
   if (!hasICEFeature) {
+    trackFeatureBlocked('ice_score', 'free', 'pro');
     return (
       <>
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 relative overflow-hidden">

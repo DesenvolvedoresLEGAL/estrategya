@@ -205,6 +205,41 @@ export const useAnalytics = () => {
     });
   };
 
+  // Subscription & Limit tracking
+  const trackLimitReached = (limitType: string, currentPlan: string, context?: string) => {
+    trackEvent('limit_reached', {
+      category: 'Subscription',
+      limit_type: limitType,
+      current_plan: currentPlan,
+      context,
+    });
+  };
+
+  const trackUpgradeClicked = (fromPlan: string, feature: string, location: string) => {
+    trackEvent('upgrade_clicked', {
+      category: 'Subscription',
+      from_plan: fromPlan,
+      feature_locked: feature,
+      click_location: location,
+    });
+  };
+
+  const trackPricingViewed = (source: string) => {
+    trackEvent('pricing_viewed', {
+      category: 'Subscription',
+      source,
+    });
+  };
+
+  const trackFeatureBlocked = (featureName: string, currentPlan: string, requiredPlan: string) => {
+    trackEvent('feature_blocked', {
+      category: 'Subscription',
+      feature_name: featureName,
+      current_plan: currentPlan,
+      required_plan: requiredPlan,
+    });
+  };
+
   return {
     trackEvent,
     trackWizardStep,
@@ -226,6 +261,10 @@ export const useAnalytics = () => {
     trackError,
     trackSessionStart,
     trackSessionEnd,
+    trackLimitReached,
+    trackUpgradeClicked,
+    trackPricingViewed,
+    trackFeatureBlocked,
   };
 };
 

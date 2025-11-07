@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Target, Lightbulb } from "lucide-react";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 interface Props {
   companyData: any;
@@ -32,6 +33,7 @@ export const EtapaObjetivos = ({ companyData, analysisData, initialData, onNext,
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
   const { canCreateObjective } = useSubscriptionLimits(companyData?.id);
+  const { trackLimitReached, trackFeatureBlocked } = useAnalytics();
 
   const handleGenerate = async () => {
     if (!focus) {
@@ -56,6 +58,8 @@ export const EtapaObjetivos = ({ companyData, analysisData, initialData, onNext,
       const canCreate = await canCreateObjective(companyData.id);
       
       if (!canCreate) {
+        trackLimitReached("objectives", "free", "objectives_creation");
+        trackFeatureBlocked("unlimited_objectives", "free", "pro");
         setShowUpgradePrompt(true);
         return;
       }

@@ -14,6 +14,7 @@ import { ArrowLeft, RefreshCw, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 export default function PlanoEstrategico() {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ export default function PlanoEstrategico() {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
   const { canExportPDF, tier } = useSubscriptionLimits(companyId || undefined);
+  const { trackLimitReached, trackFeatureBlocked, trackExportUsed } = useAnalytics();
   
   // Data states
   const [ogsmData, setOgsmData] = useState<any>(null);
@@ -238,9 +240,13 @@ export default function PlanoEstrategico() {
       const canExport = canExportPDF();
       
       if (!canExport) {
+        trackLimitReached("export_pdf", tier || "free", "pdf_export");
+        trackFeatureBlocked("pdf_export_no_watermark", tier || "free", "pro");
         setShowUpgradePrompt(true);
         return;
       }
+
+      trackExportUsed('pdf', 'plano_estrategico');
 
       toast({
         title: "Gerando PDF...",

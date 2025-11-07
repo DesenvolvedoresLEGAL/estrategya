@@ -18,6 +18,7 @@ import { z } from "zod";
 import { ContextualHelp } from "./ContextualHelp";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const segmentos = [
   "Eventos",
@@ -63,6 +64,7 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
   const { canCreateCompany } = useSubscriptionLimits(undefined);
+  const { trackLimitReached, trackFeatureBlocked } = useAnalytics();
 
   const handleSegmentChange = async (segment: string) => {
     setFormData({ ...formData, segment });
@@ -148,6 +150,8 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
         const canCreate = await canCreateCompany();
         
         if (!canCreate) {
+          trackLimitReached("companies", "free", "company_creation");
+          trackFeatureBlocked("multiple_companies", "free", "pro");
           setShowUpgradePrompt(true);
           return;
         }

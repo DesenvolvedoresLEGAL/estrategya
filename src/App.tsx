@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Pricing from "./pages/Pricing";
 import Planejamento from "./pages/Planejamento";
 import Dashboard from "./pages/Dashboard";
 import Objetivos from "./pages/Objetivos";
@@ -23,13 +24,14 @@ const queryClient = new QueryClient();
 
 const AppLayout = () => {
   const location = useLocation();
-  const showSidebar = !["/", "/auth"].includes(location.pathname);
+  const showSidebar = !["/", "/auth", "/pricing"].includes(location.pathname);
 
   if (!showSidebar) {
     return (
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/auth" element={<Auth />} />
+        <Route path="/pricing" element={<Pricing />} />
       </Routes>
     );
   }

@@ -1,9 +1,12 @@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Zap } from "lucide-react";
+import { Check, X, Zap, Sparkles, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface UpgradePromptProps {
   open: boolean;
@@ -13,6 +16,46 @@ interface UpgradePromptProps {
 }
 
 export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: UpgradePromptProps) => {
+  const navigate = useNavigate();
+  const { trackUpgradeClicked, trackLimitReached, trackPricingViewed } = useAnalytics();
+  const [currentTier, setCurrentTier] = useState<string>("free");
+
+  useEffect(() => {
+    if (open) {
+      trackLimitReached(limitType || feature || "unknown", currentTier, feature);
+      loadCurrentTier();
+    }
+  }, [open]);
+
+  const loadCurrentTier = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: companies } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (companies) {
+        const { data: subscription } = await supabase
+          .from('company_subscriptions')
+          .select('*, plan:subscription_plans(*)')
+          .eq('company_id', companies.id)
+          .eq('status', 'active')
+          .single();
+
+        if (subscription?.plan) {
+          setCurrentTier(subscription.plan.tier);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading current tier:', error);
+    }
+  };
+
   const { data: plans } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
@@ -28,32 +71,84 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
   });
 
   const getLimitMessage = () => {
-    switch (limitType) {
-      case "objectives":
-        return "Você atingiu o limite de objetivos do seu plano atual.";
-      case "initiatives":
-        return "Você atingiu o limite de iniciativas por objetivo.";
-      case "team_members":
-        return "Você atingiu o limite de membros da equipe.";
-      case "plans":
-        return "Você atingiu o limite de planos/cenários estratégicos ativos.";
-      case "companies":
-        return "Você atingiu o limite de empresas do seu plano atual.";
-      case "export_pdf":
-        return "A exportação em PDF não está disponível no seu plano.";
-      default:
-        return `A funcionalidade "${feature}" não está disponível no seu plano.`;
-    }
+    const messages: Record<string, { title: string; description: string; benefits: string[] }> = {
+      objectives: {
+        title: "Limite de Objetivos Atingido",
+        description: "Você atingiu o limite de 3 objetivos do plano FREE. Faça upgrade para criar objetivos ilimitados.",
+        benefits: [
+          "Objetivos estratégicos ilimitados",
+          "Múltiplas perspectivas BSC",
+          "Análise de maturidade completa"
+        ]
+      },
+      initiatives: {
+        title: "Limite de Iniciativas Atingido",
+        description: "Você atingiu o limite de 3 iniciativas por objetivo. Faça upgrade para criar iniciativas ilimitadas.",
+        benefits: [
+          "Iniciativas ilimitadas por objetivo",
+          "ICE Score para priorização",
+          "5W2H detalhado para cada iniciativa"
+        ]
+      },
+      companies: {
+        title: "Limite de Empresas Atingido",
+        description: "O plano FREE permite apenas 1 empresa. Faça upgrade para gerenciar múltiplas empresas.",
+        benefits: [
+          "Empresas ilimitadas",
+          "Gestão multi-empresa unificada",
+          "Relatórios consolidados"
+        ]
+      },
+      team_members: {
+        title: "Limite de Membros Atingido",
+        description: "Você atingiu o limite de membros da equipe do seu plano.",
+        benefits: [
+          "Mais membros na equipe",
+          "Gestão de permissões avançada",
+          "Colaboração em tempo real"
+        ]
+      },
+      plans: {
+        title: "Limite de Planos OGSM Atingido",
+        description: "Você atingiu o limite de planos estratégicos ativos.",
+        benefits: [
+          "Múltiplos cenários estratégicos",
+          "Comparação entre planos",
+          "Histórico completo"
+        ]
+      },
+      export_pdf: {
+        title: "Exportação PDF Premium",
+        description: "Exporte seus planos estratégicos sem marca d'água com o plano PRO.",
+        benefits: [
+          "PDF profissional sem marca d'água",
+          "Exportação ilimitada",
+          "Customização de layout"
+        ]
+      }
+    };
+
+    const config = messages[limitType || ""] || {
+      title: `Feature ${feature} Bloqueada`,
+      description: `A funcionalidade "${feature}" não está disponível no plano FREE.`,
+      benefits: [
+        "Acesso completo a features premium",
+        "Suporte prioritário",
+        "Atualizações exclusivas"
+      ]
+    };
+
+    return config;
   };
 
-  const handleUpgrade = (planId: string, tier: string) => {
+  const handleUpgrade = (planId: string, tier: string, planName: string) => {
+    trackUpgradeClicked(currentTier, feature || limitType || "unknown", "upgrade_modal");
+
     if (tier === "business") {
-      // Para Enterprise, abrir contato ao invés de checkout
       window.open("https://legal.team/contato", "_blank");
       return;
     }
 
-    // Para outros planos, seguir com checkout
     supabase.functions.invoke("create-checkout-session", {
       body: { planId },
     }).then(({ data, error }) => {
@@ -67,16 +162,42 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
     });
   };
 
+  const handleViewPricing = () => {
+    trackPricingViewed('upgrade_modal');
+    onOpenChange(false);
+    navigate('/pricing');
+  };
+
+  const messageConfig = getLimitMessage();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
-            Upgrade seu Plano
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Sparkles className="h-6 w-6 text-primary" />
+            {messageConfig.title}
           </DialogTitle>
-          <DialogDescription>{getLimitMessage()}</DialogDescription>
+          <DialogDescription className="text-base pt-2">
+            {messageConfig.description}
+          </DialogDescription>
         </DialogHeader>
+
+        {/* Benefits Section */}
+        <div className="my-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">O que você ganha com o upgrade:</h3>
+          </div>
+          <ul className="space-y-2">
+            {messageConfig.benefits.map((benefit, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-sm">{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="grid md:grid-cols-3 gap-4 mt-6">
           {plans?.map((plan) => {
@@ -154,7 +275,7 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
                 </div>
 
                 <Button
-                  onClick={() => handleUpgrade(plan.id, plan.tier)}
+                  onClick={() => handleUpgrade(plan.id, plan.tier, plan.name)}
                   className="w-full"
                   variant={isPro ? "default" : "outline"}
                   disabled={plan.tier === "free"}
