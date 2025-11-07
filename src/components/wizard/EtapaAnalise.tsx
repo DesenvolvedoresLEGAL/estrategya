@@ -53,7 +53,7 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
 
   const handleNext = () => {
     if (!analysis) {
-      toast.error("Gere a análise antes de continuar");
+      toast.error("Por favor, gere a análise estratégica antes de continuar");
       return;
     }
     onNext(analysis);

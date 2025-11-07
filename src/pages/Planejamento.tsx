@@ -15,6 +15,7 @@ import { EtapaPriorizacao } from "@/components/wizard/EtapaPriorizacao";
 import { EtapaExecucao } from "@/components/wizard/EtapaExecucao";
 import { EtapaMetricas } from "@/components/wizard/EtapaMetricas";
 import { useWizardProgress } from "@/hooks/useWizardProgress";
+import { ErrorBoundary } from "@/components/wizard/ErrorBoundary";
 
 const steps = [
   { 
@@ -299,80 +300,82 @@ const Planejamento = () => {
         />
 
         <div className="mt-8">
-          {currentStep === 1 && (
-            <EtapaContexto
-              initialData={companyData}
-              onNext={handleNext}
-              userId={user!.id}
-            />
-          )}
+          <ErrorBoundary onReset={() => setCurrentStep(1)}>
+            {currentStep === 1 && (
+              <EtapaContexto
+                initialData={companyData}
+                onNext={handleNext}
+                userId={user!.id}
+              />
+            )}
 
-          {currentStep === 2 && (
-            <EtapaSWOT
-              companyData={companyData}
-              initialData={swotData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 2 && (
+              <EtapaSWOT
+                companyData={companyData}
+                initialData={swotData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 3 && (
-            <EtapaAnalise
-              companyData={companyData}
-              swotData={swotData}
-              initialData={analysisData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 3 && (
+              <EtapaAnalise
+                companyData={companyData}
+                swotData={swotData}
+                initialData={analysisData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 4 && (
-            <EtapaOGSM
-              companyData={companyData}
-              analysisData={analysisData}
-              initialData={ogsmData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 4 && (
+              <EtapaOGSM
+                companyData={companyData}
+                analysisData={analysisData}
+                initialData={ogsmData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 5 && (
-            <EtapaOKRsBSC
-              companyData={companyData}
-              ogsmData={ogsmData}
-              initialData={okrsBscData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 5 && (
+              <EtapaOKRsBSC
+                companyData={companyData}
+                ogsmData={ogsmData}
+                initialData={okrsBscData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 6 && (
-            <EtapaPriorizacao
-              companyData={companyData}
-              okrsBscData={okrsBscData}
-              initialData={prioritizationData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 6 && (
+              <EtapaPriorizacao
+                companyData={companyData}
+                okrsBscData={okrsBscData}
+                initialData={prioritizationData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 7 && (
-            <EtapaExecucao
-              companyData={companyData}
-              prioritizationData={prioritizationData}
-              initialData={executionData}
-              onNext={handleNext}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 7 && (
+              <EtapaExecucao
+                companyData={companyData}
+                prioritizationData={prioritizationData}
+                initialData={executionData}
+                onNext={handleNext}
+                onBack={handleBack}
+              />
+            )}
 
-          {currentStep === 8 && (
-            <EtapaMetricas
-              companyData={companyData}
-              okrsBscData={okrsBscData}
-              onBack={handleBack}
-            />
-          )}
+            {currentStep === 8 && (
+              <EtapaMetricas
+                companyData={companyData}
+                okrsBscData={okrsBscData}
+                onBack={handleBack}
+              />
+            )}
+          </ErrorBoundary>
         </div>
       </main>
     </div>

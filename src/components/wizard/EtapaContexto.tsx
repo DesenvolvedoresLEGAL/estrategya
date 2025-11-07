@@ -6,10 +6,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowRight, FileUp } from "lucide-react";
+import { ArrowRight, FileUp, AlertCircle } from "lucide-react";
 import { FileUploadZone } from "./FileUploadZone";
+import { companyContextSchema } from "@/lib/validations/wizard";
+import { z } from "zod";
 
 const segmentos = [
   "Eventos",
@@ -33,6 +36,7 @@ interface Props {
 
 export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     segment: initialData?.segment || "",
@@ -48,10 +52,23 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     
-    if (!formData.name || !formData.segment || !formData.model) {
-      toast.error("Preencha os campos obrigatórios");
-      return;
+    // Validação com Zod
+    try {
+      companyContextSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+        toast.error("Por favor, corrija os erros no formulário");
+        return;
+      }
     }
 
     setLoading(true);
@@ -64,8 +81,15 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
         const { error } = await supabase
           .from('companies')
           .update({
-            ...formData,
-            size_team: parseInt(formData.size_team) || null,
+            name: formData.name.trim(),
+            segment: formData.segment,
+            model: formData.model,
+            size_team: formData.size_team ? parseInt(formData.size_team) : null,
+            region: formData.region?.trim() || null,
+            main_challenge: formData.main_challenge?.trim() || null,
+            mission: formData.mission?.trim() || null,
+            vision: formData.vision?.trim() || null,
+            values: formData.values?.trim() || null,
           })
           .eq('id', companyId);
 
@@ -75,8 +99,15 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
         const { data, error } = await supabase
           .from('companies')
           .insert({
-            ...formData,
-            size_team: parseInt(formData.size_team) || null,
+            name: formData.name.trim(),
+            segment: formData.segment,
+            model: formData.model,
+            size_team: formData.size_team ? parseInt(formData.size_team) : null,
+            region: formData.region?.trim() || null,
+            main_challenge: formData.main_challenge?.trim() || null,
+            mission: formData.mission?.trim() || null,
+            vision: formData.vision?.trim() || null,
+            values: formData.values?.trim() || null,
             owner_user_id: userId,
           })
           .select()
@@ -86,11 +117,11 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
         companyId = data.id;
       }
 
-      toast.success("Contexto salvo!");
+      toast.success("Contexto salvo com sucesso!");
       onNext({ ...formData, id: companyId });
     } catch (error: any) {
       console.error('Error saving company:', error);
-      toast.error("Erro ao salvar dados: " + error.message);
+      toast.error(error.message || "Erro ao salvar dados da empresa");
     } finally {
       setLoading(false);
     }
@@ -105,16 +136,32 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {Object.keys(errors).length > 0 && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Por favor, corrija os erros destacados no formulário.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Empresa *</Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, name: e.target.value });
+                if (errors.name) setErrors({ ...errors, name: "" });
+              }}
               placeholder="Ex: LEGAL Telecom"
+              className={errors.name ? "border-destructive" : ""}
               required
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -122,10 +169,13 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
               <Label htmlFor="segment">Segmento *</Label>
               <Select
                 value={formData.segment}
-                onValueChange={(value) => setFormData({ ...formData, segment: value })}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, segment: value });
+                  if (errors.segment) setErrors({ ...errors, segment: "" });
+                }}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className={errors.segment ? "border-destructive" : ""}>
                   <SelectValue placeholder="Selecione o segmento" />
                 </SelectTrigger>
                 <SelectContent>
@@ -136,6 +186,9 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.segment && (
+                <p className="text-sm text-destructive">{errors.segment}</p>
+              )}
             </div>
 
             <div className="space-y-2">
