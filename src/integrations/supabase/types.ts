@@ -201,12 +201,18 @@ export type Database = {
       }
       initiatives: {
         Row: {
+          confidence_score: number | null
           created_at: string
           description: string | null
           due_date: string | null
+          ease_score: number | null
           effort: number | null
+          how: string | null
+          how_much: number | null
+          ice_score: number | null
           id: string
           impact: number | null
+          impact_score: number | null
           objective_id: string
           owner: string | null
           priority_quadrant: string | null
@@ -214,14 +220,25 @@ export type Database = {
           suggested_by_ai: boolean | null
           title: string
           updated_at: string
+          what: string | null
+          when_deadline: string | null
+          where_location: string | null
+          who: string | null
+          why: string | null
         }
         Insert: {
+          confidence_score?: number | null
           created_at?: string
           description?: string | null
           due_date?: string | null
+          ease_score?: number | null
           effort?: number | null
+          how?: string | null
+          how_much?: number | null
+          ice_score?: number | null
           id?: string
           impact?: number | null
+          impact_score?: number | null
           objective_id: string
           owner?: string | null
           priority_quadrant?: string | null
@@ -229,14 +246,25 @@ export type Database = {
           suggested_by_ai?: boolean | null
           title: string
           updated_at?: string
+          what?: string | null
+          when_deadline?: string | null
+          where_location?: string | null
+          who?: string | null
+          why?: string | null
         }
         Update: {
+          confidence_score?: number | null
           created_at?: string
           description?: string | null
           due_date?: string | null
+          ease_score?: number | null
           effort?: number | null
+          how?: string | null
+          how_much?: number | null
+          ice_score?: number | null
           id?: string
           impact?: number | null
+          impact_score?: number | null
           objective_id?: string
           owner?: string | null
           priority_quadrant?: string | null
@@ -244,6 +272,11 @@ export type Database = {
           suggested_by_ai?: boolean | null
           title?: string
           updated_at?: string
+          what?: string | null
+          when_deadline?: string | null
+          where_location?: string | null
+          who?: string | null
+          why?: string | null
         }
         Relationships: [
           {
