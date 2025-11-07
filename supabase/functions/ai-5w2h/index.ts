@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { initiative, objective, company } = await req.json();
+    const { initiative, objective, company, estimate_budget_only } = await req.json();
     
     if (!initiative) {
       throw new Error('Dados da iniciativa não fornecidos');
@@ -28,11 +28,79 @@ Sua missão é transformar iniciativas estratégicas em planos de ação concret
 A metodologia 5W2H responde:
 - What (O que): Descrição clara e específica da ação
 - Why (Por que): Justificativa estratégica e impacto esperado
-- Who (Quem): Responsável pela execução (cargo/área)
-- When (Quando): Prazo realista (considere a complexidade)
+- Who (Quem): Responsável pela execução (cargo/área) - considere o porte e estrutura da empresa
+- When (Quando): Prazo realista baseado na complexidade da iniciativa
 - Where (Onde): Local/contexto de execução
 - How (Como): Passos detalhados de execução
-- How much (Quanto): Estimativa de investimento necessário`;
+- How much (Quanto): Estimativa de investimento realista baseada no segmento da empresa
+
+DIRETRIZES PARA BUDGETS REALISTAS POR SEGMENTO:
+- Telecom: Infraestrutura cara (R$ 20k-200k), considere equipamentos e licenças
+- SaaS: Desenvolvimento (R$ 10k-100k), considere tecnologia e marketing digital
+- Eventos: Variável (R$ 5k-150k), considere logística, espaço e fornecedores
+- Indústria: Alto custo (R$ 30k-300k), considere maquinário e matéria-prima
+- Saúde: Médio-alto (R$ 15k-200k), considere equipamentos e treinamento
+- Varejo: Variável (R$ 5k-100k), considere estoque, marketing e tecnologia
+- Serviços: Médio (R$ 8k-80k), considere pessoal e marketing
+
+COMPLEXIDADE E PRAZOS:
+- Baixa complexidade: 30-60 dias
+- Média complexidade: 60-120 dias
+- Alta complexidade: 120-180 dias
+
+RESPONSÁVEIS BASEADOS NO PORTE:
+- Pequeno porte (<20 funcionários): Indicar áreas (ex: "Equipe de Marketing", "Responsável Comercial")
+- Médio porte (20-100): Indicar gerências (ex: "Gerente de Operações")
+- Grande porte (>100): Indicar diretorias (ex: "Diretor de TI")`;
+
+    // Se for apenas estimativa de budget
+    if (estimate_budget_only) {
+      const budgetPrompt = `Estime o investimento necessário para esta iniciativa:
+
+INICIATIVA: ${initiative.title}
+DESCRIÇÃO: ${initiative.description || 'Não informada'}
+O QUE SERÁ FEITO: ${initiative.what || 'Não informado'}
+COMO SERÁ FEITO: ${initiative.how || 'Não informado'}
+SEGMENTO: ${company?.segment || 'Não informado'}
+PORTE: ${company?.size_team ? `${company.size_team} funcionários` : 'Não informado'}
+
+Considerando o segmento e complexidade, retorne APENAS um JSON:
+{
+  "how_much": 15000
+}
+
+Use as diretrizes de budget por segmento do system prompt.`;
+
+      console.log('Estimando budget apenas');
+
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: budgetPrompt }
+          ],
+          response_format: { type: "json_object" }
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro na API: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const result = JSON.parse(data.choices[0].message.content);
+
+      return new Response(
+        JSON.stringify(result),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     const userPrompt = `Crie um plano 5W2H detalhado para a seguinte iniciativa:
 
@@ -41,24 +109,26 @@ DESCRIÇÃO: ${initiative.description || 'Não informada'}
 OBJETIVO ESTRATÉGICO: ${objective?.title || 'Não informado'}
 EMPRESA: ${company?.name || 'Não informada'}
 SEGMENTO: ${company?.segment || 'Não informado'}
+PORTE: ${company?.size_team ? `${company.size_team} funcionários` : 'Não informado'}
 
 RETORNE UM JSON com esta estrutura EXATA:
 {
   "what": "Descrição clara e específica do que será feito (2-3 frases)",
   "why": "Por que essa iniciativa é importante para o objetivo estratégico (2-3 frases explicando o vínculo)",
-  "who": "Quem deve ser responsável (cargo/área específica, ex: 'Gerente de Marketing' ou 'Equipe de Vendas')",
-  "when": "Prazo sugerido em dias corridos (apenas o número, ex: 30, 60, 90)",
+  "who": "Quem deve ser responsável (cargo/área específica baseado no porte, ex: 'Gerente de Marketing' ou 'Equipe Comercial')",
+  "when": "Prazo sugerido em dias corridos baseado na complexidade (apenas o número, ex: 30, 60, 90, 120, 180)",
   "where": "Onde será executado (ex: 'Online - Redes Sociais', 'Presencial - Loja Física', 'Sistema CRM')",
   "how": "Como executar - passos principais (lista com 3-5 etapas práticas e sequenciais)",
-  "how_much": "Estimativa de investimento em reais (apenas o número, ex: 5000, 15000)"
+  "how_much": "Estimativa REALISTA de investimento em reais baseada no segmento (apenas o número, ex: 5000, 15000, 50000)"
 }
 
 IMPORTANTE:
 - Seja específico e prático
-- When: retorne apenas número de dias (30, 60, 90, etc)
-- How much: retorne apenas número em reais
-- How: liste 3-5 passos claros e executáveis
-- Considere o segmento e porte da empresa
+- When: considere a complexidade (simples=30-60, médio=60-120, complexo=120-180 dias)
+- How much: use as diretrizes de budget por segmento acima - seja realista!
+- Who: adapte ao porte da empresa (pequeno=equipes, médio=gerentes, grande=diretores)
+- How: liste 3-5 passos claros e executáveis em ordem lógica
+- Considere o segmento e contexto da empresa
 - Foque em ações concretas, não abstratas`;
 
     console.log('Gerando 5W2H para iniciativa:', initiative.title);

@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import { ICEScoreForm } from "@/components/planning/ICEScoreForm";
 import { FiveW2HForm } from "@/components/planning/FiveW2HForm";
 import { FiveW2HDisplay } from "@/components/planning/FiveW2HDisplay";
+import { FiveW2HWizard } from "@/components/planning/FiveW2HWizard";
+import { InitiativeTimeline } from "@/components/planning/InitiativeTimeline";
+import { FiveW2HCompleteness } from "@/components/planning/FiveW2HCompleteness";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function InitiativeDetail() {
@@ -183,12 +186,29 @@ export default function InitiativeDetail() {
         </CardHeader>
       </Card>
 
+      {/* 5W2H Completeness & Timeline */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <FiveW2HCompleteness
+          data={{
+            what: initiative.what,
+            why: initiative.why,
+            who: initiative.who,
+            when_deadline: initiative.when_deadline,
+            where_location: initiative.where_location,
+            how: initiative.how,
+            how_much: initiative.how_much,
+          }}
+        />
+        <InitiativeTimeline initiative={initiative} />
+      </div>
+
       {/* Tabs */}
       <Tabs defaultValue="ice" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="ice">ICE Score</TabsTrigger>
-          <TabsTrigger value="5w2h-form">Editar 5W2H</TabsTrigger>
-          <TabsTrigger value="5w2h-view">Visualizar 5W2H</TabsTrigger>
+          <TabsTrigger value="5w2h-wizard">5W2H Wizard</TabsTrigger>
+          <TabsTrigger value="5w2h-form">Editar Avançado</TabsTrigger>
+          <TabsTrigger value="5w2h-view">Visualizar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ice" className="space-y-4">
@@ -238,6 +258,26 @@ export default function InitiativeDetail() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="5w2h-wizard">
+          <FiveW2HWizard
+            initiativeId={id!}
+            initiativeTitle={initiative.title}
+            initiativeDescription={initiative.description}
+            objectiveTitle={objective?.title}
+            companyData={company}
+            initialData={{
+              what: initiative.what,
+              why: initiative.why,
+              who: initiative.who,
+              when_deadline: initiative.when_deadline,
+              where_location: initiative.where_location,
+              how: initiative.how,
+              how_much: initiative.how_much,
+            }}
+            onSave={loadInitiativeData}
+          />
         </TabsContent>
 
         <TabsContent value="5w2h-form">
