@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Calendar, Sparkles } from "lucide-react";
 import { WBRPlan } from "@/components/planning/WBRPlan";
+import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
   companyData: any;
@@ -91,6 +92,8 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <FrameworkInfo framework="4DX" />
+          
           {!executionData ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">

@@ -16,14 +16,54 @@ import { EtapaExecucao } from "@/components/wizard/EtapaExecucao";
 import { EtapaMetricas } from "@/components/wizard/EtapaMetricas";
 
 const steps = [
-  { id: 1, title: "Contexto", description: "Empresa + MVV" },
-  { id: 2, title: "SWOT", description: "Diagnóstico" },
-  { id: 3, title: "Análise IA", description: "Leitura Estratégica" },
-  { id: 4, title: "OGSM", description: "Direcionamento" },
-  { id: 5, title: "OKRs + BSC", description: "Objetivos" },
-  { id: 6, title: "Priorização", description: "Matriz 2x2" },
-  { id: 7, title: "Execução", description: "Plano 4DX" },
-  { id: 8, title: "Métricas", description: "KPIs" },
+  { 
+    id: 1, 
+    title: "Contexto", 
+    description: "Empresa + MVV",
+    tooltip: "Defina o contexto da empresa, incluindo Missão, Visão e Valores. Opcionalmente, faça upload de dados históricos."
+  },
+  { 
+    id: 2, 
+    title: "SWOT", 
+    description: "Diagnóstico",
+    tooltip: "Análise SWOT: identifique Forças, Fraquezas, Oportunidades e Ameaças do seu negócio."
+  },
+  { 
+    id: 3, 
+    title: "Análise IA", 
+    description: "Leitura Estratégica",
+    tooltip: "A IA analisa seu contexto e SWOT, gerando uma leitura executiva e linhas estratégicas usando frameworks globais."
+  },
+  { 
+    id: 4, 
+    title: "OGSM", 
+    description: "Direcionamento",
+    tooltip: "Framework OGSM: Objective (objetivo), Goals (metas), Strategies (estratégias) e Measures (medidas)."
+  },
+  { 
+    id: 5, 
+    title: "OKRs + BSC", 
+    description: "Objetivos",
+    tooltip: "Transforme seus Goals em OKRs (Objectives and Key Results) e valide com as 4 perspectivas do Balanced Scorecard."
+  },
+  { 
+    id: 6, 
+    title: "Priorização", 
+    description: "Matriz 2x2",
+    tooltip: "Matriz Impacto x Esforço: priorize iniciativas em 4 quadrantes (Fazer Agora, Planejar, Quick Wins, Evitar)."
+  },
+  { 
+    id: 7, 
+    title: "Execução", 
+    description: "Plano 4DX",
+    tooltip: "As 4 Disciplinas da Execução: foco no crucialmente importante, medidas de direção, placar visível e cadência de responsabilização."
+  },
+  { 
+    id: 8, 
+    title: "Métricas", 
+    description: "KPIs",
+    tooltip: "Defina métricas específicas (KPIs) para cada OKR, permitindo acompanhamento preciso do progresso."
+  },
 ];
 
 const Planejamento = () => {

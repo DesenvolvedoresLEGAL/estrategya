@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Target, Sparkles, CheckCircle2 } from "lucide-react";
 import { OKRCard } from "@/components/planning/OKRCard";
 import { BSCBalance } from "@/components/planning/BSCBalance";
+import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
   companyData: any;
@@ -131,6 +132,11 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <FrameworkInfo framework="OKR" />
+            <FrameworkInfo framework="BSC" />
+          </div>
+          
           {step === 'idle' && (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">

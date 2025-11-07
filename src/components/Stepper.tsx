@@ -1,10 +1,18 @@
-import { Check } from "lucide-react";
+import { Check, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Step {
   id: number;
   title: string;
   description: string;
+  tooltip?: string;
 }
 
 interface StepperProps {
@@ -14,8 +22,24 @@ interface StepperProps {
 }
 
 export const Stepper = ({ steps, currentStep, onStepClick }: StepperProps) => {
+  const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
+
   return (
     <div className="w-full py-8">
+      {/* Barra de Progresso */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Etapa {currentStep} de {steps.length}
+          </span>
+          <span className="text-sm font-medium text-primary">
+            {Math.round(progressPercentage)}% completo
+          </span>
+        </div>
+        <Progress value={progressPercentage} className="h-2" />
+      </div>
+
+      {/* Stepper Original */}
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
           const isCompleted = currentStep > step.id;
@@ -61,14 +85,30 @@ export const Stepper = ({ steps, currentStep, onStepClick }: StepperProps) => {
                 )}
               </div>
               <div className="mt-4 text-center max-w-[120px]">
-                <p
-                  className={cn(
-                    "text-sm font-medium transition-colors",
-                    isCurrent ? "text-primary" : "text-muted-foreground"
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <p
+                    className={cn(
+                      "text-sm font-medium transition-colors",
+                      isCurrent ? "text-primary" : "text-muted-foreground"
+                    )}
+                  >
+                    {step.title}
+                  </p>
+                  {step.tooltip && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button className="focus:outline-none">
+                            <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">{step.tooltip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
-                >
-                  {step.title}
-                </p>
+                </div>
                 <p className="text-xs text-muted-foreground mt-1 hidden sm:block">
                   {step.description}
                 </p>

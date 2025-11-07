@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Target, Sparkles } from "lucide-react";
 import { OGSMCard } from "@/components/planning/OGSMCard";
+import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
   companyData: any;
@@ -135,6 +136,8 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <FrameworkInfo framework="OGSM" />
+          
           {!ogsmData ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">

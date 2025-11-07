@@ -5,9 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileUp } from "lucide-react";
+import { FileUploadZone } from "./FileUploadZone";
 
 const segmentos = [
   "Eventos",
@@ -42,6 +44,7 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
     vision: initialData?.vision || "",
     values: initialData?.values || "",
   });
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,6 +245,34 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
                 {formData.values.length}/500 caracteres
               </p>
             </div>
+          </div>
+
+          <div className="border-t pt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <FileUp className="w-5 h-5 text-primary" />
+              <div>
+                <h3 className="text-lg font-semibold">Dados Históricos</h3>
+                <Badge variant="outline" className="ml-2">Opcional</Badge>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Faça upload de planilhas ou relatórios financeiros para enriquecer a análise estratégica
+            </p>
+            
+            {formData.name && (
+              <FileUploadZone 
+                companyId={initialData?.id || 'temp'}
+                onUploadComplete={(url) => setUploadedFileUrl(url)}
+              />
+            )}
+            
+            {!formData.name && (
+              <Card className="p-4 bg-muted/50">
+                <p className="text-sm text-muted-foreground text-center">
+                  Preencha o nome da empresa para habilitar o upload
+                </p>
+              </Card>
+            )}
           </div>
 
           <div className="flex justify-end">

@@ -149,6 +149,56 @@ export type Database = {
         }
         Relationships: []
       }
+      financial_data: {
+        Row: {
+          company_id: string
+          created_at: string
+          customers_count: number | null
+          expenses: number | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          period: string
+          profit: number | null
+          revenue: number | null
+          sales_volume: number | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customers_count?: number | null
+          expenses?: number | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          period: string
+          profit?: number | null
+          revenue?: number | null
+          sales_volume?: number | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customers_count?: number | null
+          expenses?: number | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          period?: string
+          profit?: number | null
+          revenue?: number | null
+          sales_volume?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_data_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       initiatives: {
         Row: {
           created_at: string

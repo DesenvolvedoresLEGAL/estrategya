@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Grid3x3, Sparkles } from "lucide-react";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
+import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
   companyData: any;
@@ -95,6 +96,8 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <FrameworkInfo framework="MATRIZ" />
+          
           {!prioritizationData ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
