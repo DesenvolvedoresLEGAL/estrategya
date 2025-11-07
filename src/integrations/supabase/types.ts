@@ -1134,6 +1134,30 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_checkins: {
         Row: {
           attendees: string[] | null
@@ -1246,6 +1270,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_platform_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["platform_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _company_id: string
@@ -1254,6 +1285,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_platform_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "owner" | "admin" | "editor" | "viewer"
@@ -1267,6 +1299,7 @@ export type Database = {
         | "concluido"
         | "pausado"
       plan_tier: "free" | "pro" | "business" | "enterprise"
+      platform_role: "platform_admin" | "platform_moderator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1406,6 +1439,7 @@ export const Constants = {
         "pausado",
       ],
       plan_tier: ["free", "pro", "business", "enterprise"],
+      platform_role: ["platform_admin", "platform_moderator"],
     },
   },
 } as const

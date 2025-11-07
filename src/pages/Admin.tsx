@@ -56,18 +56,24 @@ export default function Admin() {
         return;
       }
 
-      // Check if user has admin role
-      const { data: userRole } = await supabase
-        .from('team_members')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'owner')
-        .single();
+      // Check if user has platform_admin role using security definer function
+      const { data, error } = await supabase.rpc('is_platform_admin');
 
-      if (!userRole) {
+      if (error) {
+        console.error('Error checking platform admin:', error);
+        toast({
+          title: "Erro ao verificar permissões",
+          description: "Tente novamente mais tarde",
+          variant: "destructive"
+        });
+        navigate('/dashboard');
+        return;
+      }
+
+      if (!data) {
         toast({
           title: "Acesso Negado",
-          description: "Você não tem permissão para acessar esta página",
+          description: "Apenas administradores da plataforma podem acessar esta área",
           variant: "destructive"
         });
         navigate('/dashboard');
