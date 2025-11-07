@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ObjectiveDetailCard } from "@/components/objectives/ObjectiveDetailCard";
+import { InitiativesFilter, FilterState } from "@/components/objectives/InitiativesFilter";
 import { Target, ArrowLeft, RefreshCw, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,6 +13,7 @@ export default function Objetivos() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [objectives, setObjectives] = useState<any[]>([]);
+  const [filteredObjectives, setFilteredObjectives] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('todos');
 
   useEffect(() => {
@@ -82,6 +84,7 @@ export default function Objetivos() {
       })) || [];
 
       setObjectives(formattedData);
+      setFilteredObjectives(formattedData);
 
     } catch (error: any) {
       console.error('Error loading objectives:', error);
@@ -96,13 +99,91 @@ export default function Objetivos() {
   };
 
   const filterObjectives = (status?: string) => {
-    if (!status || status === 'todos') return objectives;
+    if (!status || status === 'todos') {
+      setFilteredObjectives(objectives);
+      return;
+    }
 
-    return objectives.filter(obj => {
+    const filtered = objectives.filter(obj => {
       const latestUpdate = obj.objective_updates?.[0];
       return latestUpdate?.status === status;
     });
+    
+    setFilteredObjectives(filtered);
   };
+
+  const handleFilterChange = (filters: FilterState) => {
+    let filtered = [...objectives];
+
+    // Apply status filter from activeTab
+    if (activeTab !== 'todos') {
+      filtered = filtered.filter(obj => {
+        const latestUpdate = obj.objective_updates?.[0];
+        return latestUpdate?.status === activeTab;
+      });
+    }
+
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(obj => 
+        obj.title?.toLowerCase().includes(searchLower) ||
+        obj.description?.toLowerCase().includes(searchLower) ||
+        obj.initiatives?.some((ini: any) => 
+          ini.title?.toLowerCase().includes(searchLower)
+        )
+      );
+    }
+
+    // Apply ICE Score range filter (filter initiatives)
+    filtered = filtered.map(obj => ({
+      ...obj,
+      initiatives: obj.initiatives?.filter((ini: any) => 
+        !ini.ice_score || (
+          ini.ice_score >= filters.iceMin &&
+          ini.ice_score <= filters.iceMax
+        )
+      )
+    }));
+
+    // Apply Who filter
+    if (filters.who) {
+      const whoLower = filters.who.toLowerCase();
+      filtered = filtered.map(obj => ({
+        ...obj,
+        initiatives: obj.initiatives?.filter((ini: any) => 
+          ini.who?.toLowerCase().includes(whoLower)
+        )
+      }));
+    }
+
+    // Apply 5W2H status filter
+    if (filters.has5W2H !== 'all') {
+      filtered = filtered.map(obj => ({
+        ...obj,
+        initiatives: obj.initiatives?.filter((ini: any) => {
+          const has5W2H = ini.what && ini.why && ini.who;
+          return filters.has5W2H === 'complete' ? has5W2H : !has5W2H;
+        })
+      }));
+    }
+
+    // Apply quadrant filter
+    if (filters.quadrant !== 'all') {
+      filtered = filtered.map(obj => ({
+        ...obj,
+        initiatives: obj.initiatives?.filter((ini: any) => 
+          ini.priority_quadrant === filters.quadrant
+        )
+      }));
+    }
+
+    setFilteredObjectives(filtered);
+  };
+
+  useEffect(() => {
+    filterObjectives(activeTab);
+  }, [activeTab, objectives]);
 
   const getStatusCount = (status: string) => {
     if (status === 'todos') return objectives.length;
@@ -124,8 +205,6 @@ export default function Objetivos() {
     );
   }
 
-  const filteredObjectives = filterObjectives(activeTab);
-
   return (
     <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
@@ -140,6 +219,9 @@ export default function Objetivos() {
             Atualizar
           </Button>
         </div>
+
+        {/* Filtros Avançados */}
+        <InitiativesFilter onFilterChange={handleFilterChange} />
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">

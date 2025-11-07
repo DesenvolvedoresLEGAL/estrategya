@@ -8,6 +8,8 @@ import { ObjectiveCard } from "@/components/dashboard/ObjectiveCard";
 import { InsightCard } from "@/components/dashboard/InsightCard";
 import { ProgressChart } from "@/components/dashboard/ProgressChart";
 import { QuickWinList } from "@/components/dashboard/QuickWinList";
+import { TopInitiativesICE } from "@/components/dashboard/TopInitiativesICE";
+import { ICEScoreChart } from "@/components/planning/ICEScoreChart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle } from "lucide-react";
@@ -24,6 +26,7 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
   const [quickWins, setQuickWins] = useState<any[]>([]);
+  const [initiatives, setInitiatives] = useState<any[]>([]);
 
   // Enable insight notifications
   useInsightNotifications(companyId);
@@ -114,6 +117,17 @@ export default function Dashboard() {
       .limit(5);
 
     setInsights(insightsData || []);
+
+    // Load initiatives with ICE scores
+    const { data: initiativesData } = await supabase
+      .from('initiatives')
+      .select(`
+        *,
+        strategic_objectives!inner(company_id)
+      `)
+      .eq('strategic_objectives.company_id', companies.id);
+
+    setInitiatives(initiativesData || []);
   };
 
   const generateInsights = async () => {
@@ -364,6 +378,12 @@ export default function Dashboard() {
               />
             ))}
           </div>
+        </div>
+
+        {/* Top 3 Iniciativas ICE & Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <TopInitiativesICE initiatives={initiatives} />
+          <ICEScoreChart initiatives={initiatives} />
         </div>
 
         {/* Insights and Quick Wins */}

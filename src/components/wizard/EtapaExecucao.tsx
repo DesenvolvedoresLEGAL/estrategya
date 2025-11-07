@@ -79,7 +79,7 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
       if (saveError) throw saveError;
 
       setExecutionData(data);
-      toast.success("Plano de execução gerado!");
+      toast.success("Plano de execução 4DX gerado baseado nas top 3 iniciativas ICE!");
     } catch (error: any) {
       console.error('Error generating execution plan:', error);
       toast.error("Erro ao gerar plano: " + error.message);

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Grid3x3, Sparkles } from "lucide-react";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
 import { ICERankingList } from "@/components/planning/ICERankingList";
@@ -20,6 +20,7 @@ interface Props {
 export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext, onBack }: Props) => {
   const [loading, setLoading] = useState(false);
   const [prioritizationData, setPrioritizationData] = useState(initialData);
+  const { toast } = useToast();
 
   const handlePrioritize = async () => {
     setLoading(true);
@@ -34,7 +35,11 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
       if (initiativesError) throw initiativesError;
 
       if (!initiatives || initiatives.length === 0) {
-        toast.error("Nenhuma iniciativa encontrada para priorizar");
+        toast({
+          title: "Erro",
+          description: "Nenhuma iniciativa encontrada para priorizar",
+          variant: "destructive"
+        });
         return;
       }
 
@@ -83,10 +88,17 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
         .order('ice_score', { ascending: false, nullsFirst: false });
 
       setPrioritizationData({ ...data, initiatives: updatedInitiatives });
-      toast.success("Iniciativas priorizadas com ICE Score sugerido pela IA!");
+      toast({
+        title: "Sucesso!",
+        description: "Iniciativas priorizadas com ICE Score sugerido pela IA!",
+      });
     } catch (error: any) {
       console.error('Error prioritizing initiatives:', error);
-      toast.error("Erro ao priorizar: " + error.message);
+      toast({
+        title: "Erro ao priorizar",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -94,9 +106,39 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
 
   const handleNext = () => {
     if (!prioritizationData) {
-      toast.error("Priorize as iniciativas antes de continuar");
+      toast({
+        title: "Atenção",
+        description: "Priorize as iniciativas antes de continuar",
+        variant: "destructive"
+      });
       return;
     }
+
+    // Verificar se as top 3 têm ICE Score
+    const top3 = prioritizationData.initiatives
+      ?.filter((i: any) => i.ice_score !== null)
+      .sort((a: any, b: any) => (b.ice_score || 0) - (a.ice_score || 0))
+      .slice(0, 3) || [];
+
+    if (top3.length === 0) {
+      toast({
+        title: "Atenção",
+        description: "Nenhuma iniciativa com ICE Score. Ajuste os scores primeiro.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Verificar se as top 3 têm 5W2H completo
+    const missing5W2H = top3.filter((i: any) => !i.what || !i.why || !i.who);
+    
+    if (missing5W2H.length > 0) {
+      toast({
+        title: "⚠️ 5W2H Incompleto",
+        description: `${missing5W2H.length} das top 3 iniciativas não têm 5W2H completo. Recomendamos preencher antes de continuar para um plano mais detalhado.`,
+      });
+    }
+
     onNext(prioritizationData);
   };
 
