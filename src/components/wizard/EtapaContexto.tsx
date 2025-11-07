@@ -15,6 +15,7 @@ import { SegmentQuestionsSection } from "./SegmentQuestionsSection";
 import { Sparkles } from "lucide-react";
 import { companyContextSchema } from "@/lib/validations/wizard";
 import { z } from "zod";
+import { ContextualHelp } from "./ContextualHelp";
 
 const segmentos = [
   "Eventos",
@@ -182,7 +183,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Nome da Empresa *</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="name">Nome da Empresa *</Label>
+              <ContextualHelp
+                label="Nome da Empresa"
+                description="Digite o nome oficial registrado da sua empresa"
+                examples={[
+                  "LEGAL Telecom",
+                  "TechCorp Brasil Ltda",
+                  "Eventos Premium SP"
+                ]}
+              />
+            </div>
             <Input
               id="name"
               value={formData.name}
@@ -201,7 +213,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="segment">Segmento *</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="segment">Segmento *</Label>
+                <ContextualHelp
+                  label="Segmento"
+                  description="Escolha o setor principal de atuação"
+                  examples={[
+                    "Telecom: provedores de internet, telefonia",
+                    "SaaS: software como serviço",
+                    "Eventos: organização e produção"
+                  ]}
+                />
+              </div>
               <Select
                 value={formData.segment}
                 onValueChange={handleSegmentChange}
@@ -224,7 +247,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="model">Modelo de Negócio *</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="model">Modelo de Negócio *</Label>
+                <ContextualHelp
+                  label="Modelo de Negócio"
+                  description="Como sua empresa gera receita"
+                  examples={[
+                    "B2B: vende para outras empresas",
+                    "B2C: vende para consumidor final",
+                    "Híbrido: atende ambos os públicos"
+                  ]}
+                />
+              </div>
               <Select
                 value={formData.model}
                 onValueChange={(value) => setFormData({ ...formData, model: value })}
@@ -246,7 +280,14 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="size_team">Tamanho do Time</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="size_team">Tamanho do Time</Label>
+                <ContextualHelp
+                  label="Tamanho do Time"
+                  description="Número total de colaboradores"
+                  examples={["5 pessoas", "15 pessoas", "50+ pessoas"]}
+                />
+              </div>
               <Input
                 id="size_team"
                 type="number"
@@ -257,7 +298,19 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="region">Região de Atuação</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="region">Região de Atuação</Label>
+                <ContextualHelp
+                  label="Região de Atuação"
+                  description="Onde sua empresa atua geograficamente"
+                  examples={[
+                    "Sul do Brasil",
+                    "Grande São Paulo",
+                    "Nacional",
+                    "América Latina"
+                  ]}
+                />
+              </div>
               <Input
                 id="region"
                 value={formData.region}
@@ -268,7 +321,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="main_challenge">Principal Desafio Atual</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="main_challenge">Principal Desafio Atual</Label>
+              <ContextualHelp
+                label="Principal Desafio"
+                description="O maior obstáculo que sua empresa enfrenta agora"
+                examples={[
+                  "Escalabilidade operacional limitada",
+                  "Competição acirrada no mercado",
+                  "Retenção de clientes baixa"
+                ]}
+              />
+            </div>
             <Textarea
               id="main_challenge"
               value={formData.main_challenge}
@@ -287,7 +351,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="mission">Missão</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="mission">Missão</Label>
+                <ContextualHelp
+                  label="Missão"
+                  description="O propósito fundamental da empresa - por que existe"
+                  examples={[
+                    "Conectar pessoas através de tecnologia acessível",
+                    "Transformar eventos em experiências memoráveis",
+                    "Simplificar a gestão de negócios com software inteligente"
+                  ]}
+                />
+              </div>
               <Textarea
                 id="mission"
                 value={formData.mission}
@@ -302,7 +377,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="vision">Visão</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="vision">Visão</Label>
+                <ContextualHelp
+                  label="Visão"
+                  description="Onde a empresa quer chegar - estado futuro desejado"
+                  examples={[
+                    "Ser líder regional em soluções de telecom até 2027",
+                    "Referência nacional em eventos corporativos em 3 anos",
+                    "Top 5 SaaS de gestão na América Latina até 2026"
+                  ]}
+                />
+              </div>
               <Textarea
                 id="vision"
                 value={formData.vision}
@@ -317,7 +403,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="values">Valores</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="values">Valores</Label>
+                <ContextualHelp
+                  label="Valores"
+                  description="Princípios que guiam decisões e comportamentos"
+                  examples={[
+                    "Transparência, Inovação, Foco no Cliente",
+                    "Excelência, Colaboração, Sustentabilidade",
+                    "Integridade, Agilidade, Resultados"
+                  ]}
+                />
+              </div>
               <Textarea
                 id="values"
                 value={formData.values}

@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, Target, TrendingDown, Zap, ShieldAlert, AlertCir
 import { swotSchema } from "@/lib/validations/wizard";
 import { z } from "zod";
 import { SegmentExamplesModal } from "./SegmentExamplesModal";
+import { ContextualHelp } from "./ContextualHelp";
 
 interface Props {
   companyData: any;
@@ -168,6 +169,16 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-primary" />
               <Label htmlFor="strengths">Forças (Strengths) *</Label>
+              <ContextualHelp
+                label="Forças"
+                description="Pontos fortes internos que geram vantagem competitiva"
+                examples={[
+                  "Equipe técnica altamente qualificada",
+                  "Tecnologia proprietária diferenciada",
+                  "Base de clientes fiel e satisfeita",
+                  "Processos otimizados e eficientes"
+                ]}
+              />
             </div>
             <Textarea
               id="strengths"
@@ -193,6 +204,16 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
             <div className="flex items-center gap-2">
               <TrendingDown className="w-5 h-5 text-orange-500" />
               <Label htmlFor="weaknesses">Fraquezas (Weaknesses) *</Label>
+              <ContextualHelp
+                label="Fraquezas"
+                description="Limitações internas que precisam ser melhoradas"
+                examples={[
+                  "Processos manuais e pouco automatizados",
+                  "Dependência de poucos clientes ou fornecedores",
+                  "Falta de investimento em marketing",
+                  "Equipe pequena com sobrecarga"
+                ]}
+              />
             </div>
             <Textarea
               id="weaknesses"
@@ -218,6 +239,16 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
             <div className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-green-500" />
               <Label htmlFor="opportunities">Oportunidades (Opportunities) *</Label>
+              <ContextualHelp
+                label="Oportunidades"
+                description="Fatores externos favoráveis que podem ser aproveitados"
+                examples={[
+                  "Expansão para novas regiões geográficas",
+                  "Demanda crescente por serviços digitais",
+                  "Parcerias estratégicas com players maiores",
+                  "Mudanças regulatórias favoráveis"
+                ]}
+              />
             </div>
             <Textarea
               id="opportunities"
@@ -243,6 +274,16 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-red-500" />
               <Label htmlFor="threats">Ameaças (Threats) *</Label>
+              <ContextualHelp
+                label="Ameaças"
+                description="Fatores externos que podem prejudicar o negócio"
+                examples={[
+                  "Entrada de novos concorrentes com preços menores",
+                  "Mudanças tecnológicas que tornem produtos obsoletos",
+                  "Crises econômicas que reduzem demanda",
+                  "Novas regulamentações restritivas"
+                ]}
+              />
             </div>
             <Textarea
               id="threats"

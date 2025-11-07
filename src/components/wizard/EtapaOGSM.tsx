@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Target, Sparkles, Save } from "lucide-react";
 import { OGSMCard } from "@/components/planning/OGSMCard";
 import { FrameworkInfo } from "./FrameworkInfo";
+import { ContextualHelp } from "./ContextualHelp";
 
 interface Props {
   companyData: any;
@@ -131,6 +132,16 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
           <CardTitle className="flex items-center gap-2">
             <Target className="w-6 h-6 text-primary" />
             OGSM - Objective, Goals, Strategies, Measures
+            <ContextualHelp
+              label="OGSM"
+              description="Framework para estruturar objetivos em metas, estratégias e medidas"
+              examples={[
+                "Objective: Objetivo principal da empresa",
+                "Goals: Metas mensuráveis",
+                "Strategies: Estratégias para atingir as metas",
+                "Measures: Indicadores para acompanhar progresso"
+              ]}
+            />
           </CardTitle>
           <CardDescription>
             Vamos transformar sua análise em um plano estratégico estruturado usando o framework OGSM

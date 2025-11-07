@@ -51,13 +51,18 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
               </span>
             )}
           </div>
-          <span 
-            className="text-sm font-medium text-primary"
-            role="status"
-            aria-label={`${Math.round(progressPercentage)} por cento completo`}
-          >
-            {Math.round(progressPercentage)}% completo
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span 
+              className="text-sm font-medium text-primary"
+              role="status"
+              aria-label={`${Math.round(progressPercentage)} por cento completo`}
+            >
+              {Math.round(progressPercentage)}% completo
+            </span>
+            <span className="text-xs text-muted-foreground">
+              ~{(steps.length - currentStep) * 5} min restantes
+            </span>
+          </div>
         </div>
         <Progress 
           value={progressPercentage} 
