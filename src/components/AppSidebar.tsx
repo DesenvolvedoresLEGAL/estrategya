@@ -7,7 +7,7 @@ import {
   FileText, 
   Settings,
   LogOut,
-  ChevronRight
+  Users
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +32,7 @@ const mainItems = [
   { title: "Objetivos", url: "/objetivos", icon: Target },
   { title: "Métricas", url: "/metricas", icon: TrendingUp },
   { title: "Insights IA", url: "/insights", icon: Lightbulb },
+  { title: "Equipe", url: "/equipe", icon: Users },
 ];
 
 const planningItems = [

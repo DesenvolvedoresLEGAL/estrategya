@@ -14,6 +14,7 @@ import Metricas from "./pages/Metricas";
 import Insights from "./pages/Insights";
 import PlanoEstrategico from "@/pages/PlanoEstrategico";
 import InitiativeDetail from "@/pages/InitiativeDetail";
+import Equipe from "@/pages/Equipe";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const AppLayout = () => {
               <Route path="/insights" element={<Insights />} />
           <Route path="/plano-estrategico" element={<PlanoEstrategico />} />
           <Route path="/iniciativa/:id" element={<InitiativeDetail />} />
+          <Route path="/equipe" element={<Equipe />} />
           <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

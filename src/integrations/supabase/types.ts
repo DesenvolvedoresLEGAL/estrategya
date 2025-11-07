@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action_type: string
+          company_id: string
+          created_at: string | null
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          company_id: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          company_id?: string
+          created_at?: string | null
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_insights: {
         Row: {
           company_id: string
@@ -64,6 +105,47 @@ export type Database = {
             columns: ["related_objective_id"]
             isOneToOne: false
             referencedRelation: "strategic_objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          parent_comment_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          parent_comment_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          parent_comment_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
         ]
@@ -248,6 +330,8 @@ export type Database = {
       }
       initiatives: {
         Row: {
+          assigned_at: string | null
+          assigned_to: string | null
           confidence_score: number | null
           created_at: string
           description: string | null
@@ -274,6 +358,8 @@ export type Database = {
           why: string | null
         }
         Insert: {
+          assigned_at?: string | null
+          assigned_to?: string | null
           confidence_score?: number | null
           created_at?: string
           description?: string | null
@@ -300,6 +386,8 @@ export type Database = {
           why?: string | null
         }
         Update: {
+          assigned_at?: string | null
+          assigned_to?: string | null
           confidence_score?: number | null
           created_at?: string
           description?: string | null
@@ -698,6 +786,7 @@ export type Database = {
           description: string | null
           horizon: string | null
           id: string
+          owner_id: string | null
           perspective: string | null
           priority: number | null
           title: string
@@ -709,6 +798,7 @@ export type Database = {
           description?: string | null
           horizon?: string | null
           id?: string
+          owner_id?: string | null
           perspective?: string | null
           priority?: number | null
           title: string
@@ -720,6 +810,7 @@ export type Database = {
           description?: string | null
           horizon?: string | null
           id?: string
+          owner_id?: string | null
           perspective?: string | null
           priority?: number | null
           title?: string
@@ -728,6 +819,97 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "strategic_objectives_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invites: {
+        Row: {
+          accepted: boolean | null
+          accepted_at: string | null
+          company_id: string
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invite_token: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          accepted?: boolean | null
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invite_token?: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          accepted?: boolean | null
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invite_token?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          accepted_at: string | null
+          company_id: string
+          created_at: string | null
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          company_id: string
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
@@ -847,9 +1029,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _company_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "owner" | "admin" | "editor" | "viewer"
       insight_priority: "baixa" | "media" | "alta" | "critica"
       insight_status: "novo" | "visualizado" | "resolvido" | "ignorado"
       insight_type: "progresso" | "risco" | "oportunidade" | "recomendacao"
@@ -986,6 +1176,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["owner", "admin", "editor", "viewer"],
       insight_priority: ["baixa", "media", "alta", "critica"],
       insight_status: ["novo", "visualizado", "resolvido", "ignorado"],
       insight_type: ["progresso", "risco", "oportunidade", "recomendacao"],
