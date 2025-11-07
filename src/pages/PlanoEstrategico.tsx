@@ -12,6 +12,8 @@ import { WBRPlan } from "@/components/planning/WBRPlan";
 import { PESTELDisplay } from "@/components/planning/PESTELDisplay";
 import { ArrowLeft, RefreshCw, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 export default function PlanoEstrategico() {
   const navigate = useNavigate();
@@ -19,6 +21,9 @@ export default function PlanoEstrategico() {
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { canExportPDF, tier } = useSubscriptionLimits(companyId || undefined);
   
   // Data states
   const [ogsmData, setOgsmData] = useState<any>(null);
@@ -229,6 +234,14 @@ export default function PlanoEstrategico() {
 
   const handleExportPDF = async () => {
     try {
+      // Check if user can export PDF
+      const canExport = canExportPDF();
+      
+      if (!canExport) {
+        setShowUpgradePrompt(true);
+        return;
+      }
+
       toast({
         title: "Gerando PDF...",
         description: "Aguarde enquanto preparamos seu relatório",
@@ -243,18 +256,22 @@ export default function PlanoEstrategico() {
           month: 'long',
           day: 'numeric'
         }),
-        orientation: 'portrait'
+        orientation: 'portrait',
+        watermark: tier === 'free', // Add watermark for FREE users
+        canExport: true // We already checked above
       });
 
       toast({
         title: "✓ PDF gerado com sucesso!",
-        description: "O arquivo foi baixado para seu computador",
+        description: tier === 'free' 
+          ? "Faça upgrade para remover a marca d'água" 
+          : "O arquivo foi baixado para seu computador",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating PDF:', error);
       toast({
         title: "Erro ao gerar PDF",
-        description: "Tente novamente mais tarde",
+        description: error.message || "Tente novamente mais tarde",
         variant: "destructive"
       });
     }
@@ -510,6 +527,13 @@ export default function PlanoEstrategico() {
           </Tabs>
         )}
       </div>
+
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        limitType="export_pdf"
+        feature="Exportação de PDF"
+      />
     </div>
   );
 }

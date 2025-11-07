@@ -16,6 +16,8 @@ import { Sparkles } from "lucide-react";
 import { companyContextSchema } from "@/lib/validations/wizard";
 import { z } from "zod";
 import { ContextualHelp } from "./ContextualHelp";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 const segmentos = [
   "Eventos",
@@ -58,6 +60,9 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
     initialData?.segment_specific_data || {}
   );
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { canCreateCompany } = useSubscriptionLimits(undefined);
 
   const handleSegmentChange = async (segment: string) => {
     setFormData({ ...formData, segment });
@@ -139,7 +144,14 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
 
         if (error) throw error;
       } else {
-        // Criar nova empresa
+        // Criar nova empresa - verificar limites de subscription
+        const canCreate = await canCreateCompany();
+        
+        if (!canCreate) {
+          setShowUpgradePrompt(true);
+          return;
+        }
+        
         const { data, error } = await supabase
           .from('companies')
           .insert({
@@ -466,6 +478,12 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
               </Card>
             )}
           </div>
+
+          <UpgradePrompt
+            open={showUpgradePrompt}
+            onOpenChange={setShowUpgradePrompt}
+            limitType="companies"
+          />
 
           <div className="flex justify-between">
             <div>

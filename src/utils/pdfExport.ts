@@ -7,8 +7,10 @@ export interface PDFExportOptions {
   subtitle?: string;
   orientation?: 'portrait' | 'landscape';
   watermark?: boolean;
+  watermarkText?: string;
   companyName?: string;
   companyLogo?: string;
+  canExport?: boolean;
 }
 
 export interface ExcelExportData {
@@ -28,8 +30,16 @@ export const exportToPDF = async (
     filename = 'plano-estrategico.pdf',
     title = 'Plano Estratégico',
     subtitle = new Date().toLocaleDateString('pt-BR'),
-    orientation = 'portrait'
+    orientation = 'portrait',
+    watermark = false,
+    watermarkText = 'Criado com LEGAL Strategic Planner - Faça upgrade para remover',
+    canExport = true
   } = options;
+
+  // Block export if user doesn't have permission
+  if (!canExport) {
+    throw new Error('Exportação de PDF não disponível no seu plano. Faça upgrade para desbloquear!');
+  }
 
   try {
     const element = document.getElementById(elementId);
@@ -107,6 +117,18 @@ export const exportToPDF = async (
         pageHeight - 10,
         { align: 'right' }
       );
+      
+      // Add watermark if enabled (for FREE users)
+      if (watermark) {
+        pdf.setFontSize(10);
+        pdf.setTextColor(200, 200, 200);
+        pdf.text(
+          watermarkText,
+          pageWidth / 2,
+          pageHeight / 2,
+          { align: 'center', angle: 45 }
+        );
+      }
     }
 
     // Save the PDF
@@ -126,8 +148,16 @@ export const exportMultipleSectionsToPDF = async (
   const {
     filename = 'plano-estrategico-completo.pdf',
     title = 'Plano Estratégico Completo',
-    orientation = 'portrait'
+    orientation = 'portrait',
+    watermark = false,
+    watermarkText = 'Criado com LEGAL Strategic Planner - Faça upgrade para remover',
+    canExport = true
   } = options;
+
+  // Block export if user doesn't have permission
+  if (!canExport) {
+    throw new Error('Exportação de PDF não disponível no seu plano. Faça upgrade para desbloquear!');
+  }
 
   try {
     const pdf = new jsPDF({
@@ -204,7 +234,7 @@ export const exportMultipleSectionsToPDF = async (
       }
     }
 
-    // Add page numbers
+    // Add page numbers and watermark
     const totalPages = pdf.internal.pages.length - 1;
     for (let i = 1; i <= totalPages; i++) {
       pdf.setPage(i);
@@ -216,6 +246,18 @@ export const exportMultipleSectionsToPDF = async (
         pageHeight - 10,
         { align: 'center' }
       );
+      
+      // Add watermark if enabled (for FREE users)
+      if (watermark) {
+        pdf.setFontSize(10);
+        pdf.setTextColor(200, 200, 200);
+        pdf.text(
+          watermarkText,
+          pageWidth / 2,
+          pageHeight / 2,
+          { align: 'center', angle: 45 }
+        );
+      }
     }
 
     pdf.save(filename);

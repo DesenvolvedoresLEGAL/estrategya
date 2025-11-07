@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Target, Lightbulb } from "lucide-react";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface Props {
   companyData: any;
@@ -27,6 +29,9 @@ export const EtapaObjetivos = ({ companyData, analysisData, initialData, onNext,
   const [loading, setLoading] = useState(false);
   const [focus, setFocus] = useState("");
   const [objectives, setObjectives] = useState(initialData || null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { canCreateObjective } = useSubscriptionLimits(companyData?.id);
 
   const handleGenerate = async () => {
     if (!focus) {
@@ -46,6 +51,14 @@ export const EtapaObjetivos = ({ companyData, analysisData, initialData, onNext,
       });
 
       if (error) throw error;
+
+      // Verificar limite de objetivos antes de salvar
+      const canCreate = await canCreateObjective(companyData.id);
+      
+      if (!canCreate) {
+        setShowUpgradePrompt(true);
+        return;
+      }
 
       // Salvar objetivos e iniciativas no banco
       const objectivePromises = data.objetivos.map(async (obj: any) => {
@@ -205,6 +218,12 @@ export const EtapaObjetivos = ({ companyData, analysisData, initialData, onNext,
           )}
         </CardContent>
       </Card>
+
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        limitType="objectives"
+      />
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>

@@ -8,6 +8,8 @@ import { ArrowLeft, ArrowRight, Target, Sparkles, CheckCircle2, Save } from "luc
 import { OKRCard } from "@/components/planning/OKRCard";
 import { BSCBalance } from "@/components/planning/BSCBalance";
 import { FrameworkInfo } from "./FrameworkInfo";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface Props {
   companyData: any;
@@ -23,6 +25,9 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
   const [step, setStep] = useState<'idle' | 'okrs-generated' | 'bsc-validated'>('idle');
   const [okrsData, setOkrsData] = useState<any>(null);
   const [bscData, setBscData] = useState<any>(null);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  
+  const { canCreateObjective, canCreateInitiative } = useSubscriptionLimits(companyData?.id);
 
   const handleGenerateOKRs = async () => {
     setLoading(true);
@@ -78,6 +83,14 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
     setLoading(true);
 
     try {
+      // Verificar limites de objetivos
+      const canCreateObj = await canCreateObjective(companyData.id);
+      
+      if (!canCreateObj) {
+        setShowUpgradePrompt(true);
+        return;
+      }
+
       // Salvar OKRs como strategic_objectives e initiatives
       for (const okr of okrsData.okrs) {
         const { data: objectiveRecord, error: objectiveError } = await supabase
@@ -93,8 +106,17 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
 
         if (objectiveError) throw objectiveError;
 
-        // Salvar Key Results como initiatives
+        // Verificar limite de iniciativas antes de salvar Key Results
         if (okr.key_results && okr.key_results.length > 0) {
+          const canCreateInit = await canCreateInitiative(objectiveRecord.id);
+          
+          if (!canCreateInit) {
+            setShowUpgradePrompt(true);
+            // Delete the objective we just created since we can't add initiatives
+            await supabase.from('strategic_objectives').delete().eq('id', objectiveRecord.id);
+            return;
+          }
+
           const initiativesToInsert = okr.key_results.map((kr: any) => ({
             objective_id: objectiveRecord.id,
             title: kr.kr,
@@ -220,6 +242,12 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
           )}
         </CardContent>
       </Card>
+
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        limitType="objectives"
+      />
 
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>
