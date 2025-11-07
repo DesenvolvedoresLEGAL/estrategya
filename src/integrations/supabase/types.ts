@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string
+          id: string
+          insight_type: Database["public"]["Enums"]["insight_type"]
+          priority: Database["public"]["Enums"]["insight_priority"]
+          related_objective_id: string | null
+          status: Database["public"]["Enums"]["insight_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description: string
+          id?: string
+          insight_type: Database["public"]["Enums"]["insight_type"]
+          priority?: Database["public"]["Enums"]["insight_priority"]
+          related_objective_id?: string | null
+          status?: Database["public"]["Enums"]["insight_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          insight_type?: Database["public"]["Enums"]["insight_type"]
+          priority?: Database["public"]["Enums"]["insight_priority"]
+          related_objective_id?: string | null
+          status?: Database["public"]["Enums"]["insight_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_insights_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_insights_related_objective_id_fkey"
+            columns: ["related_objective_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           created_at: string
@@ -142,6 +196,44 @@ export type Database = {
           },
         ]
       }
+      metric_updates: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          metric_id: string
+          notes: string | null
+          recorded_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          metric_id: string
+          notes?: string | null
+          recorded_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          metric_id?: string
+          notes?: string | null
+          recorded_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metric_updates_metric_id_fkey"
+            columns: ["metric_id"]
+            isOneToOne: false
+            referencedRelation: "metrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metrics: {
         Row: {
           created_at: string
@@ -179,6 +271,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "metrics_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "strategic_objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      objective_updates: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          objective_id: string
+          progress_percentage: number
+          status: Database["public"]["Enums"]["objective_status"]
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          objective_id: string
+          progress_percentage?: number
+          status?: Database["public"]["Enums"]["objective_status"]
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          objective_id?: string
+          progress_percentage?: number
+          status?: Database["public"]["Enums"]["objective_status"]
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objective_updates_objective_id_fkey"
             columns: ["objective_id"]
             isOneToOne: false
             referencedRelation: "strategic_objectives"
@@ -444,7 +574,15 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      insight_priority: "baixa" | "media" | "alta" | "critica"
+      insight_status: "novo" | "visualizado" | "resolvido" | "ignorado"
+      insight_type: "progresso" | "risco" | "oportunidade" | "recomendacao"
+      objective_status:
+        | "nao_iniciado"
+        | "em_andamento"
+        | "em_risco"
+        | "concluido"
+        | "pausado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -571,6 +709,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      insight_priority: ["baixa", "media", "alta", "critica"],
+      insight_status: ["novo", "visualizado", "resolvido", "ignorado"],
+      insight_type: ["progresso", "risco", "oportunidade", "recomendacao"],
+      objective_status: [
+        "nao_iniciado",
+        "em_andamento",
+        "em_risco",
+        "concluido",
+        "pausado",
+      ],
+    },
   },
 } as const

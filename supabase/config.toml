@@ -1,1 +1,34 @@
 project_id = "phunnvywhrvylzsyvonx"
+
+[functions.ai-diagnostico]
+verify_jwt = false
+
+[functions.ai-estrategia]
+verify_jwt = false
+
+[functions.ai-indicadores]
+verify_jwt = false
+
+[functions.ai-mais-iniciativas]
+verify_jwt = false
+
+[functions.ai-ogsm]
+verify_jwt = false
+
+[functions.ai-okrs]
+verify_jwt = false
+
+[functions.ai-bsc-check]
+verify_jwt = false
+
+[functions.ai-priorizacao]
+verify_jwt = false
+
+[functions.ai-execucao]
+verify_jwt = false
+
+[functions.ai-progress-analysis]
+verify_jwt = false
+
+[functions.ai-smart-suggestions]
+verify_jwt = false
