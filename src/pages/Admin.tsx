@@ -18,8 +18,12 @@ import {
   BarChart3,
   Calendar,
   AlertCircle,
-  Loader2
+  Loader2,
+  TestTube,
+  ClipboardCheck
 } from "lucide-react";
+import { TestUsersManager } from "@/components/admin/TestUsersManager";
+import { TestChecklistValidator } from "@/components/admin/TestChecklistValidator";
 import { useToast } from "@/hooks/use-toast";
 import { 
   LineChart, 
@@ -285,11 +289,19 @@ export default function Admin() {
 
         {/* Charts */}
         <Tabs defaultValue="growth" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="growth">Crescimento</TabsTrigger>
             <TabsTrigger value="engagement">Engajamento</TabsTrigger>
             <TabsTrigger value="segments">Segmentos</TabsTrigger>
             <TabsTrigger value="companies">Empresas</TabsTrigger>
+            <TabsTrigger value="test-users">
+              <TestTube className="h-4 w-4 mr-2" />
+              Usuários Teste
+            </TabsTrigger>
+            <TabsTrigger value="validation">
+              <ClipboardCheck className="h-4 w-4 mr-2" />
+              Validação
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="growth" className="space-y-4">
@@ -419,6 +431,14 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="test-users" className="space-y-4">
+            <TestUsersManager />
+          </TabsContent>
+
+          <TabsContent value="validation" className="space-y-4">
+            <TestChecklistValidator />
           </TabsContent>
         </Tabs>
       </main>
