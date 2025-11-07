@@ -9,7 +9,7 @@ interface UpgradePromptProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   feature?: string;
-  limitType?: "objectives" | "initiatives" | "team_members" | "plans";
+  limitType?: "objectives" | "initiatives" | "team_members" | "plans" | "companies" | "export_pdf";
 }
 
 export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: UpgradePromptProps) => {
@@ -36,14 +36,24 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
       case "team_members":
         return "Você atingiu o limite de membros da equipe.";
       case "plans":
-        return "Você atingiu o limite de planos ativos.";
+        return "Você atingiu o limite de planos/cenários estratégicos ativos.";
+      case "companies":
+        return "Você atingiu o limite de empresas do seu plano atual.";
+      case "export_pdf":
+        return "A exportação em PDF não está disponível no seu plano.";
       default:
         return `A funcionalidade "${feature}" não está disponível no seu plano.`;
     }
   };
 
-  const handleUpgrade = (planId: string) => {
-    // This would trigger the Stripe checkout flow
+  const handleUpgrade = (planId: string, tier: string) => {
+    if (tier === "business") {
+      // Para Enterprise, abrir contato ao invés de checkout
+      window.open("https://legal.team/contato", "_blank");
+      return;
+    }
+
+    // Para outros planos, seguir com checkout
     supabase.functions.invoke("create-checkout-session", {
       body: { planId },
     }).then(({ data, error }) => {
@@ -51,7 +61,6 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
         console.error("Error creating checkout session:", error);
         return;
       }
-      // Redirect to Stripe checkout
       if (data?.url) {
         window.location.href = data.url;
       }
@@ -74,7 +83,7 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
             const features = plan.features as string[];
             const limits = plan.limits as Record<string, any>;
             const isPro = plan.tier === "pro";
-            const isBusiness = plan.tier === "business";
+            const isEnterprise = plan.tier === "business";
 
             return (
               <div
@@ -92,10 +101,16 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
                 <div className="mb-4">
                   <h3 className="text-xl font-bold">{plan.name}</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold">
-                      R$ {plan.price_monthly?.toFixed(2)}
-                    </span>
-                    <span className="text-muted-foreground">/mês</span>
+                    {plan.price_monthly !== null ? (
+                      <>
+                        <span className="text-3xl font-bold">
+                          R$ {plan.price_monthly?.toFixed(2)}
+                        </span>
+                        <span className="text-muted-foreground">/mês</span>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-bold">Sob consulta</span>
+                    )}
                   </div>
                   {plan.price_annual && (
                     <p className="text-sm text-muted-foreground mt-1">
@@ -121,6 +136,14 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
 
                 <div className="space-y-2 text-xs text-muted-foreground mb-6">
                   <p>
+                    Empresas:{" "}
+                    {limits.max_companies === -1 ? "Ilimitadas" : limits.max_companies}
+                  </p>
+                  <p>
+                    Planos/Cenários:{" "}
+                    {limits.max_plans === -1 ? "Ilimitados" : limits.max_plans}
+                  </p>
+                  <p>
                     Objetivos:{" "}
                     {limits.max_objectives === -1 ? "Ilimitados" : limits.max_objectives}
                   </p>
@@ -128,21 +151,19 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
                     Membros:{" "}
                     {limits.max_team_members === -1 ? "Ilimitados" : limits.max_team_members}
                   </p>
-                  <p>
-                    Insights IA:{" "}
-                    {limits.ai_insights_per_month === -1
-                      ? "Ilimitados"
-                      : `${limits.ai_insights_per_month}/mês`}
-                  </p>
                 </div>
 
                 <Button
-                  onClick={() => handleUpgrade(plan.id)}
+                  onClick={() => handleUpgrade(plan.id, plan.tier)}
                   className="w-full"
                   variant={isPro ? "default" : "outline"}
                   disabled={plan.tier === "free"}
                 >
-                  {plan.tier === "free" ? "Plano Atual" : "Fazer Upgrade"}
+                  {plan.tier === "free" 
+                    ? "Plano Atual" 
+                    : isEnterprise 
+                    ? "Falar com a LEGAL" 
+                    : "Fazer Upgrade"}
                 </Button>
               </div>
             );
@@ -155,7 +176,12 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
             <div className="font-medium">Recurso</div>
             <div className="font-medium text-center">Free</div>
             <div className="font-medium text-center">Pro</div>
-            <div className="font-medium text-center">Business</div>
+            <div className="font-medium text-center">Enterprise</div>
+
+            <div>Exportar PDF</div>
+            <div className="text-center"><X className="h-4 w-4 mx-auto text-destructive" /></div>
+            <div className="text-center"><Check className="h-4 w-4 mx-auto text-primary" /></div>
+            <div className="text-center"><Check className="h-4 w-4 mx-auto text-primary" /></div>
 
             <div>ICE Score</div>
             <div className="text-center"><X className="h-4 w-4 mx-auto text-destructive" /></div>

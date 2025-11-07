@@ -3,11 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface SubscriptionLimits {
+  max_companies: number;
   max_plans: number;
   max_objectives: number;
   max_initiatives_per_objective: number;
   max_team_members: number;
   ai_insights_per_month: number;
+  export_pdf: boolean;
   ice_score: boolean;
   "5w2h": boolean;
   "4dx_execution": boolean;
@@ -22,12 +24,15 @@ interface SubscriptionData {
   tier: string;
   status: string;
   isLoading: boolean;
-  canCreatePlan: () => Promise<boolean>;
+  canCreateCompany: () => Promise<boolean>;
+  canCreatePlan: (companyId: string) => Promise<boolean>;
   canCreateObjective: (companyId: string) => Promise<boolean>;
   canCreateInitiative: (objectiveId: string) => Promise<boolean>;
   canInviteTeamMember: (companyId: string) => Promise<boolean>;
+  canExportPDF: () => boolean;
   hasFeature: (feature: keyof SubscriptionLimits) => boolean;
   currentUsage: {
+    companies: number;
     plans: number;
     objectives: number;
     teamMembers: number;
@@ -75,41 +80,51 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   const { data: currentUsage } = useQuery({
     queryKey: ["subscription-usage", companyId],
     queryFn: async () => {
-      if (!companyId) return { plans: 0, objectives: 0, teamMembers: 0 };
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { companies: 0, plans: 0, objectives: 0, teamMembers: 0 };
 
-      // Count current plans (companies created by user)
-      const { count: plansCount } = await supabase
+      // Count companies owned by user
+      const { count: companiesCount } = await supabase
         .from("companies")
         .select("*", { count: "exact", head: true })
-        .eq("id", companyId);
+        .eq("owner_user_id", user.id);
+
+      // Count plans (OGSM records) for the specific company
+      const { count: plansCount } = companyId ? await supabase
+        .from("ogsm")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", companyId) : { count: 0 };
 
       // Count current objectives
-      const { count: objectivesCount } = await supabase
+      const { count: objectivesCount } = companyId ? await supabase
         .from("strategic_objectives")
         .select("*", { count: "exact", head: true })
-        .eq("company_id", companyId);
+        .eq("company_id", companyId) : { count: 0 };
 
       // Count current team members
-      const { count: teamMembersCount } = await supabase
+      const { count: teamMembersCount } = companyId ? await supabase
         .from("team_members")
         .select("*", { count: "exact", head: true })
-        .eq("company_id", companyId);
+        .eq("company_id", companyId) : { count: 0 };
 
       return {
+        companies: companiesCount || 0,
         plans: plansCount || 0,
         objectives: objectivesCount || 0,
         teamMembers: teamMembersCount || 0,
       };
     },
-    enabled: !!companyId,
+    enabled: true,
   });
 
   const limits: SubscriptionLimits = (subscription?.plan?.limits as unknown as SubscriptionLimits) || {
+    max_companies: 1,
     max_plans: 1,
     max_objectives: 3,
     max_initiatives_per_objective: 3,
     max_team_members: 1,
     ai_insights_per_month: 5,
+    export_pdf: false,
     ice_score: false,
     "5w2h": false,
     "4dx_execution": false,
@@ -119,10 +134,21 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     custom_branding: false,
   };
 
-  const canCreatePlan = async (): Promise<boolean> => {
+  const canCreateCompany = async (): Promise<boolean> => {
+    if (limits.max_companies === -1) return true;
+    const usage = currentUsage?.companies || 0;
+    return usage < limits.max_companies;
+  };
+
+  const canCreatePlan = async (cId: string): Promise<boolean> => {
     if (limits.max_plans === -1) return true;
-    const usage = currentUsage?.plans || 0;
-    return usage < limits.max_plans;
+    
+    const { count } = await supabase
+      .from("ogsm")
+      .select("*", { count: "exact", head: true })
+      .eq("company_id", cId);
+
+    return (count || 0) < limits.max_plans;
   };
 
   const canCreateObjective = async (cId: string): Promise<boolean> => {
@@ -158,6 +184,10 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     return (count || 0) < limits.max_team_members;
   };
 
+  const canExportPDF = (): boolean => {
+    return limits.export_pdf === true;
+  };
+
   const hasFeature = (feature: keyof SubscriptionLimits): boolean => {
     return !!limits[feature];
   };
@@ -167,11 +197,13 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     tier: subscription?.plan?.tier || "free",
     status: subscription?.status || "active",
     isLoading,
+    canCreateCompany,
     canCreatePlan,
     canCreateObjective,
     canCreateInitiative,
     canInviteTeamMember,
+    canExportPDF,
     hasFeature,
-    currentUsage: currentUsage || { plans: 0, objectives: 0, teamMembers: 0 },
+    currentUsage: currentUsage || { companies: 0, plans: 0, objectives: 0, teamMembers: 0 },
   };
 };

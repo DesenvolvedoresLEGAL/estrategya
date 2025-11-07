@@ -8,6 +8,8 @@ import { ArrowLeft, ArrowRight, Target, Sparkles, Save } from "lucide-react";
 import { OGSMCard } from "@/components/planning/OGSMCard";
 import { FrameworkInfo } from "./FrameworkInfo";
 import { ContextualHelp } from "./ContextualHelp";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 
 interface Props {
   companyData: any;
@@ -21,8 +23,17 @@ interface Props {
 export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [ogsmData, setOgsmData] = useState(initialData);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const { canCreatePlan } = useSubscriptionLimits(companyData?.id);
 
   const handleGenerate = async () => {
+    // Verificar limite de planos antes de criar
+    const canCreate = await canCreatePlan(companyData.id);
+    if (!canCreate) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -127,6 +138,12 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <UpgradePrompt
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        limitType="plans"
+      />
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

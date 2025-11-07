@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Target, TrendingUp, Users, Zap } from "lucide-react";
+import { PricingSection } from "@/components/pricing/PricingSection";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -101,6 +102,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Pricing Section */}
+      <PricingSection />
 
       {/* CTA Section */}
       <div className="bg-muted py-16">
