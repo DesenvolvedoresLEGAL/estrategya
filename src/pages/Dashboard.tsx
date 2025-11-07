@@ -10,7 +10,7 @@ import { ProgressChart } from "@/components/dashboard/ProgressChart";
 import { QuickWinList } from "@/components/dashboard/QuickWinList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle } from "lucide-react";
+import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
@@ -298,6 +298,14 @@ export default function Dashboard() {
               >
                 <Lightbulb className="mr-2 h-4 w-4" />
                 Insights
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/plano-estrategico")}
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                Plano Completo
               </Button>
               <Button 
                 onClick={generateInsights}

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ObjectiveDetailCard } from "@/components/objectives/ObjectiveDetailCard";
-import { Target, ArrowLeft, RefreshCw, TrendingUp } from "lucide-react";
+import { Target, ArrowLeft, RefreshCw, TrendingUp, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Objetivos() {
@@ -155,6 +155,14 @@ export default function Objetivos() {
               >
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Métricas
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/plano-estrategico')}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Plano Completo
               </Button>
               <Button onClick={loadObjectives}>
                 <RefreshCw className="h-4 w-4 mr-2" />

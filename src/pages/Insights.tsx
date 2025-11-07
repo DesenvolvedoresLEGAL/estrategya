@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { InsightCard } from "@/components/dashboard/InsightCard";
-import { ArrowLeft, Sparkles, RefreshCw, TrendingUp, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Sparkles, RefreshCw, TrendingUp, AlertTriangle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Insight {
@@ -319,19 +319,28 @@ export default function Insights() {
               <p className="text-muted-foreground">Análises e recomendações geradas por IA</p>
             </div>
           </div>
-          <Button onClick={generateInsights} disabled={generating}>
-            {generating ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Gerar Novos Insights
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={() => navigate('/plano-estrategico')}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Plano Completo
+            </Button>
+            <Button onClick={generateInsights} disabled={generating}>
+              {generating ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Gerando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Gerar Novos Insights
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Objetivos from "./pages/Objetivos";
 import Metricas from "./pages/Metricas";
 import Insights from "./pages/Insights";
+import PlanoEstrategico from "./pages/PlanoEstrategico";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/objetivos" element={<Objetivos />} />
           <Route path="/metricas" element={<Metricas />} />
           <Route path="/insights" element={<Insights />} />
+          <Route path="/plano-estrategico" element={<PlanoEstrategico />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
