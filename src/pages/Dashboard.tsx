@@ -10,10 +10,17 @@ import { ProgressChart } from "@/components/dashboard/ProgressChart";
 import { QuickWinList } from "@/components/dashboard/QuickWinList";
 import { TopInitiativesICE } from "@/components/dashboard/TopInitiativesICE";
 import { ICEScoreChart } from "@/components/planning/ICEScoreChart";
+import { UpcomingDeadlines } from "@/components/dashboard/UpcomingDeadlines";
+import { TeamPerformance } from "@/components/dashboard/TeamPerformance";
+import { BurndownChart } from "@/components/dashboard/BurndownChart";
+import { StrategicHealthScore } from "@/components/dashboard/StrategicHealthScore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { exportStrategicPlanToExcel } from "@/utils/excelExport";
+import { formatStrategicPlanForPPT, openPresentation } from "@/utils/pptExport";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -249,6 +256,95 @@ export default function Dashboard() {
     setInsights(insights.filter(i => i.id !== insightId));
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const { data: company } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single();
+
+      exportStrategicPlanToExcel({
+        objectives,
+        initiatives,
+        metrics,
+        company,
+      });
+
+      toast({
+        title: "Exportado com sucesso!",
+        description: "Arquivos CSV foram baixados",
+      });
+    } catch (error) {
+      console.error('Error exporting:', error);
+      toast({
+        title: "Erro ao exportar",
+        description: "Tente novamente",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGenerateReport = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-report', {
+        body: {
+          companyId,
+          reportType: 'executive',
+          format: 'html',
+        },
+      });
+
+      if (error) throw error;
+
+      const reportWindow = window.open('', '_blank');
+      if (reportWindow) {
+        reportWindow.document.write(data);
+        reportWindow.document.close();
+      }
+
+      toast({
+        title: "Relatório gerado!",
+        description: "Abrindo em nova janela",
+      });
+    } catch (error: any) {
+      console.error('Error generating report:', error);
+      toast({
+        title: "Erro ao gerar relatório",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportPowerPoint = async () => {
+    try {
+      const { data: company } = await supabase.from('companies').select('*').eq('id', companyId).single();
+      const { data: swot } = await supabase.from('strategic_context').select('*').eq('company_id', companyId).single();
+
+      const pptData = formatStrategicPlanForPPT({
+        company,
+        objectives,
+        initiatives,
+        metrics,
+        swot,
+      });
+
+      openPresentation(pptData);
+
+      toast({
+        title: "Apresentação gerada!",
+        description: "Use as setas para navegar. Pressione Ctrl+P para imprimir como PDF.",
+      });
+    } catch (error) {
+      console.error('Error exporting PPT:', error);
+      toast({
+        title: "Erro ao gerar apresentação",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -290,13 +386,24 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
             <p className="text-muted-foreground">Visão geral do progresso estratégico</p>
           </div>
-          <Button 
-            onClick={generateInsights}
-            disabled={generatingInsights}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${generatingInsights ? 'animate-spin' : ''}`} />
-            {generatingInsights ? 'Analisando...' : 'Atualizar Insights'}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportExcel}>
+              <Download className="mr-2 h-4 w-4" />
+              Excel
+            </Button>
+            <Button variant="outline" onClick={handleExportPowerPoint}>
+              <FileText className="mr-2 h-4 w-4" />
+              PowerPoint
+            </Button>
+            <Button variant="outline" onClick={handleGenerateReport}>
+              <FileText className="mr-2 h-4 w-4" />
+              Relatório
+            </Button>
+            <Button onClick={generateInsights} disabled={generatingInsights}>
+              <RefreshCw className={`mr-2 h-4 w-4 ${generatingInsights ? 'animate-spin' : ''}`} />
+              {generatingInsights ? 'Analisando...' : 'Atualizar'}
+            </Button>
+          </div>
         </div>
         {/* Hero Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -386,57 +493,86 @@ export default function Dashboard() {
           <ICEScoreChart initiatives={initiatives} />
         </div>
 
-        {/* Insights and Quick Wins */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Insights */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Insights de IA</h2>
-              <Button variant="outline" size="sm" onClick={() => navigate('/insights')}>
-                Ver Todos
-              </Button>
-            </div>
-            <div className="space-y-4">
-              {insights.length === 0 ? (
-                <Card>
-                  <CardContent className="pt-6 text-center py-12">
-                    <Lightbulb className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      Nenhum insight novo no momento
-                    </p>
-                    <Button 
-                      className="mt-4"
-                      onClick={generateInsights}
-                      disabled={generatingInsights}
-                    >
-                      Gerar Insights
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                insights.map((insight) => (
-                  <InsightCard
-                    key={insight.id}
-                    type={insight.insight_type}
-                    title={insight.title}
-                    description={insight.description}
-                    priority={insight.priority}
-                    status={insight.status}
-                    onMarkAsViewed={() => updateInsightStatus(insight.id, 'visualizado')}
-                    onResolve={() => updateInsightStatus(insight.id, 'resolvido')}
-                    onIgnore={() => updateInsightStatus(insight.id, 'ignorado')}
-                  />
-                ))
-              )}
-            </div>
-          </div>
+        {/* Advanced Analytics Tabs */}
+        <Tabs defaultValue="insights" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="insights">Insights & Quick Wins</TabsTrigger>
+            <TabsTrigger value="team">Equipe & Prazos</TabsTrigger>
+            <TabsTrigger value="charts">Gráficos</TabsTrigger>
+            <TabsTrigger value="health">Saúde Estratégica</TabsTrigger>
+          </TabsList>
 
-          {/* Quick Wins */}
-          <QuickWinList 
-            quickWins={quickWins}
-            onGenerateMore={generateQuickWins}
-          />
-        </div>
+          <TabsContent value="insights" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Insights */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold">Insights de IA</h2>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/insights')}>
+                    Ver Todos
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {insights.length === 0 ? (
+                    <Card>
+                      <CardContent className="pt-6 text-center py-12">
+                        <Lightbulb className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-muted-foreground">
+                          Nenhum insight novo no momento
+                        </p>
+                        <Button 
+                          className="mt-4"
+                          onClick={generateInsights}
+                          disabled={generatingInsights}
+                        >
+                          Gerar Insights
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    insights.map((insight) => (
+                      <InsightCard
+                        key={insight.id}
+                        type={insight.insight_type}
+                        title={insight.title}
+                        description={insight.description}
+                        priority={insight.priority}
+                        status={insight.status}
+                        onMarkAsViewed={() => updateInsightStatus(insight.id, 'visualizado')}
+                        onResolve={() => updateInsightStatus(insight.id, 'resolvido')}
+                        onIgnore={() => updateInsightStatus(insight.id, 'ignorado')}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Wins */}
+              <QuickWinList 
+                quickWins={quickWins}
+                onGenerateMore={generateQuickWins}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="team" className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {companyId && <TeamPerformance companyId={companyId} />}
+              <UpcomingDeadlines initiatives={initiatives} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="charts" className="space-y-4">
+            <div className="grid grid-cols-1 gap-8">
+              {companyId && <BurndownChart companyId={companyId} />}
+              <ICEScoreChart initiatives={initiatives} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="health" className="space-y-4">
+            {companyId && <StrategicHealthScore companyId={companyId} />}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

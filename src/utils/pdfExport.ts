@@ -6,6 +6,18 @@ export interface PDFExportOptions {
   title?: string;
   subtitle?: string;
   orientation?: 'portrait' | 'landscape';
+  watermark?: boolean;
+  companyName?: string;
+  companyLogo?: string;
+}
+
+export interface ExcelExportData {
+  sheets: {
+    name: string;
+    data: any[][];
+    headers: string[];
+  }[];
+  filename?: string;
 }
 
 export const exportToPDF = async (
