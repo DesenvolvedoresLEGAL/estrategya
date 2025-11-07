@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Stepper } from "@/components/Stepper";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Save } from "lucide-react";
 import { toast } from "sonner";
 import { EtapaContexto } from "@/components/wizard/EtapaContexto";
 import { EtapaSWOT } from "@/components/wizard/EtapaSWOT";
@@ -14,6 +14,7 @@ import { EtapaOKRsBSC } from "@/components/wizard/EtapaOKRsBSC";
 import { EtapaPriorizacao } from "@/components/wizard/EtapaPriorizacao";
 import { EtapaExecucao } from "@/components/wizard/EtapaExecucao";
 import { EtapaMetricas } from "@/components/wizard/EtapaMetricas";
+import { useWizardProgress } from "@/hooks/useWizardProgress";
 
 const steps = [
   { 
@@ -81,6 +82,15 @@ const Planejamento = () => {
   const [prioritizationData, setPrioritizationData] = useState<any>(null);
   const [executionData, setExecutionData] = useState<any>(null);
 
+  // Hook para gerenciar progresso do wizard
+  const {
+    isLoading: progressLoading,
+    completedSteps,
+    loadProgress,
+    saveProgress,
+    markStepCompleted,
+  } = useWizardProgress(user?.id || null, companyData?.id || null);
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -91,10 +101,11 @@ const Planejamento = () => {
       }
       
       setUser(session.user);
-      setLoading(false);
       
       // Carregar dados existentes se houver
       await loadExistingData(session.user.id);
+      
+      setLoading(false);
     };
 
     checkAuth();
@@ -107,6 +118,21 @@ const Planejamento = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Carregar progresso salvo quando companyData estiver disponível
+  useEffect(() => {
+    const restoreProgress = async () => {
+      if (companyData?.id && user?.id) {
+        const savedProgress = await loadProgress();
+        if (savedProgress && savedProgress.currentStep > currentStep) {
+          setCurrentStep(savedProgress.currentStep);
+          toast.success('Progresso restaurado!');
+        }
+      }
+    };
+    
+    restoreProgress();
+  }, [companyData?.id, user?.id]);
 
   const loadExistingData = async (userId: string) => {
     try {
@@ -156,7 +182,10 @@ const Planejamento = () => {
     navigate("/");
   };
 
-  const handleNext = (data?: any) => {
+  const handleNext = async (data?: any) => {
+    // Marcar etapa atual como concluída
+    await markStepCompleted(currentStep);
+    
     if (currentStep === 1 && data) {
       setCompanyData(data);
     } else if (currentStep === 2 && data) {
@@ -174,25 +203,47 @@ const Planejamento = () => {
     }
     
     if (currentStep < 8) {
-      setCurrentStep(currentStep + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      // Salvar progresso automaticamente
+      if (companyData?.id) {
+        await saveProgress(nextStep, {
+          companyData,
+          swotData,
+          analysisData,
+          ogsmData,
+          okrsBscData,
+          prioritizationData,
+          executionData,
+        });
+      }
     } else {
       toast.success("Planejamento concluído!");
       navigate("/dashboard");
     }
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      
+      // Salvar progresso ao voltar
+      if (companyData?.id) {
+        await saveProgress(prevStep);
+      }
     }
   };
 
-  if (loading) {
+  if (loading || progressLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">
+            {progressLoading ? 'Carregando progresso...' : 'Carregando...'}
+          </p>
         </div>
       </div>
     );
@@ -212,10 +263,20 @@ const Planejamento = () => {
                 {user?.email}
               </p>
             </div>
-            <Button variant="outline" onClick={handleLogout} size="sm">
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
-            </Button>
+            <div className="flex items-center gap-2">
+              {completedSteps.length > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary">
+                  <Save className="w-4 h-4" />
+                  <span className="text-xs font-medium">
+                    Progresso salvo
+                  </span>
+                </div>
+              )}
+              <Button variant="outline" onClick={handleLogout} size="sm">
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -225,10 +286,14 @@ const Planejamento = () => {
         <Stepper 
           steps={steps} 
           currentStep={currentStep}
-          onStepClick={(step) => {
-            // Permitir voltar para etapas anteriores completadas
-            if (step < currentStep) {
+          completedSteps={completedSteps}
+          onStepClick={async (step) => {
+            // Permitir navegar para etapas completadas ou atual
+            if (completedSteps.includes(step) || step === currentStep) {
               setCurrentStep(step);
+              if (companyData?.id) {
+                await saveProgress(step);
+              }
             }
           }}
         />

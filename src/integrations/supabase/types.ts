@@ -658,6 +658,47 @@ export type Database = {
           },
         ]
       }
+      wizard_progress: {
+        Row: {
+          company_id: string | null
+          completed_steps: number[] | null
+          created_at: string | null
+          current_step: number
+          id: string
+          last_updated_at: string | null
+          step_data: Json | null
+          user_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          completed_steps?: number[] | null
+          created_at?: string | null
+          current_step?: number
+          id?: string
+          last_updated_at?: string | null
+          step_data?: Json | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string | null
+          completed_steps?: number[] | null
+          created_at?: string | null
+          current_step?: number
+          id?: string
+          last_updated_at?: string | null
+          step_data?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wizard_progress_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -18,20 +18,29 @@ interface Step {
 interface StepperProps {
   steps: Step[];
   currentStep: number;
+  completedSteps?: number[];
   onStepClick?: (step: number) => void;
 }
 
-export const Stepper = ({ steps, currentStep, onStepClick }: StepperProps) => {
+export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }: StepperProps) => {
   const progressPercentage = ((currentStep - 1) / (steps.length - 1)) * 100;
+  const totalCompletedSteps = completedSteps.length;
 
   return (
     <div className="w-full py-8">
       {/* Barra de Progresso */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-muted-foreground">
-            Etapa {currentStep} de {steps.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              Etapa {currentStep} de {steps.length}
+            </span>
+            {totalCompletedSteps > 0 && (
+              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                {totalCompletedSteps} concluídas
+              </span>
+            )}
+          </div>
           <span className="text-sm font-medium text-primary">
             {Math.round(progressPercentage)}% completo
           </span>
@@ -42,9 +51,9 @@ export const Stepper = ({ steps, currentStep, onStepClick }: StepperProps) => {
       {/* Stepper Original */}
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
-          const isCompleted = currentStep > step.id;
+          const isCompleted = completedSteps.includes(step.id);
           const isCurrent = currentStep === step.id;
-          const isClickable = currentStep >= step.id && onStepClick;
+          const isClickable = (isCompleted || isCurrent) && onStepClick;
 
           return (
             <div key={step.id} className="flex flex-col items-center flex-1">
