@@ -9,15 +9,19 @@ import { toast } from "sonner";
 import { EtapaContexto } from "@/components/wizard/EtapaContexto";
 import { EtapaSWOT } from "@/components/wizard/EtapaSWOT";
 import { EtapaAnalise } from "@/components/wizard/EtapaAnalise";
+import { EtapaOGSM } from "@/components/wizard/EtapaOGSM";
+import { EtapaOKRsBSC } from "@/components/wizard/EtapaOKRsBSC";
 import { EtapaObjetivos } from "@/components/wizard/EtapaObjetivos";
 import { EtapaMetricas } from "@/components/wizard/EtapaMetricas";
 
 const steps = [
-  { id: 1, title: "Empresa", description: "Contexto do negócio" },
-  { id: 2, title: "Diagnóstico", description: "Análise SWOT" },
-  { id: 3, title: "Análise IA", description: "Leitura estratégica" },
-  { id: 4, title: "Objetivos", description: "Metas e iniciativas" },
-  { id: 5, title: "Métricas", description: "Indicadores" },
+  { id: 1, title: "Contexto", description: "Empresa + MVV" },
+  { id: 2, title: "SWOT", description: "Diagnóstico" },
+  { id: 3, title: "Análise IA", description: "Leitura Estratégica" },
+  { id: 4, title: "OGSM", description: "Direcionamento" },
+  { id: 5, title: "OKRs + BSC", description: "Objetivos" },
+  { id: 6, title: "Priorização", description: "Matriz 2x2" },
+  { id: 7, title: "Métricas", description: "KPIs" },
 ];
 
 const Planejamento = () => {
@@ -30,6 +34,8 @@ const Planejamento = () => {
   const [companyData, setCompanyData] = useState<any>(null);
   const [swotData, setSWOTData] = useState<any>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
+  const [ogsmData, setOgsmData] = useState<any>(null);
+  const [okrsBscData, setOkrsBscData] = useState<any>(null);
   const [objectivesData, setObjectivesData] = useState<any>(null);
 
   useEffect(() => {
@@ -114,14 +120,18 @@ const Planejamento = () => {
     } else if (currentStep === 3 && data) {
       setAnalysisData(data);
     } else if (currentStep === 4 && data) {
+      setOgsmData(data);
+    } else if (currentStep === 5 && data) {
+      setOkrsBscData(data);
+    } else if (currentStep === 6 && data) {
       setObjectivesData(data);
     }
     
-    if (currentStep < 5) {
+    if (currentStep < 7) {
       setCurrentStep(currentStep + 1);
     } else {
       toast.success("Planejamento concluído!");
-      navigate("/objetivos");
+      navigate("/dashboard");
     }
   };
 
@@ -206,6 +216,26 @@ const Planejamento = () => {
           )}
 
           {currentStep === 4 && (
+            <EtapaOGSM
+              companyData={companyData}
+              analysisData={analysisData}
+              initialData={ogsmData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+
+          {currentStep === 5 && (
+            <EtapaOKRsBSC
+              companyData={companyData}
+              ogsmData={ogsmData}
+              initialData={okrsBscData}
+              onNext={handleNext}
+              onBack={handleBack}
+            />
+          )}
+
+          {currentStep === 6 && (
             <EtapaObjetivos
               companyData={companyData}
               analysisData={analysisData}
@@ -215,7 +245,7 @@ const Planejamento = () => {
             />
           )}
 
-          {currentStep === 5 && (
+          {currentStep === 7 && (
             <EtapaMetricas
               companyData={companyData}
               objectivesData={objectivesData}

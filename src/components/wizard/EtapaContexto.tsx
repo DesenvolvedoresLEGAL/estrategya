@@ -38,6 +38,9 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
     size_team: initialData?.size_team || "",
     region: initialData?.region || "",
     main_challenge: initialData?.main_challenge || "",
+    mission: initialData?.mission || "",
+    vision: initialData?.vision || "",
+    values: initialData?.values || "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,6 +188,60 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
               placeholder="Descreva o maior desafio que sua empresa enfrenta hoje..."
               rows={4}
             />
+          </div>
+
+          <div className="border-t pt-6 space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Missão, Visão e Valores</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Defina o propósito e direcionamento estratégico da sua empresa
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mission">Missão</Label>
+              <Textarea
+                id="mission"
+                value={formData.mission}
+                onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
+                placeholder="Por que sua empresa existe? Qual é o propósito fundamental?"
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground">
+                {formData.mission.length}/500 caracteres
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="vision">Visão</Label>
+              <Textarea
+                id="vision"
+                value={formData.vision}
+                onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
+                placeholder="Onde sua empresa quer chegar? O que deseja se tornar?"
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground">
+                {formData.vision.length}/500 caracteres
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="values">Valores</Label>
+              <Textarea
+                id="values"
+                value={formData.values}
+                onChange={(e) => setFormData({ ...formData, values: e.target.value })}
+                placeholder="Quais são os princípios que guiam as decisões e comportamentos?"
+                rows={3}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground">
+                {formData.values.length}/500 caracteres
+              </p>
+            </div>
           </div>
 
           <div className="flex justify-end">

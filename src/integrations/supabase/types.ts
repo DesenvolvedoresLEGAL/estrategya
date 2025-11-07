@@ -73,6 +73,7 @@ export type Database = {
           created_at: string
           id: string
           main_challenge: string | null
+          mission: string | null
           model: string
           name: string
           owner_user_id: string
@@ -80,11 +81,14 @@ export type Database = {
           segment: string
           size_team: number | null
           updated_at: string
+          values: string | null
+          vision: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           main_challenge?: string | null
+          mission?: string | null
           model: string
           name: string
           owner_user_id: string
@@ -92,11 +96,14 @@ export type Database = {
           segment: string
           size_team?: number | null
           updated_at?: string
+          values?: string | null
+          vision?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           main_challenge?: string | null
+          mission?: string | null
           model?: string
           name?: string
           owner_user_id?: string
@@ -104,6 +111,8 @@ export type Database = {
           segment?: string
           size_team?: number | null
           updated_at?: string
+          values?: string | null
+          vision?: string | null
         }
         Relationships: []
       }
