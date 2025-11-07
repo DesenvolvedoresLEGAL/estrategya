@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDebounce } from './useDebounce';
-import { toast } from 'sonner';
 
 interface UseAutoSaveOptions {
   data: any;
@@ -25,10 +24,7 @@ export const useAutoSave = ({
     try {
       isSaving.current = true;
       await onSave(debouncedData);
-      toast.success('Rascunho salvo automaticamente', {
-        duration: 2000,
-        position: 'bottom-right',
-      });
+      // Silencioso: indicador visual externo (SaveIndicator) cuida do feedback
     } catch (error) {
       console.error('Auto-save error:', error);
       // Não mostrar erro ao usuário para não ser intrusivo

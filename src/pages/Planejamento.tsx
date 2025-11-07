@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -97,17 +97,19 @@ const Planejamento = () => {
     markStepCompleted,
   } = useWizardProgress(user?.id || null, companyData?.id || null);
 
-  // Auto-save a cada 30 segundos
+  // Auto-save a cada 30 segundos (somente quando dados relevantes mudam)
+  const autoSaveData = useMemo(() => ({
+    companyData,
+    swotData,
+    analysisData,
+    ogsmData,
+    okrsBscData,
+    prioritizationData,
+    executionData,
+  }), [companyData, swotData, analysisData, ogsmData, okrsBscData, prioritizationData, executionData]);
+
   const { isSaving } = useAutoSave({
-    data: {
-      companyData,
-      swotData,
-      analysisData,
-      ogsmData,
-      okrsBscData,
-      prioritizationData,
-      executionData,
-    },
+    data: autoSaveData,
     onSave: async (data) => {
       if (companyData?.id && user?.id) {
         await saveProgress(currentStep, data);

@@ -83,10 +83,10 @@ export const useWizardProgress = (userId: string | null, companyId: string | nul
 
         if (error) throw error;
       } else {
-        // Create new progress
+        // Create or update progress atomically (avoid unique constraint violations)
         const { data, error } = await supabase
           .from('wizard_progress')
-          .insert(progressData)
+          .upsert(progressData, { onConflict: 'company_id,user_id' })
           .select()
           .single();
 
