@@ -201,6 +201,60 @@ export type Database = {
         }
         Relationships: []
       }
+      company_subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          company_id: string
+          created_at: string | null
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan_id: string
+          status: string
+          trial_ends_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          company_id: string
+          created_at?: string | null
+          current_period_end: string
+          current_period_start?: string
+          id?: string
+          plan_id: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          company_id?: string
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id?: string
+          status?: string
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       execution_plan: {
         Row: {
           company_id: string
@@ -826,6 +880,45 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          features: Json
+          id: string
+          is_active: boolean | null
+          limits: Json
+          name: string
+          price_annual: number | null
+          price_monthly: number | null
+          tier: Database["public"]["Enums"]["plan_tier"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          features: Json
+          id?: string
+          is_active?: boolean | null
+          limits: Json
+          name: string
+          price_annual?: number | null
+          price_monthly?: number | null
+          tier: Database["public"]["Enums"]["plan_tier"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          features?: Json
+          id?: string
+          is_active?: boolean | null
+          limits?: Json
+          name?: string
+          price_annual?: number | null
+          price_monthly?: number | null
+          tier?: Database["public"]["Enums"]["plan_tier"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       team_invites: {
         Row: {
           accepted: boolean | null
@@ -1049,6 +1142,7 @@ export type Database = {
         | "em_risco"
         | "concluido"
         | "pausado"
+      plan_tier: "free" | "pro" | "business" | "enterprise"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1187,6 +1281,7 @@ export const Constants = {
         "concluido",
         "pausado",
       ],
+      plan_tier: ["free", "pro", "business", "enterprise"],
     },
   },
 } as const
