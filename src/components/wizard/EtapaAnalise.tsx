@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Sparkles, Brain } from "lucide-react";
+import { PESTELDisplay } from "@/components/planning/PESTELDisplay";
 
 interface Props {
   companyData: any;
@@ -17,6 +18,39 @@ interface Props {
 export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBack }: Props) => {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(initialData);
+  const [pestelData, setPestelData] = useState<any>(null);
+  const [loadingPestel, setLoadingPestel] = useState(false);
+
+  useEffect(() => {
+    // Load existing PESTEL analysis if available
+    if (companyData?.id) {
+      loadPestelAnalysis();
+    }
+  }, [companyData?.id]);
+
+  const loadPestelAnalysis = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pestel_analysis')
+        .select('*')
+        .eq('company_id', companyData.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (data) {
+        setPestelData({
+          politico: data.political,
+          economico: data.economic,
+          social: data.social,
+          tecnologico: data.technological,
+          ambiental: data.environmental,
+          legal: data.legal,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading PESTEL analysis:', error);
+    }
+  };
 
   const handleAnalyze = async () => {
     setLoading(true);
@@ -42,12 +76,61 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
       if (updateError) throw updateError;
 
       setAnalysis(data);
+      
+      // Generate PESTEL if applicable
+      const pestelSegments = ['Eventos', 'Telecomunicações', 'Indústria'];
+      if (pestelSegments.includes(companyData.segment)) {
+        await generatePestelAnalysis();
+      }
+      
       toast.success("Análise gerada com sucesso!");
     } catch (error: any) {
       console.error('Error generating analysis:', error);
       toast.error("Erro ao gerar análise: " + error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generatePestelAnalysis = async () => {
+    setLoadingPestel(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-segment-customization', {
+        body: {
+          action: 'analyze_pestel',
+          segment: companyData.segment,
+          company_context: companyData,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.pestel) {
+        // Save PESTEL analysis
+        const { error: pestelError } = await supabase
+          .from('pestel_analysis')
+          .upsert({
+            company_id: companyData.id,
+            political: data.pestel.politico,
+            economic: data.pestel.economico,
+            social: data.pestel.social,
+            technological: data.pestel.tecnologico,
+            environmental: data.pestel.ambiental,
+            legal: data.pestel.legal,
+          }, {
+            onConflict: 'company_id'
+          });
+
+        if (pestelError) throw pestelError;
+
+        setPestelData(data.pestel);
+        toast.success("Análise PESTEL gerada!");
+      }
+    } catch (error: any) {
+      console.error('Error generating PESTEL:', error);
+      // Don't show error to user, PESTEL is optional
+    } finally {
+      setLoadingPestel(false);
     }
   };
 
@@ -131,6 +214,16 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
                   ))}
                 </div>
               </div>
+
+              {/* PESTEL Analysis (if applicable) */}
+              {pestelData && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <Badge variant="secondary">Análise PESTEL para {companyData.segment}</Badge>
+                  </h3>
+                  <PESTELDisplay pestel={pestelData} />
+                </div>
+              )}
 
               <div className="bg-success/10 border border-success/20 rounded-lg p-4">
                 <p className="text-sm text-foreground font-medium">

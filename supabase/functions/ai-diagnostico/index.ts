@@ -19,6 +19,10 @@ serve(async (req) => {
     }
 
     console.log('Generating strategic diagnosis for:', company.name);
+    
+    // Extract segment-specific data if available
+    const segmentData = company.segment_specific_data || {};
+    const hasSegmentData = Object.keys(segmentData).length > 0;
 
     const systemPrompt = `Você é um estrategista corporativo de classe mundial, atuando como Chief Strategy Officer de uma big tech.
 Sua missão é analisar o diagnóstico SWOT de uma empresa brasileira e produzir uma análise estratégica executiva.
@@ -35,6 +39,11 @@ Modelo de negócio: ${company.model}
 Região: ${company.region || 'Brasil'}
 Desafio principal: ${company.main_challenge}
 Tamanho do time: ${company.size_team || 'não informado'}
+
+${hasSegmentData ? `INFORMAÇÕES ESPECÍFICAS DO SEGMENTO ${company.segment}:
+${Object.entries(segmentData).map(([key, value]) => `${key}: ${value}`).join('\n')}
+
+IMPORTANTE: Considere estas informações específicas do segmento para gerar insights mais precisos e contextualizados.` : ''}
 
 ANÁLISE SWOT:
 Forças: ${swot.strengths?.join(', ') || 'não informadas'}

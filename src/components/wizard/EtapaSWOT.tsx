@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Target, TrendingDown, Zap, ShieldAlert, AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Target, TrendingDown, Zap, ShieldAlert, AlertCircle, Lightbulb } from "lucide-react";
 import { swotSchema } from "@/lib/validations/wizard";
 import { z } from "zod";
+import { SegmentExamplesModal } from "./SegmentExamplesModal";
 
 interface Props {
   companyData: any;
@@ -26,6 +27,40 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack }: Props) =
     opportunities: initialData?.opportunities?.join("\n") || "",
     threats: initialData?.threats?.join("\n") || "",
   });
+  const [examples, setExamples] = useState<any>(null);
+  const [showExamplesModal, setShowExamplesModal] = useState(false);
+
+  useEffect(() => {
+    if (companyData?.segment) {
+      loadSegmentExamples();
+    }
+  }, [companyData?.segment]);
+
+  const loadSegmentExamples = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('segment_templates')
+        .select('template_data')
+        .eq('segment', companyData.segment)
+        .eq('template_type', 'swot')
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (data) {
+        setExamples(data.template_data);
+      }
+    } catch (error) {
+      console.error('Error loading segment examples:', error);
+    }
+  };
+
+  const handleUseExample = (field: string, example: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: prev[field] ? `${prev[field]}\n${example}` : example
+    }));
+    toast.success('Exemplo adicionado!');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,10 +133,24 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack }: Props) =
   return (
     <Card className="max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle>Análise SWOT</CardTitle>
-        <CardDescription>
-          Identifique os pontos fortes, fracos, oportunidades e ameaças da sua empresa
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Análise SWOT</CardTitle>
+            <CardDescription>
+              Identifique os pontos fortes, fracos, oportunidades e ameaças da sua empresa
+            </CardDescription>
+          </div>
+          {examples && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowExamplesModal(true)}
+            >
+              <Lightbulb className="w-4 h-4 mr-2" />
+              Ver exemplos para {companyData.segment}
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {Object.keys(errors).length > 0 && (
@@ -222,10 +271,20 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack }: Props) =
             <Button type="submit" disabled={loading}>
               {loading ? "Salvando..." : "Próximo"}
               <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
-  );
+          </Button>
+        </div>
+      </form>
+    </CardContent>
+
+    {examples && (
+      <SegmentExamplesModal
+        open={showExamplesModal}
+        onOpenChange={setShowExamplesModal}
+        segment={companyData.segment}
+        examples={examples}
+        onUseExample={handleUseExample}
+      />
+    )}
+  </Card>
+);
 };

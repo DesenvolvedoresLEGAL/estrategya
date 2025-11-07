@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowRight, FileUp, AlertCircle } from "lucide-react";
 import { FileUploadZone } from "./FileUploadZone";
+import { SegmentQuestionsSection } from "./SegmentQuestionsSection";
+import { Sparkles } from "lucide-react";
 import { companyContextSchema } from "@/lib/validations/wizard";
 import { z } from "zod";
 
@@ -49,6 +51,43 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
     values: initialData?.values || "",
   });
   const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const [segmentQuestions, setSegmentQuestions] = useState<any[]>([]);
+  const [segmentAnswers, setSegmentAnswers] = useState<Record<string, any>>(
+    initialData?.segment_specific_data || {}
+  );
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+
+  const handleSegmentChange = async (segment: string) => {
+    setFormData({ ...formData, segment });
+    if (errors.segment) setErrors({ ...errors, segment: "" });
+    
+    if (segment) {
+      setLoadingQuestions(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('ai-segment-customization', {
+          body: { 
+            action: 'generate_questions', 
+            segment,
+            company_context: formData 
+          }
+        });
+        
+        if (error) throw error;
+        setSegmentQuestions(data.questions || []);
+      } catch (error) {
+        console.error('Error loading segment questions:', error);
+        toast.error('Erro ao carregar perguntas específicas do segmento');
+      } finally {
+        setLoadingQuestions(false);
+      }
+    } else {
+      setSegmentQuestions([]);
+    }
+  };
+
+  const handleSegmentAnswerChange = (field: string, value: string) => {
+    setSegmentAnswers({ ...segmentAnswers, [field]: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,21 +115,24 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
     try {
       let companyId = initialData?.id;
 
+      const sanitizedData = {
+        name: formData.name.trim(),
+        segment: formData.segment,
+        model: formData.model,
+        size_team: formData.size_team ? parseInt(formData.size_team) : null,
+        region: formData.region?.trim() || null,
+        main_challenge: formData.main_challenge?.trim() || null,
+        mission: formData.mission?.trim() || null,
+        vision: formData.vision?.trim() || null,
+        values: formData.values?.trim() || null,
+        segment_specific_data: segmentAnswers,
+      };
+
       if (companyId) {
         // Atualizar empresa existente
         const { error } = await supabase
           .from('companies')
-          .update({
-            name: formData.name.trim(),
-            segment: formData.segment,
-            model: formData.model,
-            size_team: formData.size_team ? parseInt(formData.size_team) : null,
-            region: formData.region?.trim() || null,
-            main_challenge: formData.main_challenge?.trim() || null,
-            mission: formData.mission?.trim() || null,
-            vision: formData.vision?.trim() || null,
-            values: formData.values?.trim() || null,
-          })
+          .update(sanitizedData)
           .eq('id', companyId);
 
         if (error) throw error;
@@ -99,15 +141,7 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
         const { data, error } = await supabase
           .from('companies')
           .insert({
-            name: formData.name.trim(),
-            segment: formData.segment,
-            model: formData.model,
-            size_team: formData.size_team ? parseInt(formData.size_team) : null,
-            region: formData.region?.trim() || null,
-            main_challenge: formData.main_challenge?.trim() || null,
-            mission: formData.mission?.trim() || null,
-            vision: formData.vision?.trim() || null,
-            values: formData.values?.trim() || null,
+            ...sanitizedData,
             owner_user_id: userId,
           })
           .select()
@@ -118,7 +152,7 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
       }
 
       toast.success("Contexto salvo com sucesso!");
-      onNext({ ...formData, id: companyId });
+      onNext({ ...formData, ...sanitizedData, id: companyId });
     } catch (error: any) {
       console.error('Error saving company:', error);
       toast.error(error.message || "Erro ao salvar dados da empresa");
@@ -169,10 +203,7 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
               <Label htmlFor="segment">Segmento *</Label>
               <Select
                 value={formData.segment}
-                onValueChange={(value) => {
-                  setFormData({ ...formData, segment: value });
-                  if (errors.segment) setErrors({ ...errors, segment: "" });
-                }}
+                onValueChange={handleSegmentChange}
                 required
               >
                 <SelectTrigger className={errors.segment ? "border-destructive" : ""}>
@@ -299,6 +330,16 @@ export const EtapaContexto = ({ initialData, onNext, userId }: Props) => {
               </p>
             </div>
           </div>
+
+          {formData.segment && (
+            <SegmentQuestionsSection
+              questions={segmentQuestions}
+              answers={segmentAnswers}
+              onChange={handleSegmentAnswerChange}
+              loading={loadingQuestions}
+              segment={formData.segment}
+            />
+          )}
 
           <div className="border-t pt-6 space-y-4">
             <div className="flex items-center gap-2">

@@ -79,6 +79,7 @@ export type Database = {
           owner_user_id: string
           region: string | null
           segment: string
+          segment_specific_data: Json | null
           size_team: number | null
           updated_at: string
           values: string | null
@@ -94,6 +95,7 @@ export type Database = {
           owner_user_id: string
           region?: string | null
           segment: string
+          segment_specific_data?: Json | null
           size_team?: number | null
           updated_at?: string
           values?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           owner_user_id?: string
           region?: string | null
           segment?: string
+          segment_specific_data?: Json | null
           size_team?: number | null
           updated_at?: string
           values?: string | null
@@ -564,6 +567,36 @@ export type Database = {
           social?: string | null
           technological?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      segment_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_premium: boolean | null
+          segment: string
+          template_data: Json
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_premium?: boolean | null
+          segment: string
+          template_data: Json
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_premium?: boolean | null
+          segment?: string
+          template_data?: Json
+          template_type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
