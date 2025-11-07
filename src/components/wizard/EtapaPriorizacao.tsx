@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Grid3x3, Sparkles, Save } from "lucide-react";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
 import { ICERankingList } from "@/components/planning/ICERankingList";
+import { ICEDashboard } from "@/components/planning/ICEDashboard";
 import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
@@ -198,21 +199,13 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
                 evitar={prioritizationData.evitar || []}
               />
 
-              {/* Ranking ICE Score */}
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    Ranking ICE - Ajuste a Confiança
-                  </CardTitle>
-                  <CardDescription>
-                    A IA sugeriu Impact e Ease. Ajuste o Confidence nas páginas de detalhes. Top 3 irão para o WBR.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ICERankingList initiatives={prioritizationData.initiatives || []} />
-                </CardContent>
-              </Card>
+              {/* Dashboard ICE Aprimorado */}
+              <div className="mt-6">
+                <ICEDashboard 
+                  companyId={companyData.id}
+                  initiatives={prioritizationData.initiatives || []}
+                />
+              </div>
 
               <div className="bg-muted p-4 rounded-lg">
                 <h4 className="font-semibold mb-2">Recomendações:</h4>

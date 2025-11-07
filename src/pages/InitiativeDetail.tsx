@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Loader2, Target, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { ICEScoreForm } from "@/components/planning/ICEScoreForm";
+import { ICEScoreWizard } from "@/components/planning/ICEScoreWizard";
 import { FiveW2HForm } from "@/components/planning/FiveW2HForm";
 import { FiveW2HDisplay } from "@/components/planning/FiveW2HDisplay";
 import { FiveW2HWizard } from "@/components/planning/FiveW2HWizard";
@@ -22,6 +23,7 @@ export default function InitiativeDetail() {
   const [initiative, setInitiative] = useState<any>(null);
   const [objective, setObjective] = useState<any>(null);
   const [company, setCompany] = useState<any>(null);
+  const [showICEWizard, setShowICEWizard] = useState(false);
 
   useEffect(() => {
     loadInitiativeData();
@@ -204,8 +206,9 @@ export default function InitiativeDetail() {
 
       {/* Tabs */}
       <Tabs defaultValue="ice" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="ice">ICE Score</TabsTrigger>
+          <TabsTrigger value="ice-wizard">ICE Wizard</TabsTrigger>
           <TabsTrigger value="5w2h-wizard">5W2H Wizard</TabsTrigger>
           <TabsTrigger value="5w2h-form">Editar Avançado</TabsTrigger>
           <TabsTrigger value="5w2h-view">Visualizar</TabsTrigger>
@@ -219,6 +222,24 @@ export default function InitiativeDetail() {
             initialEase={initiative.ease_score || 5}
             onScoresChange={handleICEScoreChange}
           />
+
+          <Card>
+            <CardContent className="py-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                Prefere uma análise guiada? Use o <strong>ICE Wizard</strong> para responder perguntas contextuais e obter uma avaliação mais precisa.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const tabs = document.querySelector('[value="ice-wizard"]') as HTMLElement;
+                  tabs?.click();
+                }}
+                className="w-full"
+              >
+                Usar ICE Wizard
+              </Button>
+            </CardContent>
+          </Card>
 
           {initiative.ice_score && (
             <Card>
@@ -258,6 +279,24 @@ export default function InitiativeDetail() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="ice-wizard">
+          <ICEScoreWizard
+            initiativeTitle={initiative.title}
+            initiativeDescription={initiative.description}
+            onComplete={(scores) => {
+              handleICEScoreChange(scores);
+              toast.success('ICE Score atualizado com sucesso!');
+              // Voltar para a aba ICE Score
+              const tabs = document.querySelector('[value="ice"]') as HTMLElement;
+              tabs?.click();
+            }}
+            onCancel={() => {
+              const tabs = document.querySelector('[value="ice"]') as HTMLElement;
+              tabs?.click();
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="5w2h-wizard">
