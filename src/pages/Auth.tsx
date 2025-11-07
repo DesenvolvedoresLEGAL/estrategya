@@ -29,12 +29,12 @@ const Auth = () => {
               }
             });
         }
-        navigate("/");
+        navigate("/dashboard");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, trackSignup, trackLogin]);
 
   return (
     <div className="min-h-screen flex">
