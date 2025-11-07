@@ -24,25 +24,42 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
     setLoading(true);
 
     try {
-      // Buscar iniciativas de alta prioridade
+      // Buscar TOP 3 iniciativas por ICE Score
       const { data: initiatives, error: initiativesError } = await supabase
         .from('initiatives')
-        .select('*, strategic_objectives(title)')
+        .select(`
+          *,
+          strategic_objectives(title, company_id)
+        `)
         .eq('strategic_objectives.company_id', companyData.id)
-        .in('priority_quadrant', ['fazer_agora', 'planejar']);
+        .not('ice_score', 'is', null)
+        .order('ice_score', { ascending: false })
+        .limit(3);
 
       if (initiativesError) throw initiativesError;
 
-      // Chamar AI para gerar plano 4DX
+      if (!initiatives || initiatives.length === 0) {
+        toast.error("Nenhuma iniciativa com ICE Score encontrada. Priorize as iniciativas primeiro.");
+        return;
+      }
+
+      // Chamar AI para gerar plano 4DX com dados do 5W2H
       const { data, error } = await supabase.functions.invoke('ai-execucao', {
         body: {
           company: companyData,
-          initiatives: initiatives?.map(i => ({
+          initiatives: initiatives.map(i => ({
             title: i.title,
             description: i.description,
             objective: i.strategic_objectives?.title,
-            quadrant: i.priority_quadrant,
-          })) || [],
+            ice_score: i.ice_score,
+            what: i.what,
+            why: i.why,
+            who: i.who,
+            when_deadline: i.when_deadline,
+            where_location: i.where_location,
+            how: i.how,
+            how_much: i.how_much,
+          })),
         },
       });
 
@@ -101,8 +118,8 @@ export const EtapaExecucao = ({ companyData, prioritizationData, initialData, on
               </div>
               <h3 className="text-xl font-semibold mb-2">Vamos criar seu plano de execução!</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                O framework 4DX vai ajudar você a focar no que realmente importa, definir 
-                medidas de sucesso, criar um placar visível e estabelecer uma cadência de revisão.
+                O framework 4DX vai pegar suas TOP 3 iniciativas (ICE Score) e criar um plano 
+                de execução semanal com foco no que realmente importa.
               </p>
               <Button onClick={handleGenerateExecutionPlan} disabled={loading} size="lg">
                 {loading ? (

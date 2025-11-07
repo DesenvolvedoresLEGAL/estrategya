@@ -46,6 +46,8 @@ PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
       "titulo": "Nome da iniciativa",
       "impacto": "alto",
       "esforco": "baixo",
+      "impact_score": 9,
+      "ease_score": 8,
       "justificativa": "Por que fazer agora (1 linha)"
     }
   ],
@@ -55,6 +57,8 @@ PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
       "titulo": "Nome",
       "impacto": "alto",
       "esforco": "alto",
+      "impact_score": 9,
+      "ease_score": 3,
       "justificativa": "Por que planejar (1 linha)"
     }
   ],
@@ -64,6 +68,8 @@ PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
       "titulo": "Nome",
       "impacto": "medio",
       "esforco": "baixo",
+      "impact_score": 6,
+      "ease_score": 8,
       "justificativa": "Ganho rápido (1 linha)"
     }
   ],
@@ -73,6 +79,8 @@ PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
       "titulo": "Nome",
       "impacto": "baixo",
       "esforco": "alto ou medio",
+      "impact_score": 3,
+      "ease_score": 4,
       "justificativa": "Por que evitar (1 linha)"
     }
   ]
@@ -83,6 +91,8 @@ IMPORTANTE:
 - Use initiative_index como índice da iniciativa na lista original (0, 1, 2...)
 - Impacto pode ser: alto, medio, baixo
 - Esforço pode ser: alto, medio, baixo
+- impact_score: avalie o impacto real no objetivo (1-10, quanto maior melhor)
+- ease_score: avalie a facilidade de execução (1-10, quanto maior mais fácil, inverso do esforço)
 - Priorize iniciativas de alto impacto e baixo esforço
 - Dentro de cada quadrante, ordene por prioridade (mais importante primeiro)`;
 

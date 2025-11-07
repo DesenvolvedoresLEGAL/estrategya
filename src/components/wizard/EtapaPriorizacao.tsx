@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Grid3x3, Sparkles } from "lucide-react";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
+import { ICERankingList } from "@/components/planning/ICERankingList";
 import { FrameworkInfo } from "./FrameworkInfo";
 
 interface Props {
@@ -51,22 +52,38 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
 
       if (error) throw error;
 
-      // Atualizar initiatives com priorização
-      for (const item of data.initiatives) {
-        const { error: updateError } = await supabase
-          .from('initiatives')
-          .update({
-            impact: item.impact,
-            effort: item.effort,
-            priority_quadrant: item.quadrant,
-          })
-          .eq('id', item.id);
+      // Atualizar initiatives com priorização e scores ICE sugeridos
+      for (const quadrantKey of ['fazer_agora', 'planejar', 'oportunidades_rapidas', 'evitar']) {
+        const quadrant = data[quadrantKey];
+        if (Array.isArray(quadrant)) {
+          for (const item of quadrant) {
+            const originalInitiative = initiatives[item.initiative_index];
+            if (originalInitiative) {
+              const { error: updateError } = await supabase
+                .from('initiatives')
+                .update({
+                  priority_quadrant: quadrantKey,
+                  impact_score: item.impact_score || null,
+                  ease_score: item.ease_score || null,
+                  confidence_score: 5, // Valor inicial padrão, usuário ajusta depois
+                })
+                .eq('id', originalInitiative.id);
 
-        if (updateError) throw updateError;
+              if (updateError) console.error('Error updating initiative:', updateError);
+            }
+          }
+        }
       }
 
-      setPrioritizationData(data);
-      toast.success("Iniciativas priorizadas com sucesso!");
+      // Recarregar initiatives com os scores atualizados
+      const { data: updatedInitiatives } = await supabase
+        .from('initiatives')
+        .select('*, strategic_objectives(title)')
+        .eq('strategic_objectives.company_id', companyData.id)
+        .order('ice_score', { ascending: false, nullsFirst: false });
+
+      setPrioritizationData({ ...data, initiatives: updatedInitiatives });
+      toast.success("Iniciativas priorizadas com ICE Score sugerido pela IA!");
     } catch (error: any) {
       console.error('Error prioritizing initiatives:', error);
       toast.error("Erro ao priorizar: " + error.message);
@@ -137,6 +154,22 @@ export const EtapaPriorizacao = ({ companyData, okrsBscData, initialData, onNext
                 oportunidades_rapidas={prioritizationData.oportunidades_rapidas || []}
                 evitar={prioritizationData.evitar || []}
               />
+
+              {/* Ranking ICE Score */}
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Ranking ICE - Ajuste a Confiança
+                  </CardTitle>
+                  <CardDescription>
+                    A IA sugeriu Impact e Ease. Ajuste o Confidence nas páginas de detalhes. Top 3 irão para o WBR.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ICERankingList initiatives={prioritizationData.initiatives || []} />
+                </CardContent>
+              </Card>
 
               <div className="bg-muted p-4 rounded-lg">
                 <h4 className="font-semibold mb-2">Recomendações:</h4>

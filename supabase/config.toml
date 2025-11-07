@@ -24,6 +24,9 @@ verify_jwt = false
 [functions.ai-priorizacao]
 verify_jwt = false
 
+[functions.ai-5w2h]
+verify_jwt = false
+
 [functions.ai-execucao]
 verify_jwt = false
 
