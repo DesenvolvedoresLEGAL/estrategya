@@ -72,11 +72,34 @@ export const EtapaMetricas = ({ companyData, objectivesData, onBack }: Props) =>
     }
   };
 
-  const handleFinish = () => {
-    toast.success("Planejamento estratégico concluído!", {
-      description: "Seu plano está pronto para ser executado!",
-    });
-    navigate("/");
+  const handleFinish = async () => {
+    try {
+      // Create initial status for all objectives
+      const statusPromises = objectivesData.map(async (obj: any) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        await supabase
+          .from('objective_updates')
+          .insert({
+            objective_id: obj.id,
+            status: 'nao_iniciado',
+            progress_percentage: 0,
+            updated_by: user.id,
+            notes: 'Status inicial criado automaticamente'
+          });
+      });
+
+      await Promise.all(statusPromises);
+
+      toast.success("Planejamento estratégico concluído!", {
+        description: "Seu plano está pronto para ser executado!",
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      console.error('Error creating initial status:', error);
+      navigate("/dashboard");
+    }
   };
 
   if (loading) {
