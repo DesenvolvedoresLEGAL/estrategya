@@ -4,13 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Building2, Target, TrendingUp, Users } from "lucide-react";
+import { useAnalytics } from "@/hooks/useAnalytics";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { trackSignup, trackLogin } = useAnalytics();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
+        // Track signup or login
+        if (event === 'SIGNED_IN') {
+          // Check if it's a new user by checking if they have a company
+          supabase
+            .from('companies')
+            .select('id')
+            .eq('owner_user_id', session.user.id)
+            .single()
+            .then(({ data }) => {
+              if (!data) {
+                trackSignup('email');
+              } else {
+                trackLogin('email');
+              }
+            });
+        }
         navigate("/");
       }
     });

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { AnalyticsTracker } from "@/components/analytics/AnalyticsTracker";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Planejamento from "./pages/Planejamento";
@@ -15,6 +16,7 @@ import Insights from "./pages/Insights";
 import PlanoEstrategico from "@/pages/PlanoEstrategico";
 import InitiativeDetail from "@/pages/InitiativeDetail";
 import Equipe from "@/pages/Equipe";
+import Admin from "@/pages/Admin";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,10 +51,11 @@ const AppLayout = () => {
               <Route path="/objetivos" element={<Objetivos />} />
               <Route path="/metricas" element={<Metricas />} />
               <Route path="/insights" element={<Insights />} />
-          <Route path="/plano-estrategico" element={<PlanoEstrategico />} />
-          <Route path="/iniciativa/:id" element={<InitiativeDetail />} />
-          <Route path="/equipe" element={<Equipe />} />
-          <Route path="*" element={<NotFound />} />
+              <Route path="/plano-estrategico" element={<PlanoEstrategico />} />
+              <Route path="/iniciativa/:id" element={<InitiativeDetail />} />
+              <Route path="/equipe" element={<Equipe />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
         </div>
@@ -67,6 +70,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AnalyticsTracker />
         <AppLayout />
       </BrowserRouter>
     </TooltipProvider>
