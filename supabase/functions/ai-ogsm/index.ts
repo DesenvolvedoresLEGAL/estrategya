@@ -11,16 +11,43 @@ serve(async (req) => {
   }
 
   try {
-    const { company, diagnostico } = await req.json();
-    
-    if (!company || !diagnostico) {
-      throw new Error('Dados incompletos');
+    const body = await req.json();
+    const { company, diagnostico } = body || {};
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+
+    if (!LOVABLE_API_KEY) {
+      console.error('LOVABLE_API_KEY not configured');
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY não configurada');
+    // Validação detalhada com mensagens específicas
+    if (!company) {
+      console.error('Missing company data in request body:', JSON.stringify(body));
+      return new Response(
+        JSON.stringify({ error: 'Dados da empresa não fornecidos. Por favor, complete as informações da empresa.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+
+    if (!diagnostico) {
+      console.error('Missing diagnostico data in request body:', JSON.stringify(body));
+      return new Response(
+        JSON.stringify({ error: 'Diagnóstico não fornecido. Por favor, complete a análise SWOT primeiro.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validação de campos obrigatórios da empresa
+    if (!company.name || !company.segment) {
+      console.error('Missing required company fields:', company);
+      return new Response(
+        JSON.stringify({ error: 'Nome e segmento da empresa são obrigatórios.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Generating OGSM for:', company.name, 'Segment:', company.segment);
+    console.log('Diagnostico summary:', diagnostico?.leitura_executiva ? 'Present' : 'Missing');
 
     const systemPrompt = `Você é um estrategista corporativo de classe mundial.
 Sua missão é criar um OGSM (Objective, Goals, Strategies, Measures) enxuto e executável para empresas brasileiras.
@@ -35,16 +62,16 @@ REGRAS:
 
 EMPRESA: ${company.name}
 SEGMENTO: ${company.segment}
-DESAFIO: ${company.main_challenge}
+DESAFIO: ${company.main_challenge || 'Não especificado'}
 
 DIAGNÓSTICO:
-${diagnostico.leitura_executiva}
+${diagnostico.leitura_executiva || 'Não disponível'}
 
 SWOT RESUMIDO:
-Forças: ${diagnostico.swot_resumido?.forcas?.join(', ')}
-Fraquezas: ${diagnostico.swot_resumido?.fraquezas?.join(', ')}
-Oportunidades: ${diagnostico.swot_resumido?.oportunidades?.join(', ')}
-Ameaças: ${diagnostico.swot_resumido?.ameacas?.join(', ')}
+Forças: ${diagnostico.swot_resumido?.forcas?.join(', ') || 'Não especificado'}
+Fraquezas: ${diagnostico.swot_resumido?.fraquezas?.join(', ') || 'Não especificado'}
+Oportunidades: ${diagnostico.swot_resumido?.oportunidades?.join(', ') || 'Não especificado'}
+Ameaças: ${diagnostico.swot_resumido?.ameacas?.join(', ') || 'Não especificado'}
 
 PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
 {
@@ -80,58 +107,97 @@ IMPORTANTE:
 - Se a empresa quer crescer, priorize metas de aquisição, conversão, receita
 - Se a empresa quer eficiência, priorize metas de produtividade, custo, SLA`;
 
-    console.log('Gerando OGSM...');
+    // Implementação de retry logic
+    let retryCount = 0;
+    const maxRetries = 3;
+    let lastError;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        response_format: { type: "json_object" }
-      }),
-    });
+    while (retryCount < maxRetries) {
+      try {
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            response_format: { type: "json_object" }
+          }),
+        });
 
-    if (!response.ok) {
-      if (response.status === 429) {
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('AI Gateway error:', response.status, errorText);
+          
+          if (response.status === 429) {
+            return new Response(
+              JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em instantes.' }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          if (response.status === 402) {
+            return new Response(
+              JSON.stringify({ error: 'Créditos insuficientes. Adicione créditos no workspace Lovable.' }),
+              { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          throw new Error(`AI Gateway error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+          console.error('Invalid AI response structure:', data);
+          throw new Error('Resposta da IA inválida');
+        }
+
+        const result = JSON.parse(data.choices[0].message.content);
+
+        // Validação da estrutura do resultado
+        if (!result.objective || !result.goals || !result.strategies || !result.measures) {
+          console.error('Missing required OGSM fields in AI response:', result);
+          throw new Error('Resposta da IA incompleta');
+        }
+
+        console.log('OGSM generated successfully');
+
         return new Response(
-          JSON.stringify({ error: 'Limite de requisições excedido. Tente novamente em alguns instantes.' }), 
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify(result),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } catch (error) {
+        lastError = error;
+        retryCount++;
+        console.error(`Attempt ${retryCount} failed:`, error);
+        
+        if (retryCount < maxRetries) {
+          console.log(`Retrying... (${retryCount}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Créditos insuficientes. Adicione créditos ao seu workspace Lovable.' }), 
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      const errorText = await response.text();
-      console.error('Erro na API:', response.status, errorText);
-      throw new Error(`Erro na API: ${response.status}`);
     }
 
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    const ogsm = JSON.parse(content);
-
-    console.log('OGSM gerado com sucesso');
-
-    return new Response(
-      JSON.stringify(ogsm),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Se todas as tentativas falharem
+    throw lastError;
 
   } catch (error) {
     console.error('Erro ao gerar OGSM:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar OGSM';
+    const statusCode = error instanceof Error && error.message.includes('não fornecido') ? 400 : 500;
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Erro ao gerar OGSM' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      }),
+      { status: statusCode, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
