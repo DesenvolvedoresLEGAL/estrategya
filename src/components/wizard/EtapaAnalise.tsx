@@ -133,7 +133,7 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
               </div>
 
               <div className="bg-success/10 border border-success/20 rounded-lg p-4">
-                <p className="text-sm text-success-foreground">
+                <p className="text-sm text-foreground font-medium">
                   ✓ Análise concluída! Agora vamos definir seus objetivos estratégicos baseados nesta leitura.
                 </p>
               </div>
