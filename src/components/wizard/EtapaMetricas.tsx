@@ -2,103 +2,136 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Check, TrendingUp } from "lucide-react";
+import { ArrowLeft, Check, TrendingUp, Plus, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Props {
   companyData: any;
-  objectivesData: any;
+  okrsBscData: any;
   onBack: () => void;
 }
 
-export const EtapaMetricas = ({ companyData, objectivesData, onBack }: Props) => {
+export const EtapaMetricas = ({ companyData, okrsBscData, onBack }: Props) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [metrics, setMetrics] = useState<any>(null);
+  const [objectives, setObjectives] = useState<any[]>([]);
+  const [metricsMap, setMetricsMap] = useState<{ [key: string]: any[] }>({});
 
   useEffect(() => {
-    if (objectivesData) {
-      generateMetrics();
-    }
-  }, [objectivesData]);
+    loadObjectives();
+  }, []);
 
-  const generateMetrics = async () => {
+  const loadObjectives = async () => {
     setLoading(true);
-
     try {
-      const { data, error } = await supabase.functions.invoke('ai-indicadores', {
-        body: {
-          objectives: objectivesData.map((obj: any) => ({
-            titulo: obj.title,
-            perspectiva: obj.perspective,
-          })),
-        },
-      });
+      const { data, error } = await supabase
+        .from('strategic_objectives')
+        .select('*, initiatives(*)')
+        .eq('company_id', companyData.id);
 
       if (error) throw error;
 
-      // Salvar métricas no banco
-      const metricPromises = objectivesData.map(async (obj: any, idx: number) => {
-        const objectiveKey = Object.keys(data.metricas_por_objetivo)[idx];
-        const objMetrics = data.metricas_por_objetivo[objectiveKey];
-
-        if (objMetrics && objMetrics.length > 0) {
-          const { error: metricsError } = await supabase
-            .from('metrics')
-            .insert(
-              objMetrics.map((metric: any) => ({
-                objective_id: obj.id,
-                name: metric.nome,
-                target: metric.meta,
-                period: metric.periodo,
-                source: 'manual',
-              }))
-            );
-
-          if (metricsError) throw metricsError;
-        }
+      setObjectives(data || []);
+      
+      // Inicializar métricas sugeridas baseadas nos Key Results dos OKRs
+      const initialMetrics: { [key: string]: any[] } = {};
+      data?.forEach((obj, idx) => {
+        const okr = okrsBscData?.okrs?.okrs?.[idx];
+        initialMetrics[obj.id] = okr?.key_results?.map((kr: any) => ({
+          name: kr.metrica || kr.kr,
+          target: kr.target,
+          period: 'Mensal',
+          source: 'manual',
+        })) || [];
       });
-
-      await Promise.all(metricPromises);
-      setMetrics(data);
-      toast.success("Métricas geradas com sucesso!");
+      
+      setMetricsMap(initialMetrics);
     } catch (error: any) {
-      console.error('Error generating metrics:', error);
-      toast.error("Erro ao gerar métricas: " + error.message);
+      console.error('Error loading objectives:', error);
+      toast.error("Erro ao carregar objetivos: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const updateMetric = (objectiveId: string, metricIndex: number, field: string, value: string) => {
+    setMetricsMap(prev => ({
+      ...prev,
+      [objectiveId]: prev[objectiveId].map((m, i) => 
+        i === metricIndex ? { ...m, [field]: value } : m
+      )
+    }));
+  };
+
+  const addMetric = (objectiveId: string) => {
+    setMetricsMap(prev => ({
+      ...prev,
+      [objectiveId]: [
+        ...(prev[objectiveId] || []),
+        { name: '', target: '', period: 'Mensal', source: 'manual' }
+      ]
+    }));
+  };
+
+  const removeMetric = (objectiveId: string, metricIndex: number) => {
+    setMetricsMap(prev => ({
+      ...prev,
+      [objectiveId]: prev[objectiveId].filter((_, i) => i !== metricIndex)
+    }));
+  };
+
   const handleFinish = async () => {
+    setLoading(true);
     try {
-      // Create initial status for all objectives
-      const statusPromises = objectivesData.map(async (obj: any) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+      // Salvar todas as métricas
+      for (const objectiveId of Object.keys(metricsMap)) {
+        const metrics = metricsMap[objectiveId].filter(m => m.name && m.target);
+        
+        if (metrics.length > 0) {
+          const { error: metricsError } = await supabase
+            .from('metrics')
+            .insert(
+              metrics.map(metric => ({
+                objective_id: objectiveId,
+                ...metric
+              }))
+            );
 
-        await supabase
-          .from('objective_updates')
-          .insert({
-            objective_id: obj.id,
-            status: 'nao_iniciado',
-            progress_percentage: 0,
-            updated_by: user.id,
-            notes: 'Status inicial criado automaticamente'
-          });
-      });
+          if (metricsError) throw metricsError;
+        }
+      }
 
-      await Promise.all(statusPromises);
+      // Criar status inicial para todos os objetivos
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const statusPromises = objectives.map(async (obj: any) => {
+          await supabase
+            .from('objective_updates')
+            .insert({
+              objective_id: obj.id,
+              status: 'nao_iniciado',
+              progress_percentage: 0,
+              updated_by: user.id,
+              notes: 'Status inicial criado automaticamente'
+            });
+        });
+
+        await Promise.all(statusPromises);
+      }
 
       toast.success("Planejamento estratégico concluído!", {
         description: "Seu plano está pronto para ser executado!",
       });
       navigate("/dashboard");
-    } catch (error) {
-      console.error('Error creating initial status:', error);
-      navigate("/dashboard");
+    } catch (error: any) {
+      console.error('Error finishing planning:', error);
+      toast.error("Erro ao finalizar: " + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,67 +154,114 @@ export const EtapaMetricas = ({ companyData, objectivesData, onBack }: Props) =>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-6 h-6 text-primary" />
-            Métricas e Indicadores
+            Métricas e KPIs - Refinamento Final
           </CardTitle>
           <CardDescription>
-            KRs e métricas para acompanhar o progresso dos seus objetivos
+            Defina as métricas específicas para cada OKR. Baseadas nos Key Results gerados, você pode customizar e adicionar mais.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {objectivesData.map((obj: any, idx: number) => {
-            const objectiveKey = metrics ? Object.keys(metrics.metricas_por_objetivo)[idx] : null;
-            const objMetrics = objectiveKey ? metrics.metricas_por_objetivo[objectiveKey] : [];
+          {objectives.map((obj: any) => {
+            const objMetrics = metricsMap[obj.id] || [];
 
             return (
               <Card key={obj.id} className="border-l-4 border-l-primary">
                 <CardHeader>
-                  <CardTitle className="text-lg">{obj.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {objMetrics.map((metric: any, mIdx: number) => (
-                      <div key={mIdx} className="bg-muted p-3 rounded-lg">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <h4 className="font-semibold text-sm">{metric.nome}</h4>
-                          <Badge variant="outline" className="text-xs">
-                            {metric.periodo}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          Meta: {metric.meta}
-                        </p>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{obj.title}</CardTitle>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => addMetric(obj.id)}
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Adicionar Métrica
+                    </Button>
                   </div>
+                  {obj.initiatives && obj.initiatives.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {obj.initiatives.length} Key Results
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {objMetrics.map((metric: any, mIdx: number) => (
+                    <div key={mIdx} className="bg-muted p-4 rounded-lg space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 grid md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor={`metric-name-${obj.id}-${mIdx}`}>
+                              Nome da Métrica
+                            </Label>
+                            <Input
+                              id={`metric-name-${obj.id}-${mIdx}`}
+                              value={metric.name}
+                              onChange={(e) => updateMetric(obj.id, mIdx, 'name', e.target.value)}
+                              placeholder="Ex: Taxa de conversão"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`metric-target-${obj.id}-${mIdx}`}>
+                              Meta
+                            </Label>
+                            <Input
+                              id={`metric-target-${obj.id}-${mIdx}`}
+                              value={metric.target}
+                              onChange={(e) => updateMetric(obj.id, mIdx, 'target', e.target.value)}
+                              placeholder="Ex: 25%"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeMetric(obj.id, mIdx)}
+                          className="mt-8"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {objMetrics.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Nenhuma métrica definida ainda. Clique em "Adicionar Métrica" para começar.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             );
           })}
 
-          <div className="bg-gradient-success rounded-lg p-6 text-center text-success-foreground">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8" />
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg p-6 text-center border-2 border-primary/20">
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-2xl font-bold mb-2">Parabéns!</h3>
             <p className="text-lg mb-4">
               Seu planejamento estratégico está completo
             </p>
-            <p className="text-sm opacity-90 max-w-2xl mx-auto">
-              Você criou {objectivesData.length} objetivos estratégicos com iniciativas e métricas de acompanhamento. 
-              Agora é hora de executar e acompanhar o progresso!
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+              Você criou {objectives.length} objetivos estratégicos usando os frameworks OGSM, OKR e BSC. 
+              Suas iniciativas foram priorizadas e você tem um plano de execução 4DX pronto. Agora é hora de executar!
             </p>
           </div>
         </CardContent>
       </Card>
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={loading}>
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        <Button onClick={handleFinish} size="lg" className="bg-gradient-success">
-          <Check className="mr-2 w-4 h-4" />
-          Concluir Planejamento
+        <Button onClick={handleFinish} size="lg" disabled={loading}>
+          {loading ? "Salvando..." : (
+            <>
+              <Check className="mr-2 w-4 h-4" />
+              Concluir Planejamento
+            </>
+          )}
         </Button>
       </div>
     </div>
