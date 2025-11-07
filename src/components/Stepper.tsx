@@ -27,25 +27,45 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
   const totalCompletedSteps = completedSteps.length;
 
   return (
-    <div className="w-full py-8">
+    <nav 
+      className="w-full py-8" 
+      aria-label="Progresso do planejamento estratégico"
+      role="navigation"
+    >
       {/* Barra de Progresso */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground">
+            <span 
+              className="text-sm font-medium text-muted-foreground"
+              aria-current="step"
+            >
               Etapa {currentStep} de {steps.length}
             </span>
             {totalCompletedSteps > 0 && (
-              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium">
+              <span 
+                className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary font-medium animate-fade-in"
+                role="status"
+              >
                 {totalCompletedSteps} concluídas
               </span>
             )}
           </div>
-          <span className="text-sm font-medium text-primary">
+          <span 
+            className="text-sm font-medium text-primary"
+            role="status"
+            aria-label={`${Math.round(progressPercentage)} por cento completo`}
+          >
             {Math.round(progressPercentage)}% completo
           </span>
         </div>
-        <Progress value={progressPercentage} className="h-2" />
+        <Progress 
+          value={progressPercentage} 
+          className="h-2 transition-all duration-500"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progressPercentage}
+        />
       </div>
 
       {/* Stepper Original */}
@@ -70,18 +90,23 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
                   onClick={() => isClickable && onStepClick(step.id)}
                   disabled={!isClickable}
                   className={cn(
-                    "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
+                    "relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300",
                     "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+                    "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                     isCompleted && "bg-primary text-primary-foreground shadow-md",
-                    isCurrent && "bg-primary text-primary-foreground shadow-lg scale-110",
+                    isCurrent && "bg-primary text-primary-foreground shadow-lg scale-110 animate-scale-in",
                     !isCompleted && !isCurrent && "bg-muted text-muted-foreground",
-                    isClickable && "cursor-pointer hover:scale-105"
+                    isClickable && "cursor-pointer hover:scale-105 hover:shadow-md"
                   )}
+                  aria-label={`${step.title}: ${isCompleted ? 'Concluída' : isCurrent ? 'Atual' : 'Não iniciada'}`}
+                  aria-current={isCurrent ? 'step' : undefined}
+                  tabIndex={isClickable ? 0 : -1}
+                  role="button"
                 >
                   {isCompleted ? (
-                    <Check className="w-6 h-6" />
+                    <Check className="w-6 h-6" aria-hidden="true" />
                   ) : (
-                    <span className="text-lg font-semibold">{step.id}</span>
+                    <span className="text-lg font-semibold" aria-hidden="true">{step.id}</span>
                   )}
                 </button>
                 {index !== steps.length - 1 && (
@@ -97,9 +122,10 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
                 <div className="flex items-center justify-center gap-1 mb-1">
                   <p
                     className={cn(
-                      "text-sm font-medium transition-colors",
+                      "text-sm font-medium transition-colors duration-300",
                       isCurrent ? "text-primary" : "text-muted-foreground"
                     )}
+                    id={`step-${step.id}-label`}
                   >
                     {step.title}
                   </p>
@@ -107,8 +133,14 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <button className="focus:outline-none">
-                            <HelpCircle className="w-3 h-3 text-muted-foreground hover:text-primary" />
+                          <button 
+                            className="focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-full"
+                            aria-label={`Informações sobre ${step.title}`}
+                          >
+                            <HelpCircle 
+                              className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" 
+                              aria-hidden="true"
+                            />
                           </button>
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs">
@@ -118,7 +150,10 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
                     </TooltipProvider>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 hidden sm:block">
+                <p 
+                  className="text-xs text-muted-foreground mt-1 hidden sm:block"
+                  id={`step-${step.id}-desc`}
+                >
                   {step.description}
                 </p>
               </div>
@@ -126,6 +161,6 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 };

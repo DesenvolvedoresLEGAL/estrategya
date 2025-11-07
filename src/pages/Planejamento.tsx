@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -16,6 +16,8 @@ import { EtapaExecucao } from "@/components/wizard/EtapaExecucao";
 import { EtapaMetricas } from "@/components/wizard/EtapaMetricas";
 import { useWizardProgress } from "@/hooks/useWizardProgress";
 import { ErrorBoundary } from "@/components/wizard/ErrorBoundary";
+import { LoadingSkeleton } from "@/components/wizard/LoadingSkeleton";
+import { StepTransition } from "@/components/wizard/StepTransition";
 
 const steps = [
   { 
@@ -253,7 +255,10 @@ const Planejamento = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header 
+        className="border-b border-border bg-card sticky top-0 z-10 backdrop-blur-sm bg-card/95"
+        role="banner"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -266,14 +271,23 @@ const Planejamento = () => {
             </div>
             <div className="flex items-center gap-2">
               {completedSteps.length > 0 && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary">
+                <div 
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary animate-fade-in"
+                  role="status"
+                  aria-live="polite"
+                >
                   <Save className="w-4 h-4" />
                   <span className="text-xs font-medium">
                     Progresso salvo
                   </span>
                 </div>
               )}
-              <Button variant="outline" onClick={handleLogout} size="sm">
+              <Button 
+                variant="outline" 
+                onClick={handleLogout} 
+                size="sm"
+                aria-label="Sair da aplicação"
+              >
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
@@ -283,7 +297,10 @@ const Planejamento = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main 
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        role="main"
+      >
         <Stepper 
           steps={steps} 
           currentStep={currentStep}
@@ -301,80 +318,82 @@ const Planejamento = () => {
 
         <div className="mt-8">
           <ErrorBoundary onReset={() => setCurrentStep(1)}>
-            {currentStep === 1 && (
-              <EtapaContexto
-                initialData={companyData}
-                onNext={handleNext}
-                userId={user!.id}
-              />
-            )}
+            <StepTransition>
+              {currentStep === 1 && (
+                <EtapaContexto
+                  initialData={companyData}
+                  onNext={handleNext}
+                  userId={user!.id}
+                />
+              )}
 
-            {currentStep === 2 && (
-              <EtapaSWOT
-                companyData={companyData}
-                initialData={swotData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 2 && (
+                <EtapaSWOT
+                  companyData={companyData}
+                  initialData={swotData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {currentStep === 3 && (
-              <EtapaAnalise
-                companyData={companyData}
-                swotData={swotData}
-                initialData={analysisData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 3 && (
+                <EtapaAnalise
+                  companyData={companyData}
+                  swotData={swotData}
+                  initialData={analysisData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {currentStep === 4 && (
-              <EtapaOGSM
-                companyData={companyData}
-                analysisData={analysisData}
-                initialData={ogsmData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 4 && (
+                <EtapaOGSM
+                  companyData={companyData}
+                  analysisData={analysisData}
+                  initialData={ogsmData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {currentStep === 5 && (
-              <EtapaOKRsBSC
-                companyData={companyData}
-                ogsmData={ogsmData}
-                initialData={okrsBscData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 5 && (
+                <EtapaOKRsBSC
+                  companyData={companyData}
+                  ogsmData={ogsmData}
+                  initialData={okrsBscData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {currentStep === 6 && (
-              <EtapaPriorizacao
-                companyData={companyData}
-                okrsBscData={okrsBscData}
-                initialData={prioritizationData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 6 && (
+                <EtapaPriorizacao
+                  companyData={companyData}
+                  okrsBscData={okrsBscData}
+                  initialData={prioritizationData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {currentStep === 7 && (
-              <EtapaExecucao
-                companyData={companyData}
-                prioritizationData={prioritizationData}
-                initialData={executionData}
-                onNext={handleNext}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 7 && (
+                <EtapaExecucao
+                  companyData={companyData}
+                  prioritizationData={prioritizationData}
+                  initialData={executionData}
+                  onNext={handleNext}
+                  onBack={handleBack}
+                />
+              )}
 
-            {currentStep === 8 && (
-              <EtapaMetricas
-                companyData={companyData}
-                okrsBscData={okrsBscData}
-                onBack={handleBack}
-              />
-            )}
+              {currentStep === 8 && (
+                <EtapaMetricas
+                  companyData={companyData}
+                  okrsBscData={okrsBscData}
+                  onBack={handleBack}
+                />
+              )}
+            </StepTransition>
           </ErrorBoundary>
         </div>
       </main>
