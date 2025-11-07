@@ -227,11 +227,37 @@ export default function PlanoEstrategico() {
     }
   };
 
-  const handleExportPDF = () => {
-    toast({
-      title: "Em breve!",
-      description: "Funcionalidade de exportação em PDF será implementada em breve",
-    });
+  const handleExportPDF = async () => {
+    try {
+      toast({
+        title: "Gerando PDF...",
+        description: "Aguarde enquanto preparamos seu relatório",
+      });
+
+      const { exportToPDF } = await import('@/utils/pdfExport');
+      await exportToPDF('plano-content', {
+        filename: `plano-estrategico-${companyName.toLowerCase().replace(/\s/g, '-')}.pdf`,
+        title: `Plano Estratégico - ${companyName}`,
+        subtitle: new Date().toLocaleDateString('pt-BR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }),
+        orientation: 'portrait'
+      });
+
+      toast({
+        title: "✓ PDF gerado com sucesso!",
+        description: "O arquivo foi baixado para seu computador",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Tente novamente mais tarde",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -249,18 +275,12 @@ export default function PlanoEstrategico() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-6">
+      <div id="plano-content" className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Plano Estratégico Completo</h1>
-              <p className="text-muted-foreground">{companyName}</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold">Plano Estratégico Completo</h1>
+            <p className="text-muted-foreground">{companyName}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExportPDF}>

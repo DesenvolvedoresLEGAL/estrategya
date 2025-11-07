@@ -10,7 +10,7 @@ import { ProgressChart } from "@/components/dashboard/ProgressChart";
 import { QuickWinList } from "@/components/dashboard/QuickWinList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText } from "lucide-react";
+import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
@@ -269,57 +269,21 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Dashboard Executivo</h1>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/objetivos")}
-              >
-                <Target className="mr-2 h-4 w-4" />
-                Objetivos
-              </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/metricas")}
-              >
-                <TrendingUp className="mr-2 h-4 w-4" />
-                Métricas
-              </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/insights")}
-              >
-                <Lightbulb className="mr-2 h-4 w-4" />
-                Insights
-              </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => navigate("/plano-estrategico")}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Plano Completo
-              </Button>
-              <Button 
-                onClick={generateInsights}
-                disabled={generatingInsights}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${generatingInsights ? 'animate-spin' : ''}`} />
-                {generatingInsights ? 'Analisando...' : 'Atualizar Insights'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Page Title */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard Executivo</h1>
+            <p className="text-muted-foreground">Visão geral do progresso estratégico</p>
+          </div>
+          <Button 
+            onClick={generateInsights}
+            disabled={generatingInsights}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${generatingInsights ? 'animate-spin' : ''}`} />
+            {generatingInsights ? 'Analisando...' : 'Atualizar Insights'}
+          </Button>
+        </div>
         {/* Hero Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <HealthScore score={healthScore} />

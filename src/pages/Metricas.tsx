@@ -131,36 +131,20 @@ const Metricas = () => {
   const filteredObjectives = getFilteredObjectives();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-primary" />
-                Gestão de Métricas
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {user?.email}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate("/dashboard")}>
-                <Target className="w-4 h-4 mr-2" />
-                Dashboard
-              </Button>
-              <Button variant="outline" onClick={handleLogout} size="sm">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background p-6">
+      {/* Page Title */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+          <TrendingUp className="w-8 h-8 text-primary" />
+          Gestão de Métricas
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Acompanhe a evolução dos seus indicadores estratégicos
+        </p>
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>

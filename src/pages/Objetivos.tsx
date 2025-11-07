@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ObjectiveDetailCard } from "@/components/objectives/ObjectiveDetailCard";
-import { Target, ArrowLeft, RefreshCw, TrendingUp, FileText } from "lucide-react";
+import { Target, ArrowLeft, RefreshCw, TrendingUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Objetivos() {
@@ -128,52 +128,19 @@ export default function Objetivos() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Dashboard
-              </Button>
-              <div className="h-6 w-px bg-border" />
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <h1 className="text-2xl font-bold">Gestão de Objetivos</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/metricas')}
-              >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Métricas
-              </Button>
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/plano-estrategico')}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Plano Completo
-              </Button>
-              <Button onClick={loadObjectives}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Atualizar
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="container mx-auto px-4 py-8">
+        {/* Page Title */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Gestão de Objetivos</h1>
+            <p className="text-muted-foreground">Acompanhe e atualize seus objetivos estratégicos</p>
+          </div>
+          <Button onClick={loadObjectives}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Atualizar
+          </Button>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="todos" className="gap-2">

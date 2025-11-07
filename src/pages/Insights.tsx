@@ -309,24 +309,11 @@ export default function Insights() {
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Insights Inteligentes</h1>
-              <p className="text-muted-foreground">Análises e recomendações geradas por IA</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold">Insights Inteligentes</h1>
+            <p className="text-muted-foreground">Análises e recomendações geradas por IA</p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              variant="outline"
-              onClick={() => navigate('/plano-estrategico')}
-            >
-              <FileText className="h-4 w-4 mr-2" />
-              Plano Completo
-            </Button>
             <Button onClick={generateInsights} disabled={generating}>
               {generating ? (
                 <>
