@@ -14,7 +14,9 @@ const Index = () => {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -28,12 +30,10 @@ const Index = () => {
         <div className="absolute inset-0 bg-grid-pattern opacity-10" />
         <div className="relative max-w-7xl mx-auto container-padding section-padding">
           <div className="text-center text-primary-foreground">
-            <h1 className="heading-1 mb-4 sm:mb-6 animate-fade-in">
-              LEGAL Strategic Planner OS
-            </h1>
+            <h1 className="heading-1 mb-4 sm:mb-6 animate-fade-in">Estrategya Planner OS</h1>
             <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 max-w-3xl mx-auto leading-relaxed px-2">
-              Planejamento estratégico de classe mundial em minutos, não semanas.
-              Baseado em frameworks usados pelas melhores empresas do mundo.
+              Planejamento estratégico de classe mundial em minutos, não semanas. Baseado em frameworks usados pelas
+              melhores empresas do mundo.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
               <Button
@@ -52,9 +52,7 @@ const Index = () => {
       {/* Features Section - Mobile Optimized */}
       <div className="max-w-7xl mx-auto container-padding section-padding">
         <div className="text-center mb-12 sm:mb-16 px-4">
-          <h2 className="heading-3 mb-3 sm:mb-4">
-            Estratégia que funciona na prática
-          </h2>
+          <h2 className="heading-3 mb-3 sm:mb-4">Estratégia que funciona na prática</h2>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Responda poucas perguntas e receba um plano completo com objetivos, iniciativas e métricas
           </p>
@@ -109,9 +107,7 @@ const Index = () => {
       {/* CTA Section - Mobile Optimized */}
       <div className="bg-muted py-12 sm:py-16">
         <div className="max-w-4xl mx-auto text-center container-padding">
-          <h2 className="heading-3 mb-3 sm:mb-4 px-2">
-            Pronto para transformar sua estratégia?
-          </h2>
+          <h2 className="heading-3 mb-3 sm:mb-4 px-2">Pronto para transformar sua estratégia?</h2>
           <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 px-2 leading-relaxed">
             Ferramenta gratuita desenvolvida pela LEGAL para empreendedores brasileiros
           </p>
