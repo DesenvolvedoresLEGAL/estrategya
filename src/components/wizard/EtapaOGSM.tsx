@@ -212,23 +212,24 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
         </CardContent>
       </Card>
 
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4">
+        <Button variant="outline" onClick={onBack} className="w-full sm:w-auto touch-target">
           <ArrowLeft className="mr-2 w-4 h-4" />
           Voltar
         </Button>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
           {onSaveAndExit && (
             <Button 
               variant="ghost" 
               onClick={onSaveAndExit}
+              className="w-full sm:w-auto touch-target"
             >
               <Save className="w-4 h-4 mr-2" />
               Salvar e Sair
             </Button>
           )}
           {ogsmData && (
-            <Button onClick={handleNext} size="lg">
+            <Button onClick={handleNext} size="lg" className="w-full sm:w-auto touch-target">
               Próximo
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>

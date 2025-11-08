@@ -125,23 +125,23 @@ export default function Pricing() {
             Voltar
           </Button>
           
-          <div className="text-center">
+          <div className="text-center px-4">
             {currentTier && (
-              <Badge className="mb-4" variant="secondary">
+              <Badge className="mb-3 sm:mb-4" variant="secondary">
                 Plano Atual: {currentTier.toUpperCase()}
               </Badge>
             )}
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="heading-2 mb-3 sm:mb-4">
               Escolha o Plano Ideal
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
               Comece gratuitamente e escale conforme sua estratégia cresce
             </p>
           </div>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        {/* Pricing Cards - Mobile Optimized */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
           {plans?.map((plan) => {
             const features = plan.features as string[];
             const limits = plan.limits as Record<string, any>;

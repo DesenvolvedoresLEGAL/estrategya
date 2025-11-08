@@ -181,13 +181,13 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
 
   return (
     <Card className="max-w-3xl mx-auto">
-      <CardHeader>
-        <CardTitle>Conte-nos sobre sua empresa</CardTitle>
-        <CardDescription>
+      <CardHeader className="px-4 sm:px-6">
+        <CardTitle className="text-xl sm:text-2xl">Conte-nos sobre sua empresa</CardTitle>
+        <CardDescription className="text-sm sm:text-base">
           Vamos começar entendendo o contexto do seu negócio
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6">
         {Object.keys(errors).length > 0 && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
@@ -227,7 +227,7 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             )}
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="segment">Segmento *</Label>
@@ -294,7 +294,7 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label htmlFor="size_team">Tamanho do Time</Label>

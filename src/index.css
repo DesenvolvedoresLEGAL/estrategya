@@ -127,3 +127,36 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Typography utilities - mobile-first */
+  .heading-1 {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold;
+  }
+  
+  .heading-2 {
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold;
+  }
+  
+  .heading-3 {
+    @apply text-xl sm:text-2xl md:text-3xl font-semibold;
+  }
+  
+  .body-large {
+    @apply text-base sm:text-lg;
+  }
+  
+  /* Touch targets - WCAG compliant */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Responsive spacing */
+  .section-padding {
+    @apply py-12 sm:py-16 md:py-24;
+  }
+  
+  .container-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+}

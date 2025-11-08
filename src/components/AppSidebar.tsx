@@ -69,44 +69,44 @@ export function AppSidebar() {
 
   return (
     <Sidebar className={open ? "w-64" : "w-16"} collapsible="icon">
-      <SidebarContent>
-        {/* Logo/Brand */}
-        <div className="p-4 mb-2">
+      <SidebarContent className="pt-2">{/* Reduced top padding for mobile */}
+        {/* Logo/Brand - Optimized for mobile */}
+        <div className="p-3 sm:p-4 mb-1 sm:mb-2">
           {open ? (
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Target className="h-5 w-5 text-primary-foreground" />
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
               </div>
-              <div>
-                <h2 className="font-bold text-lg">Estratégia IA</h2>
-                <p className="text-xs text-muted-foreground">Planejamento Inteligente</p>
+              <div className="min-w-0">
+                <h2 className="font-bold text-base sm:text-lg truncate">Estratégia IA</h2>
+                <p className="text-xs text-muted-foreground truncate hidden sm:block">Planejamento Inteligente</p>
               </div>
             </div>
           ) : (
-            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-              <Target className="h-5 w-5 text-primary-foreground" />
+            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
+              <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
             </div>
           )}
         </div>
 
         <Separator />
 
-        {/* Main Navigation */}
+        {/* Main Navigation - Touch-friendly */}
         <SidebarGroup>
-          {open && <SidebarGroupLabel>Principal</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="text-xs sm:text-sm px-3 sm:px-4">Principal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="touch-target">
                     <NavLink 
                       to={item.url} 
                       end 
-                      className="hover:bg-accent/50 transition-colors"
+                      className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -117,22 +117,22 @@ export function AppSidebar() {
 
         <Separator />
 
-        {/* Planning Navigation */}
+        {/* Planning Navigation - Touch-friendly */}
         <SidebarGroup>
-          {open && <SidebarGroupLabel>Planejamento</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="text-xs sm:text-sm px-3 sm:px-4">Planejamento</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {planningItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="touch-target">
                     <NavLink 
                       to={item.url} 
                       end 
-                      className="hover:bg-accent/50 transition-colors"
+                      className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4" />
-                      {open && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -142,26 +142,26 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer */}
-      <SidebarFooter>
+      {/* Footer - Touch-friendly */}
+      <SidebarFooter className="pb-safe">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild className="touch-target">
               <NavLink 
                 to="/pricing" 
                 end 
-                className="hover:bg-primary/10 hover:text-primary transition-colors"
+                className="hover:bg-primary/10 hover:text-primary transition-colors min-h-[44px] flex items-center"
                 activeClassName="bg-primary/10 text-primary font-medium"
               >
-                <Sparkles className="h-4 w-4" />
-                {open && <span>Ver Planos</span>}
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                {open && <span className="text-sm sm:text-base truncate">Ver Planos</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive">
-              <LogOut className="h-4 w-4" />
-              {open && <span>Sair</span>}
+            <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive touch-target min-h-[44px]">
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              {open && <span className="text-sm sm:text-base truncate">Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

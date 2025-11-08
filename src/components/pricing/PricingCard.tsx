@@ -33,58 +33,58 @@ export const PricingCard = ({
 
   return (
     <Card 
-      className={`relative p-6 flex flex-col h-full ${
+      className={`relative p-4 sm:p-6 flex flex-col h-full ${
         isRecommended 
-          ? "border-2 border-primary shadow-lg scale-105" 
+          ? "border-2 border-primary shadow-lg sm:scale-105" 
           : "border-border"
       }`}
     >
       {isRecommended && (
-        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+        <Badge className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 bg-primary text-xs sm:text-sm px-2 sm:px-3">
           Recomendado
         </Badge>
       )}
       
-      <div className="space-y-4 flex-1">
+      <div className="space-y-3 sm:space-y-4 flex-1">
         <div>
-          <h3 className="text-2xl font-bold text-foreground">{title}</h3>
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-foreground">{title}</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
 
         {price !== null ? (
-          <div className="py-4">
+          <div className="py-3 sm:py-4">
             {price?.monthly !== undefined ? (
               <div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-foreground">
+                <div className="flex items-baseline gap-1 flex-wrap">
+                  <span className="text-3xl sm:text-4xl font-bold text-foreground">
                     R$ {price.monthly.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
-                  <span className="text-muted-foreground">/mês</span>
+                  <span className="text-sm sm:text-base text-muted-foreground">/mês</span>
                 </div>
                 {price.annual && (
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-2">
                     ou R$ {price.annual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/ano
-                    <span className="text-primary font-medium ml-1">(2 meses grátis)</span>
+                    <span className="text-primary font-medium ml-1 block xs:inline">(2 meses grátis)</span>
                   </p>
                 )}
               </div>
             ) : (
-              <div className="text-2xl font-bold text-foreground">
+              <div className="text-xl sm:text-2xl font-bold text-foreground">
                 Sob consulta
               </div>
             )}
           </div>
         ) : null}
 
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{description}</p>
 
-        <div className="space-y-3 pt-4">
+        <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4">
           {features.map((feature, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <div className="rounded-full bg-primary/10 p-1 mt-0.5">
-                <Check className="h-3 w-3 text-primary" />
+            <div key={index} className="flex items-start gap-2 sm:gap-3">
+              <div className="rounded-full bg-primary/10 p-0.5 sm:p-1 mt-0.5 shrink-0">
+                <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
               </div>
-              <span className="text-sm text-foreground flex-1">{feature}</span>
+              <span className="text-xs sm:text-sm text-foreground flex-1 leading-relaxed">{feature}</span>
             </div>
           ))}
         </div>
@@ -92,7 +92,7 @@ export const PricingCard = ({
 
       <Button
         onClick={onButtonClick}
-        className="w-full mt-6"
+        className="w-full mt-4 sm:mt-6 touch-target"
         variant={isRecommended ? "default" : "outline"}
         disabled={isCurrentPlan}
       >
