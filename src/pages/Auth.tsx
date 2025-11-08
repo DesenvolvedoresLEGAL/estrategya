@@ -11,21 +11,23 @@ const Auth = () => {
   const { trackSignup, trackLogin } = useAnalytics();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         // Track signup or login
-        if (event === 'SIGNED_IN') {
+        if (event === "SIGNED_IN") {
           // Check if it's a new user by checking if they have a company
           supabase
-            .from('companies')
-            .select('id')
-            .eq('owner_user_id', session.user.id)
+            .from("companies")
+            .select("id")
+            .eq("owner_user_id", session.user.id)
             .single()
             .then(({ data }) => {
               if (!data) {
-                trackSignup('email');
+                trackSignup("email");
               } else {
-                trackLogin('email');
+                trackLogin("email");
               }
             });
         }
@@ -41,10 +43,8 @@ const Auth = () => {
       {/* Left side - Hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-hero p-12 flex-col justify-between text-primary-foreground">
         <div>
-          <h1 className="text-4xl font-bold mb-4">LEGAL Strategic Planner OS</h1>
-          <p className="text-xl opacity-90">
-            Planejamento estratégico de classe mundial, simples como deveria ser.
-          </p>
+          <h1 className="text-4xl font-bold mb-4">Estrategya Planner OS</h1>
+          <p className="text-xl opacity-90">Planejamento estratégico de classe mundial, simples como deveria ser.</p>
         </div>
 
         <div className="space-y-8">
@@ -54,9 +54,7 @@ const Auth = () => {
             </div>
             <div>
               <h3 className="font-semibold text-lg mb-1">IA Estratégica</h3>
-              <p className="opacity-80">
-                Análise baseada em frameworks de classe mundial (OKR, BSC, OGSM)
-              </p>
+              <p className="opacity-80">Análise baseada em frameworks de classe mundial (OKR, BSC, OGSM)</p>
             </div>
           </div>
 
@@ -66,9 +64,7 @@ const Auth = () => {
             </div>
             <div>
               <h3 className="font-semibold text-lg mb-1">Objetivos Claros</h3>
-              <p className="opacity-80">
-                De visão estratégica a iniciativas executáveis em minutos
-              </p>
+              <p className="opacity-80">De visão estratégica a iniciativas executáveis em minutos</p>
             </div>
           </div>
 
@@ -78,9 +74,7 @@ const Auth = () => {
             </div>
             <div>
               <h3 className="font-semibold text-lg mb-1">Execução em Equipe</h3>
-              <p className="opacity-80">
-                Métricas, responsáveis e acompanhamento integrados
-              </p>
+              <p className="opacity-80">Métricas, responsáveis e acompanhamento integrados</p>
             </div>
           </div>
         </div>
@@ -95,19 +89,13 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="text-center mb-8 lg:hidden">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Strategic Planner OS
-            </h1>
-            <p className="text-muted-foreground">
-              Entre para começar seu planejamento estratégico
-            </p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Strategic Planner OS</h1>
+            <p className="text-muted-foreground">Entre para começar seu planejamento estratégico</p>
           </div>
 
           <div className="bg-card p-8 rounded-2xl shadow-xl border border-border">
-            <h2 className="text-2xl font-bold text-center mb-6 text-foreground">
-              Acesse sua conta
-            </h2>
-            
+            <h2 className="text-2xl font-bold text-center mb-6 text-foreground">Acesse sua conta</h2>
+
             <SupabaseAuth
               supabaseClient={supabase}
               appearance={{
@@ -115,15 +103,15 @@ const Auth = () => {
                 variables: {
                   default: {
                     colors: {
-                      brand: 'hsl(217 91% 25%)',
-                      brandAccent: 'hsl(217 91% 35%)',
+                      brand: "hsl(217 91% 25%)",
+                      brandAccent: "hsl(217 91% 35%)",
                     },
                   },
                 },
                 className: {
-                  container: 'space-y-4',
-                  button: 'w-full bg-primary hover:bg-primary/90 text-primary-foreground',
-                  input: 'w-full bg-background border-border',
+                  container: "space-y-4",
+                  button: "w-full bg-primary hover:bg-primary/90 text-primary-foreground",
+                  input: "w-full bg-background border-border",
                 },
               }}
               providers={[]}
@@ -132,18 +120,18 @@ const Auth = () => {
               localization={{
                 variables: {
                   sign_in: {
-                    email_label: 'Email',
-                    password_label: 'Senha',
-                    button_label: 'Entrar',
-                    loading_button_label: 'Entrando...',
-                    link_text: 'Já tem uma conta? Entre',
+                    email_label: "Email",
+                    password_label: "Senha",
+                    button_label: "Entrar",
+                    loading_button_label: "Entrando...",
+                    link_text: "Já tem uma conta? Entre",
                   },
                   sign_up: {
-                    email_label: 'Email',
-                    password_label: 'Senha',
-                    button_label: 'Criar conta',
-                    loading_button_label: 'Criando conta...',
-                    link_text: 'Não tem conta? Crie uma',
+                    email_label: "Email",
+                    password_label: "Senha",
+                    button_label: "Criar conta",
+                    loading_button_label: "Criando conta...",
+                    link_text: "Não tem conta? Crie uma",
                   },
                 },
               }}
