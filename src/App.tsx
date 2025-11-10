@@ -18,6 +18,7 @@ import PlanoEstrategico from "@/pages/PlanoEstrategico";
 import InitiativeDetail from "@/pages/InitiativeDetail";
 import Equipe from "@/pages/Equipe";
 import Admin from "@/pages/Admin";
+import PlanValidator from "@/pages/PlanValidator";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const AppLayout = () => {
               <Route path="/iniciativa/:id" element={<InitiativeDetail />} />
               <Route path="/equipe" element={<Equipe />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/plan-validator" element={<PlanValidator />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>

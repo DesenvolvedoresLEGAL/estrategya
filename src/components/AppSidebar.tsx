@@ -8,7 +8,8 @@ import {
   Settings,
   LogOut,
   Users,
-  Sparkles
+  Sparkles,
+  Shield
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,11 @@ const mainItems = [
 const planningItems = [
   { title: "Planejamento", url: "/planejamento", icon: Settings },
   { title: "Plano Completo", url: "/plano-estrategico", icon: FileText },
+];
+
+const adminItems = [
+  { title: "Admin", url: "/admin", icon: Shield },
+  { title: "Validador Planos", url: "/plan-validator", icon: Shield },
 ];
 
 export function AppSidebar() {
@@ -123,6 +129,32 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {planningItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="touch-target">
+                    <NavLink 
+                      to={item.url} 
+                      end 
+                      className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
+                      activeClassName="bg-accent text-accent-foreground font-medium"
+                    >
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <Separator />
+
+        {/* Admin Navigation - Touch-friendly */}
+        <SidebarGroup>
+          {open && <SidebarGroupLabel className="text-xs sm:text-sm px-3 sm:px-4">Admin</SidebarGroupLabel>}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {adminItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="touch-target">
                     <NavLink 
