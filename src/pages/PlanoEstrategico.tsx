@@ -10,11 +10,24 @@ import { BSCBalance } from "@/components/planning/BSCBalance";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
 import { WBRPlan } from "@/components/planning/WBRPlan";
 import { PESTELDisplay } from "@/components/planning/PESTELDisplay";
-import { ArrowLeft, RefreshCw, FileText, Download } from "lucide-react";
+import { ArrowLeft, RefreshCw, FileText, Download, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function PlanoEstrategico() {
   const navigate = useNavigate();
@@ -23,6 +36,9 @@ export default function PlanoEstrategico() {
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState("");
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const {
     canExportPDF,
@@ -297,6 +313,55 @@ export default function PlanoEstrategico() {
     }
   };
 
+  const handleDeletePlan = async () => {
+    if (deleteConfirmation !== "EXCLUIR") {
+      toast({
+        title: "Confirmação incorreta",
+        description: 'Digite "EXCLUIR" para confirmar',
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!companyId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não encontrado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-strategic-plan', {
+        body: { companyId }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "✓ Plano deletado com sucesso",
+        description: "Você será redirecionado para criar um novo plano",
+      });
+
+      // Redirect to planning wizard after 1 second
+      setTimeout(() => {
+        navigate('/planejamento');
+      }, 1000);
+
+    } catch (error: any) {
+      console.error('Error deleting plan:', error);
+      toast({
+        title: "Erro ao deletar plano",
+        description: error.message || "Tente novamente mais tarde",
+        variant: "destructive"
+      });
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -320,6 +385,74 @@ export default function PlanoEstrategico() {
             <p className="text-muted-foreground">{companyName}</p>
           </div>
           <div className="flex gap-2">
+            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Excluir Plano
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>⚠️ Excluir Todo o Plano Estratégico?</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <p className="font-semibold text-destructive">
+                      Esta ação é IRREVERSÍVEL e deletará permanentemente:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Todos os objetivos estratégicos e suas métricas</li>
+                      <li>Todas as iniciativas e planejamentos</li>
+                      <li>OGSM, OKRs, BSC, Matriz Impacto/Esforço</li>
+                      <li>Plano de execução WBR e análises PESTEL</li>
+                      <li>Histórico de atividades e comentários</li>
+                    </ul>
+                    <p className="font-semibold text-foreground mt-4">
+                      O que será PRESERVADO:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-sm">
+                      <li>Sua empresa e dados cadastrais</li>
+                      <li>Membros da equipe e convites</li>
+                      <li>Plano de assinatura ativo</li>
+                    </ul>
+                    <div className="mt-4 space-y-2">
+                      <Label htmlFor="delete-confirm">
+                        Digite <span className="font-bold">EXCLUIR</span> para confirmar:
+                      </Label>
+                      <Input
+                        id="delete-confirm"
+                        value={deleteConfirmation}
+                        onChange={(e) => setDeleteConfirmation(e.target.value)}
+                        placeholder="EXCLUIR"
+                        className="font-mono"
+                      />
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>
+                    Cancelar
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeletePlan}
+                    disabled={deleteConfirmation !== "EXCLUIR" || isDeleting}
+                    className="bg-destructive hover:bg-destructive/90"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Excluindo...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Confirmar Exclusão
+                      </>
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            
             <Button variant="outline" onClick={handleExportPDF}>
               <Download className="h-4 w-4 mr-2" />
               Exportar PDF
