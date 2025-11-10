@@ -33,21 +33,34 @@ serve(async (req) => {
       }
     );
 
-    // Get authenticated user from JWT
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser();
+    // Parse user from verified JWT (function has verify_jwt = true)
+    const token = authHeader.replace('Bearer ', '');
+    const parseJwt = (t: string) => {
+      const base64 = t.split('.')[1];
+      const decoded = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(decoded);
+    };
 
-    if (userError || !user) {
-      console.error('Authentication error:', userError);
+    let userId: string | null = null;
+    try {
+      const payload = parseJwt(token);
+      userId = payload?.sub ?? null;
+    } catch (e) {
+      console.error('JWT parse error:', e);
       return new Response(
         JSON.stringify({ error: 'Token de autenticação inválido' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Authenticated user: ${user.id}`);
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação inválido' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Authenticated user: ${userId}`);
 
     const { companyId } = await req.json();
 
@@ -58,14 +71,14 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Delete plan request for company ${companyId} by user ${user.id}`);
+    console.log(`Delete plan request for company ${companyId} by user ${userId}`);
 
     // Verify user is owner or admin of the company
     const { data: membership, error: membershipError } = await supabaseClient
       .from('team_members')
       .select('role')
       .eq('company_id', companyId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
     if (membershipError || !membership) {
@@ -86,7 +99,7 @@ serve(async (req) => {
     // Log action before deletion (will be deleted but kept for audit trail if needed)
     await supabaseClient.from('activity_log').insert({
       company_id: companyId,
-      user_id: user.id,
+      user_id: userId,
       action_type: 'delete_plan',
       entity_type: 'strategic_plan',
       entity_id: companyId,
