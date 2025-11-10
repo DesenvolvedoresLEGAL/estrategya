@@ -38,7 +38,7 @@ export const WBRPlan = ({ wbr, companyId }: WBRPlanProps) => {
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const { hasFeature } = useSubscriptionLimits(companyId);
 
-  const has4DXFeature = hasFeature('4dx_execution');
+  const has4DXFeature = hasFeature('four_dx_wbr');
 
   if (!has4DXFeature) {
     return (

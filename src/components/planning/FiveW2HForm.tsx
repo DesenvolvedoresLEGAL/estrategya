@@ -54,7 +54,7 @@ export const FiveW2HForm = ({
   const [how, setHow] = useState(initialData?.how || "");
   const [howMuch, setHowMuch] = useState(initialData?.how_much?.toString() || "");
 
-  const has5W2HFeature = hasFeature('5w2h');
+  const has5W2HFeature = hasFeature('five_w2h');
 
   if (!has5W2HFeature) {
     return (

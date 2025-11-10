@@ -8,29 +8,28 @@ interface SubscriptionLimits {
   max_objectives: number;
   max_initiatives_per_objective: number;
   max_team_members: number;
-  ai_insights_per_month: number;
   pdf_export_mode: "none" | "watermark" | "standard" | "premium";
   ice_score: boolean;
-  "5w2h": boolean;
-  "4dx_execution": boolean;
-  templates: boolean;
+  five_w2h: boolean;
+  four_dx_wbr: boolean;
+  basic_templates: boolean;
   custom_templates: boolean;
   integrations: boolean;
   collaboration: boolean;
-  custom_branding: boolean;
+  branding: boolean;
   audit_log: boolean;
   advanced_permissions: boolean;
 }
 
 export type FeatureFlag =
   | "ice_score"
-  | "5w2h"
-  | "4dx_execution"
-  | "templates"
+  | "five_w2h"
+  | "four_dx_wbr"
+  | "basic_templates"
   | "custom_templates"
   | "integrations"
   | "collaboration"
-  | "custom_branding"
+  | "branding"
   | "audit_log"
   | "advanced_permissions";
 
@@ -139,18 +138,17 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     max_companies: 1,
     max_plans: 1,
     max_objectives: 3,
-    max_initiatives_per_objective: 3,
+    max_initiatives_per_objective: 5,
     max_team_members: 1,
-    ai_insights_per_month: 5,
     pdf_export_mode: "watermark",
     ice_score: false,
-    "5w2h": false,
-    "4dx_execution": false,
-    templates: false,
+    five_w2h: false,
+    four_dx_wbr: false,
+    basic_templates: false,
     custom_templates: false,
     integrations: false,
     collaboration: false,
-    custom_branding: false,
+    branding: false,
     audit_log: false,
     advanced_permissions: false,
   };
@@ -158,7 +156,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   const planLimits = (subscription?.plan?.limits as unknown as Partial<SubscriptionLimits>) || {};
   const limits: SubscriptionLimits = { ...defaultLimits, ...planLimits };
 
-  const pdfExportMode = limits.pdf_export_mode || "none";
+  const pdfExportMode = limits.pdf_export_mode || "watermark";
 
   const canCreateCompany = async (): Promise<boolean> => {
     if (limits.max_companies === -1) return true;
