@@ -261,10 +261,10 @@ export default function PlanValidator() {
                     <p className="text-sm font-medium mb-1">Plano Atual</p>
                     <Badge
                       variant={
-                        account.actualTier === account.expectedTier ? "default" : "destructive"
+                        tier === account.expectedTier ? "default" : "destructive"
                       }
                     >
-                      {account.actualTier?.toUpperCase() || "N/A"}
+                      {tier?.toUpperCase() || "N/A"}
                     </Badge>
                   </div>
                 </div>

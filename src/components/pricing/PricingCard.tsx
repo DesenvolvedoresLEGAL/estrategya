@@ -39,9 +39,14 @@ export const PricingCard = ({
           : "border-border"
       }`}
     >
-      {isRecommended && (
+      {isRecommended && !isCurrentPlan && (
         <Badge className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 bg-primary text-xs sm:text-sm px-2 sm:px-3">
-          Recomendado
+          Mais Popular
+        </Badge>
+      )}
+      {isCurrentPlan && (
+        <Badge className="absolute -top-2.5 sm:-top-3 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs sm:text-sm px-2 sm:px-3">
+          Plano Atual
         </Badge>
       )}
       
