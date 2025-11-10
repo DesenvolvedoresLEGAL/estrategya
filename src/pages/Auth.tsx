@@ -89,7 +89,7 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md">
           <div className="text-center mb-8 lg:hidden">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Strategic Planner OS</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Estrategya Planner OS</h1>
             <p className="text-muted-foreground">Entre para começar seu planejamento estratégico</p>
           </div>
 
