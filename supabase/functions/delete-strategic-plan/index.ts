@@ -74,24 +74,37 @@ serve(async (req) => {
     console.log(`Delete plan request for company ${companyId} by user ${userId}`);
 
     // Verify user is owner or admin of the company
-    const { data: membership, error: membershipError } = await supabaseClient
+    // First check team_members
+    const { data: membership } = await supabaseClient
       .from('team_members')
       .select('role')
       .eq('company_id', companyId)
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
-    if (membershipError || !membership) {
-      console.error('Membership check error:', membershipError);
-      return new Response(
-        JSON.stringify({ error: 'Você não tem permissão para deletar o plano desta empresa' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    let hasPermission = false;
+    
+    if (membership && (membership.role === 'owner' || membership.role === 'admin')) {
+      console.log(`User has ${membership.role} role in team_members`);
+      hasPermission = true;
+    } else {
+      // Check if user is owner in companies table
+      const { data: company } = await supabaseClient
+        .from('companies')
+        .select('owner_user_id')
+        .eq('id', companyId)
+        .single();
+
+      if (company && company.owner_user_id === userId) {
+        console.log('User is company owner');
+        hasPermission = true;
+      }
     }
 
-    if (membership.role !== 'owner' && membership.role !== 'admin') {
+    if (!hasPermission) {
+      console.error('User does not have permission to delete plan');
       return new Response(
-        JSON.stringify({ error: 'Apenas proprietários e administradores podem deletar o plano' }),
+        JSON.stringify({ error: 'Você não tem permissão para deletar o plano desta empresa' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
