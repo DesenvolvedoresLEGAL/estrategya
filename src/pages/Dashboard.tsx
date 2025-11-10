@@ -17,9 +17,9 @@ import { StrategicHealthScore } from "@/components/dashboard/StrategicHealthScor
 import { InsightsPanel } from "@/components/dashboard/InsightsPanel";
 import { PredictiveAlerts } from "@/components/dashboard/PredictiveAlerts";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText, Download, Brain } from "lucide-react";
+import { RefreshCw, Target, TrendingUp, Lightbulb, AlertCircle, FileText, Download, Brain, Activity } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { exportStrategicPlanToExcel } from "@/utils/excelExport";
 import { formatStrategicPlanForPPT, openPresentation } from "@/utils/pptExport";
@@ -30,12 +30,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [generatingInsights, setGeneratingInsights] = useState(false);
   const [companyId, setCompanyId] = useState<string | null>(null);
-  const [healthScore, setHealthScore] = useState(75);
+  const [healthScore, setHealthScore] = useState<number | null>(null);
   const [objectives, setObjectives] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
   const [quickWins, setQuickWins] = useState<any[]>([]);
   const [initiatives, setInitiatives] = useState<any[]>([]);
+  const [metricUpdates, setMetricUpdates] = useState<any[]>([]);
 
   // Enable insight notifications
   useInsightNotifications(companyId);
@@ -137,6 +138,36 @@ export default function Dashboard() {
       .eq('strategic_objectives.company_id', companies.id);
 
     setInitiatives(initiativesData || []);
+
+    // Load metric updates from last 30 days for chart
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const { data: updatesData } = await supabase
+      .from('metric_updates')
+      .select(`
+        *,
+        metrics!inner(
+          name,
+          objective_id,
+          strategic_objectives!inner(company_id)
+        )
+      `)
+      .eq('metrics.strategic_objectives.company_id', companies.id)
+      .gte('recorded_at', thirtyDaysAgo.toISOString())
+      .order('recorded_at', { ascending: true });
+
+    setMetricUpdates(updatesData || []);
+
+    // Calculate health score based on real data
+    if (objectivesData && objectivesData.length > 0) {
+      const avgProgress = objectivesData.reduce((sum, obj) => {
+        return sum + (obj.objective_updates?.[0]?.progress_percentage || 0);
+      }, 0) / objectivesData.length;
+      setHealthScore(Math.round(avgProgress));
+    } else {
+      setHealthScore(null);
+    }
   };
 
   const generateInsights = async () => {
@@ -371,13 +402,41 @@ export default function Dashboard() {
     return m.current_value && m.target;
   }).length;
 
-  // Mock chart data - in real app, calculate from metric_updates
-  const chartData = [
-    { date: 'Sem 1', receita: 80, satisfacao: 75, processos: 70 },
-    { date: 'Sem 2', receita: 85, satisfacao: 78, processos: 72 },
-    { date: 'Sem 3', receita: 82, satisfacao: 80, processos: 75 },
-    { date: 'Sem 4', receita: 88, satisfacao: 82, processos: 78 },
-  ];
+  // Build chart data from real metric updates
+  const chartData = metricUpdates.length > 0 ? (() => {
+    // Group updates by week
+    const weeklyData: { [key: string]: { [metric: string]: number[] } } = {};
+    
+    metricUpdates.forEach(update => {
+      const date = new Date(update.recorded_at);
+      const weekStart = new Date(date);
+      weekStart.setDate(date.getDate() - date.getDay()); // Start of week
+      const weekKey = `Sem ${Math.floor((Date.now() - weekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1}`;
+      
+      if (!weeklyData[weekKey]) {
+        weeklyData[weekKey] = {};
+      }
+      
+      const metricName = update.metrics?.name || 'metric';
+      if (!weeklyData[weekKey][metricName]) {
+        weeklyData[weekKey][metricName] = [];
+      }
+      
+      const value = parseFloat(update.value);
+      if (!isNaN(value)) {
+        weeklyData[weekKey][metricName].push(value);
+      }
+    });
+
+    // Convert to chart format with averages
+    return Object.entries(weeklyData).map(([week, metricsData]) => {
+      const weekData: any = { date: week };
+      Object.entries(metricsData).forEach(([metric, values]) => {
+        weekData[metric] = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+      });
+      return weekData;
+    }).slice(-4); // Last 4 weeks
+  })() : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -409,7 +468,22 @@ export default function Dashboard() {
         </div>
         {/* Hero Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <HealthScore score={healthScore} />
+          {healthScore !== null && <HealthScore score={healthScore} />}
+          {healthScore === null && (
+            <Card className="border-2">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-sm font-medium">Saúde Estratégica</span>
+                </div>
+                <div className="text-center py-4">
+                  <p className="text-sm text-muted-foreground">
+                    Configure objetivos para visualizar
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           <Card className="border-2">
             <CardContent className="pt-6">
@@ -455,15 +529,37 @@ export default function Dashboard() {
         </div>
 
         {/* Progress Chart */}
-        <ProgressChart 
-          data={chartData}
-          title="Evolução de Métricas (Últimas 4 Semanas)"
-          lines={[
-            { dataKey: 'receita', name: 'Receita', color: '#10b981' },
-            { dataKey: 'satisfacao', name: 'Satisfação', color: '#3b82f6' },
-            { dataKey: 'processos', name: 'Processos', color: '#8b5cf6' }
-          ]}
-        />
+        {chartData.length > 0 ? (
+          <ProgressChart 
+            data={chartData}
+            title="Evolução de Métricas (Últimas 4 Semanas)"
+            lines={Object.keys(chartData[0] || {})
+              .filter(key => key !== 'date')
+              .map((key, idx) => ({
+                dataKey: key,
+                name: key,
+                color: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][idx % 5]
+              }))
+            }
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Evolução de Métricas (Últimas 4 Semanas)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <p className="text-muted-foreground">
+                  Nenhuma atualização de métrica nos últimos 30 dias
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Configure métricas e adicione atualizações para visualizar o progresso
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Objectives Grid */}
         <div>
