@@ -69,7 +69,7 @@ export default function Pricing() {
     },
   });
 
-  const handleUpgrade = (planId: string, tier: string, planName: string) => {
+  const handleUpgrade = async (planId: string, tier: string, planName: string) => {
     trackUpgradeClicked(currentTier, planName, 'pricing_page');
 
     if (tier === "enterprise") {
@@ -77,22 +77,60 @@ export default function Pricing() {
       return;
     }
 
-    supabase.functions.invoke("create-checkout-session", {
-      body: { planId },
-    }).then(({ data, error }) => {
+    if (!companyId) {
+      toast({
+        title: "Erro",
+        description: "Você precisa criar uma empresa primeiro",
+        variant: "destructive"
+      });
+      navigate('/planejamento');
+      return;
+    }
+
+    try {
+      toast({
+        title: "Criando checkout...",
+        description: "Aguarde enquanto preparamos seu pagamento"
+      });
+
+      const { data, error } = await supabase.functions.invoke("create-abacatepay-checkout", {
+        body: { 
+          planTier: tier,
+          companyId 
+        },
+      });
+
       if (error) {
         console.error("Error creating checkout session:", error);
         toast({
           title: "Erro ao iniciar checkout",
-          description: "Tente novamente mais tarde",
+          description: error.message || "Tente novamente mais tarde",
           variant: "destructive"
         });
         return;
       }
-      if (data?.url) {
-        window.location.href = data.url;
+
+      if (data?.checkoutUrl) {
+        toast({
+          title: "Redirecionando...",
+          description: "Você será redirecionado para o pagamento"
+        });
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast({
+          title: "Erro",
+          description: "URL de checkout não encontrada",
+          variant: "destructive"
+        });
       }
-    });
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente mais tarde",
+        variant: "destructive"
+      });
+    }
   };
 
   const featureComparison = [
