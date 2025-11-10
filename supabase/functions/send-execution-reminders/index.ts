@@ -158,7 +158,7 @@ function generateReminderContent(reminder: ReminderData, companyName: string) {
           </ul>
           <p><a href="${supabaseUrl.replace("/functions/v1/", "")}/planejamento" style="display: inline-block; padding: 10px 20px; background: #0066FF; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Realizar Check-in Agora</a></p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
-          <p style="color: #666; font-size: 12px;">Este é um lembrete automático do sistema Strategic Planner OS.</p>
+          <p style="color: #666; font-size: 12px;">Este é um lembrete automático do sistema Estrategya Planner OS.</p>
         `,
       };
 
