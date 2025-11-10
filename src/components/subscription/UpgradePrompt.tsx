@@ -83,7 +83,7 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
       },
       initiatives: {
         title: "Limite de Iniciativas Atingido",
-        description: "Você atingiu o limite de 3 iniciativas por objetivo. Faça upgrade para criar iniciativas ilimitadas.",
+        description: "Você atingiu o limite de 5 iniciativas por objetivo do plano FREE. Faça upgrade para criar iniciativas ilimitadas.",
         benefits: [
           "Iniciativas ilimitadas por objetivo",
           "ICE Score para priorização",
@@ -258,19 +258,19 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
                 <div className="space-y-2 text-xs text-muted-foreground mb-6">
                   <p>
                     Empresas:{" "}
-                    {limits.max_companies === -1 ? "Ilimitadas" : limits.max_companies}
+                    {limits.max_companies >= 999999 ? "Ilimitadas" : limits.max_companies}
                   </p>
                   <p>
                     Planos/Cenários:{" "}
-                    {limits.max_plans === -1 ? "Ilimitados" : limits.max_plans}
+                    {limits.max_plans >= 999999 ? "Ilimitados" : limits.max_plans}
                   </p>
                   <p>
                     Objetivos:{" "}
-                    {limits.max_objectives === -1 ? "Ilimitados" : limits.max_objectives}
+                    {limits.max_objectives >= 999999 ? "Ilimitados" : limits.max_objectives}
                   </p>
                   <p>
                     Membros:{" "}
-                    {limits.max_team_members === -1 ? "Ilimitados" : limits.max_team_members}
+                    {limits.max_team_members >= 999999 ? "Ilimitados" : limits.max_team_members}
                   </p>
                 </div>
 

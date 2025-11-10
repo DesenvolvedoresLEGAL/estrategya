@@ -159,13 +159,13 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   const pdfExportMode = limits.pdf_export_mode || "watermark";
 
   const canCreateCompany = async (): Promise<boolean> => {
-    if (limits.max_companies === -1) return true;
+    if (limits.max_companies >= 999999) return true;
     const usage = currentUsage?.companies || 0;
     return usage < limits.max_companies;
   };
 
   const canCreatePlan = async (cId: string): Promise<boolean> => {
-    if (limits.max_plans === -1) return true;
+    if (limits.max_plans >= 999999) return true;
     
     const { count } = await supabase
       .from("ogsm")
@@ -176,7 +176,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   };
 
   const canCreateObjective = async (cId: string): Promise<boolean> => {
-    if (limits.max_objectives === -1) return true;
+    if (limits.max_objectives >= 999999) return true;
     
     const { count } = await supabase
       .from("strategic_objectives")
@@ -187,7 +187,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   };
 
   const canCreateInitiative = async (objectiveId: string): Promise<boolean> => {
-    if (limits.max_initiatives_per_objective === -1) return true;
+    if (limits.max_initiatives_per_objective >= 999999) return true;
     
     const { count } = await supabase
       .from("initiatives")
@@ -198,7 +198,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   };
 
   const canInviteTeamMember = async (cId: string): Promise<boolean> => {
-    if (limits.max_team_members === -1) return true;
+    if (limits.max_team_members >= 999999) return true;
     
     const { count } = await supabase
       .from("team_members")

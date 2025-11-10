@@ -98,16 +98,22 @@ export default function Pricing() {
   const featureComparison = [
     { name: "Empresas", free: "1", pro: "1", enterprise: "Ilimitadas" },
     { name: "Planos Estratégicos Ativos", free: "1", pro: "3", enterprise: "Ilimitados" },
+    { name: "Objetivos Estratégicos", free: "3", pro: "Ilimitados", enterprise: "Ilimitados" },
+    { name: "Iniciativas por Objetivo", free: "5", pro: "Ilimitadas", enterprise: "Ilimitadas" },
     { name: "Membros da Equipe", free: "1", pro: "3", enterprise: "Ilimitados" },
     { name: "IA Avançada", free: "Básica", pro: "Completa", enterprise: "Completa" },
     { name: "Templates Prontos", free: false, pro: true, enterprise: true },
     { name: "Templates Customizados", free: false, pro: false, enterprise: true },
     { name: "Exportação PDF", free: "Com marca d'água", pro: "Sem marca d'água", enterprise: "Premium" },
+    { name: "ICE Score", free: false, pro: true, enterprise: true },
+    { name: "5W2H Detalhado", free: false, pro: true, enterprise: true },
+    { name: "4DX/WBR Execution", free: false, pro: true, enterprise: true },
     { name: "Dashboard Completo", free: "Básico", pro: "Completo", enterprise: "Completo" },
-    { name: "5W2H e Priorização", free: false, pro: true, enterprise: true },
+    { name: "Colaboração em Tempo Real", free: false, pro: true, enterprise: true },
     { name: "Integrações Externas", free: false, pro: false, enterprise: true },
-    { name: "Histórico e Log de Mudanças", free: false, pro: false, enterprise: true },
-    { name: "Múltiplos Usuários e Permissões", free: false, pro: "Limitado", enterprise: "Completo" },
+    { name: "Histórico e Audit Log", free: false, pro: false, enterprise: true },
+    { name: "Permissões Avançadas", free: false, pro: false, enterprise: true },
+    { name: "Branding Personalizado", free: false, pro: false, enterprise: true },
     { name: "Suporte", free: "Email", pro: "Prioritário", enterprise: "Dedicado" },
   ];
 
@@ -218,9 +224,9 @@ export default function Pricing() {
                     <div className="pt-4 border-t">
                       <p className="font-semibold text-sm mb-2">Limites:</p>
                       <div className="space-y-1 text-sm text-muted-foreground">
-                        <p>• {limits.max_companies === -1 ? "Empresas ilimitadas" : `${limits.max_companies} empresa(s)`}</p>
-                        <p>• {limits.max_objectives === -1 ? "Objetivos ilimitados" : `${limits.max_objectives} objetivos`}</p>
-                        <p>• {limits.max_team_members === -1 ? "Time ilimitado" : `${limits.max_team_members} membros`}</p>
+                        <p>• {limits.max_companies >= 999999 ? "Empresas ilimitadas" : `${limits.max_companies} empresa(s)`}</p>
+                        <p>• {limits.max_objectives >= 999999 ? "Objetivos ilimitados" : `${limits.max_objectives} objetivos`}</p>
+                        <p>• {limits.max_team_members >= 999999 ? "Time ilimitado" : `${limits.max_team_members} membros`}</p>
                       </div>
                     </div>
                   </div>
