@@ -1298,7 +1298,7 @@ export type Database = {
         | "em_risco"
         | "concluido"
         | "pausado"
-      plan_tier: "free" | "pro" | "business" | "enterprise"
+      plan_tier: "free" | "pro" | "enterprise"
       platform_role: "platform_admin" | "platform_moderator"
     }
     CompositeTypes: {
@@ -1438,7 +1438,7 @@ export const Constants = {
         "concluido",
         "pausado",
       ],
-      plan_tier: ["free", "pro", "business", "enterprise"],
+      plan_tier: ["free", "pro", "enterprise"],
       platform_role: ["platform_admin", "platform_moderator"],
     },
   },

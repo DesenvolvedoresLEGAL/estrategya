@@ -9,15 +9,30 @@ interface SubscriptionLimits {
   max_initiatives_per_objective: number;
   max_team_members: number;
   ai_insights_per_month: number;
-  export_pdf: boolean;
+  pdf_export_mode: "none" | "watermark" | "standard" | "premium";
   ice_score: boolean;
   "5w2h": boolean;
   "4dx_execution": boolean;
   templates: boolean;
+  custom_templates: boolean;
   integrations: boolean;
   collaboration: boolean;
   custom_branding: boolean;
+  audit_log: boolean;
+  advanced_permissions: boolean;
 }
+
+export type FeatureFlag =
+  | "ice_score"
+  | "5w2h"
+  | "4dx_execution"
+  | "templates"
+  | "custom_templates"
+  | "integrations"
+  | "collaboration"
+  | "custom_branding"
+  | "audit_log"
+  | "advanced_permissions";
 
 interface SubscriptionData {
   limits: SubscriptionLimits;
@@ -30,7 +45,10 @@ interface SubscriptionData {
   canCreateInitiative: (objectiveId: string) => Promise<boolean>;
   canInviteTeamMember: (companyId: string) => Promise<boolean>;
   canExportPDF: () => boolean;
-  hasFeature: (feature: keyof SubscriptionLimits) => boolean;
+  shouldApplyWatermark: () => boolean;
+  hasPremiumPDF: () => boolean;
+  pdfExportMode: SubscriptionLimits["pdf_export_mode"];
+  hasFeature: (feature: FeatureFlag) => boolean;
   currentUsage: {
     companies: number;
     plans: number;
@@ -117,22 +135,30 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     enabled: true,
   });
 
-  const limits: SubscriptionLimits = (subscription?.plan?.limits as unknown as SubscriptionLimits) || {
+  const defaultLimits: SubscriptionLimits = {
     max_companies: 1,
     max_plans: 1,
     max_objectives: 3,
     max_initiatives_per_objective: 3,
     max_team_members: 1,
     ai_insights_per_month: 5,
-    export_pdf: false,
+    pdf_export_mode: "watermark",
     ice_score: false,
     "5w2h": false,
     "4dx_execution": false,
     templates: false,
+    custom_templates: false,
     integrations: false,
     collaboration: false,
     custom_branding: false,
+    audit_log: false,
+    advanced_permissions: false,
   };
+
+  const planLimits = (subscription?.plan?.limits as unknown as Partial<SubscriptionLimits>) || {};
+  const limits: SubscriptionLimits = { ...defaultLimits, ...planLimits };
+
+  const pdfExportMode = limits.pdf_export_mode || "none";
 
   const canCreateCompany = async (): Promise<boolean> => {
     if (limits.max_companies === -1) return true;
@@ -185,15 +211,24 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   };
 
   const canExportPDF = (): boolean => {
-    return limits.export_pdf === true;
+    return pdfExportMode !== "none";
   };
 
-  const hasFeature = (feature: keyof SubscriptionLimits): boolean => {
-    return !!limits[feature];
+  const shouldApplyWatermark = (): boolean => {
+    return pdfExportMode === "watermark";
+  };
+
+  const hasPremiumPDF = (): boolean => {
+    return pdfExportMode === "premium";
+  };
+
+  const hasFeature = (feature: FeatureFlag): boolean => {
+    return Boolean(limits[feature]);
   };
 
   return {
     limits,
+    pdfExportMode,
     tier: subscription?.plan?.tier || "free",
     status: subscription?.status || "active",
     isLoading,
@@ -203,6 +238,8 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     canCreateInitiative,
     canInviteTeamMember,
     canExportPDF,
+    shouldApplyWatermark,
+    hasPremiumPDF,
     hasFeature,
     currentUsage: currentUsage || { companies: 0, plans: 0, objectives: 0, teamMembers: 0 },
   };

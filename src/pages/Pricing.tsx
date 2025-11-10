@@ -72,7 +72,7 @@ export default function Pricing() {
   const handleUpgrade = (planId: string, tier: string, planName: string) => {
     trackUpgradeClicked(currentTier, planName, 'pricing_page');
 
-    if (tier === "business") {
+    if (tier === "enterprise") {
       window.open("https://legal.team/contato", "_blank");
       return;
     }
@@ -146,7 +146,7 @@ export default function Pricing() {
             const features = plan.features as string[];
             const limits = plan.limits as Record<string, any>;
             const isPro = plan.tier === "pro";
-            const isEnterprise = plan.tier === "business";
+            const isEnterprise = plan.tier === "enterprise";
             const isCurrent = plan.tier === currentTier;
 
             return (
@@ -172,7 +172,7 @@ export default function Pricing() {
                   <CardDescription className="min-h-[3rem]">
                     {plan.tier === "free" && "Para começar seu planejamento"}
                     {plan.tier === "pro" && "Para times que executam estratégia"}
-                    {plan.tier === "business" && "Para organizações avançadas"}
+                    {plan.tier === "enterprise" && "Para organizações avançadas"}
                   </CardDescription>
                   <div className="mt-4">
                     {plan.price_monthly ? (
@@ -189,7 +189,9 @@ export default function Pricing() {
                         )}
                       </>
                     ) : (
-                      <span className="text-4xl font-bold">Grátis</span>
+                      <span className="text-4xl font-bold">
+                        {plan.tier === "free" ? "Grátis" : "Sob consulta"}
+                      </span>
                     )}
                   </div>
                 </CardHeader>
