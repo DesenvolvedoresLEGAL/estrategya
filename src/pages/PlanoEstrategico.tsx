@@ -24,7 +24,12 @@ export default function PlanoEstrategico() {
   const [companyName, setCompanyName] = useState("");
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   
-  const { canExportPDF, tier } = useSubscriptionLimits(companyId || undefined);
+  const {
+    canExportPDF,
+    shouldApplyWatermark,
+    pdfExportMode,
+    tier,
+  } = useSubscriptionLimits(companyId || undefined);
   const { trackLimitReached, trackFeatureBlocked, trackExportUsed } = useAnalytics();
   
   // Data states
@@ -263,15 +268,24 @@ export default function PlanoEstrategico() {
           day: 'numeric'
         }),
         orientation: 'portrait',
-        watermark: tier === 'free', // Add watermark for FREE users
+        watermark: shouldApplyWatermark(),
+        watermarkText: shouldApplyWatermark()
+          ? "Criado com Estratégia IA - Faça upgrade para remover"
+          : undefined,
         canExport: true // We already checked above
       });
 
       toast({
         title: "✓ PDF gerado com sucesso!",
-        description: tier === 'free' 
-          ? "Faça upgrade para remover a marca d'água" 
-          : "O arquivo foi baixado para seu computador",
+        description: (() => {
+          if (pdfExportMode === 'watermark') {
+            return "Faça upgrade para remover a marca d'água.";
+          }
+          if (pdfExportMode === 'premium') {
+            return "Exportação premium entregue com sucesso.";
+          }
+          return "O arquivo foi baixado para seu computador.";
+        })(),
       });
     } catch (error: any) {
       console.error('Error generating PDF:', error);

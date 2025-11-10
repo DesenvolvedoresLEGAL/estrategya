@@ -99,7 +99,7 @@ export const PricingSection = () => {
               "1 plano estratégico salvo",
               "Dashboard básico",
               "IA básica (análise e objetivos)",
-              "Sem exportar PDF",
+              "Exportação em PDF com marca d'água",
               "Sem integrações",
             ]}
             buttonText="Começar grátis"
@@ -144,7 +144,7 @@ export const PricingSection = () => {
               "Histórico e log de mudanças",
               "Templates próprios do cliente",
               "Branding personalizado",
-              "Relatórios customizados",
+              "Relatórios customizados e exportações premium",
               "Suporte dedicado + SLA",
             ]}
             buttonText="Falar com a LEGAL"

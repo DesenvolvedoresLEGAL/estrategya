@@ -92,11 +92,11 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
       },
       companies: {
         title: "Limite de Empresas Atingido",
-        description: "O plano FREE permite apenas 1 empresa. Faça upgrade para gerenciar múltiplas empresas.",
+        description: "Seu plano atual permite apenas 1 empresa. Atualize para o Enterprise para gerenciar múltiplos workspaces.",
         benefits: [
-          "Empresas ilimitadas",
+          "Workspaces ilimitados no Enterprise",
           "Gestão multi-empresa unificada",
-          "Relatórios consolidados"
+          "Relatórios consolidados e permissões avançadas"
         ]
       },
       team_members: {
@@ -110,20 +110,20 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
       },
       plans: {
         title: "Limite de Planos OGSM Atingido",
-        description: "Você atingiu o limite de planos estratégicos ativos.",
+        description: "Você atingiu o limite de planos estratégicos ativos do seu plano.",
         benefits: [
-          "Múltiplos cenários estratégicos",
-          "Comparação entre planos",
-          "Histórico completo"
+          "Até 3 planos ativos simultâneos no PRO",
+          "Planos ilimitados no Enterprise",
+          "Comparação e histórico completo"
         ]
       },
       export_pdf: {
         title: "Exportação PDF Premium",
-        description: "Exporte seus planos estratégicos sem marca d'água com o plano PRO.",
+        description: "Remova a marca d'água com o plano PRO e libere exportações premium com branding no Enterprise.",
         benefits: [
-          "PDF profissional sem marca d'água",
-          "Exportação ilimitada",
-          "Customização de layout"
+          "PDF profissional sem marca d'água (PRO)",
+          "Exportações ilimitadas",
+          "Branding e layouts premium (Enterprise)"
         ]
       }
     };
@@ -144,7 +144,7 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
   const handleUpgrade = (planId: string, tier: string, planName: string) => {
     trackUpgradeClicked(currentTier, feature || limitType || "unknown", "upgrade_modal");
 
-    if (tier === "business") {
+    if (tier === "enterprise") {
       window.open("https://legal.team/contato", "_blank");
       return;
     }
@@ -204,7 +204,7 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
             const features = plan.features as string[];
             const limits = plan.limits as Record<string, any>;
             const isPro = plan.tier === "pro";
-            const isEnterprise = plan.tier === "business";
+            const isEnterprise = plan.tier === "enterprise";
 
             return (
               <div
