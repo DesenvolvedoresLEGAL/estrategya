@@ -57,10 +57,17 @@ interface SubscriptionData {
 }
 
 export const useSubscriptionLimits = (companyId: string | undefined): SubscriptionData => {
+  console.log("🔍 [useSubscriptionLimits] Hook called with companyId:", companyId);
+  
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["subscription", companyId],
     queryFn: async () => {
-      if (!companyId) return null;
+      console.log("🔍 [useSubscriptionLimits] Query function running for companyId:", companyId);
+      
+      if (!companyId) {
+        console.log("⚠️ [useSubscriptionLimits] No companyId provided, returning null");
+        return null;
+      }
 
       const { data, error } = await supabase
         .from("company_subscriptions")
@@ -71,13 +78,25 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
         .eq("company_id", companyId)
         .single();
 
+      console.log("🔍 [useSubscriptionLimits] Subscription query result:", {
+        companyId,
+        data,
+        error,
+        tier: data?.plan?.tier,
+        limits: data?.plan?.limits
+      });
+
       if (error) {
+        console.log("⚠️ [useSubscriptionLimits] Subscription error, falling back to free plan:", error);
+        
         // If no subscription exists, return default free plan
         const { data: freePlan } = await supabase
           .from("subscription_plans")
           .select("*")
           .eq("tier", "free")
           .single();
+
+        console.log("🔍 [useSubscriptionLimits] Free plan fallback:", freePlan);
 
         if (freePlan) {
           return {

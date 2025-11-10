@@ -40,36 +40,55 @@ export default function PlanValidator() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("🔍 [PlanValidator] Current user:", user?.email, "| User ID:", user?.id);
+      
       if (user?.email) {
         setCurrentUser(user.email);
       }
 
-      // Query diretamente usando uma função SQL customizada se necessário
-      // Por enquanto, vamos fazer uma query simples para buscar empresas
-      const accountEmails = testAccounts.map(a => a.email);
-      
-      // Buscar dados via query RPC ou diretamente
-      const { data: companiesData } = await supabase
+      // Buscar empresas do usuário atual com LEFT JOIN para não perder dados
+      const { data: companiesData, error: companiesError } = await supabase
         .from("companies")
         .select(`
           id,
           name,
           owner_user_id,
-          company_subscriptions!inner (
+          company_subscriptions (
             id,
+            status,
             plan:subscription_plans (
               tier,
               name
             )
           )
-        `);
+        `)
+        .eq("owner_user_id", user?.id);
+
+      console.log("🔍 [PlanValidator] Companies query result:", {
+        data: companiesData,
+        error: companiesError,
+        count: companiesData?.length
+      });
+
+      if (companiesError) {
+        console.error("❌ [PlanValidator] Error fetching companies:", companiesError);
+      }
 
       // Para simplificar, vamos apenas buscar para o usuário atual
       const updatedAccounts = testAccounts.map((account) => {
         // Se for a conta atual, buscar os dados
         if (user?.email === account.email && companiesData && companiesData.length > 0) {
           const company = companiesData[0];
-          const subscription = company.company_subscriptions?.[0];
+          const subscriptions = company.company_subscriptions;
+          const subscription = subscriptions?.[0];
+          
+          console.log("🔍 [PlanValidator] Processing account:", account.email, {
+            companyId: company.id,
+            companyName: company.name,
+            subscriptions: subscriptions,
+            subscription: subscription,
+            tier: subscription?.plan?.tier
+          });
           
           return {
             ...account,
@@ -79,18 +98,23 @@ export default function PlanValidator() {
           };
         }
         
+        console.log("⚠️ [PlanValidator] No data for account:", account.email);
         return account;
       });
 
+      console.log("🔍 [PlanValidator] Updated accounts:", updatedAccounts);
+
       setTestAccounts(updatedAccounts);
       const currentAccount = updatedAccounts.find(a => a.email === user?.email);
+      console.log("🔍 [PlanValidator] Selected account:", currentAccount);
+      
       if (currentAccount) {
         setSelectedAccount(currentAccount);
       } else if (updatedAccounts[0]) {
         setSelectedAccount(updatedAccounts[0]);
       }
     } catch (error) {
-      console.error("Error loading test accounts:", error);
+      console.error("❌ [PlanValidator] Error loading test accounts:", error);
       toast({
         title: "Erro",
         description: "Erro ao carregar dados das contas de teste",
