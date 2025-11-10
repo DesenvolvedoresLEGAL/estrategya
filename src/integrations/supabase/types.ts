@@ -152,6 +152,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          cnpj: string | null
           created_at: string
           id: string
           main_challenge: string | null
@@ -166,8 +167,10 @@ export type Database = {
           updated_at: string
           values: string | null
           vision: string | null
+          whatsapp_phone: string | null
         }
         Insert: {
+          cnpj?: string | null
           created_at?: string
           id?: string
           main_challenge?: string | null
@@ -182,8 +185,10 @@ export type Database = {
           updated_at?: string
           values?: string | null
           vision?: string | null
+          whatsapp_phone?: string | null
         }
         Update: {
+          cnpj?: string | null
           created_at?: string
           id?: string
           main_challenge?: string | null
@@ -198,6 +203,7 @@ export type Database = {
           updated_at?: string
           values?: string | null
           vision?: string | null
+          whatsapp_phone?: string | null
         }
         Relationships: []
       }

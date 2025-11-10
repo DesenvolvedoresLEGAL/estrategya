@@ -1,5 +1,56 @@
 import { z } from "zod";
 
+// Validação para CNPJ (formato brasileiro)
+const validateCNPJ = (cnpj: string): boolean => {
+  // Remove caracteres não numéricos
+  const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+  
+  // Verifica se tem 14 dígitos
+  if (cleanCNPJ.length !== 14) return false;
+  
+  // Verifica se todos os dígitos são iguais
+  if (/^(\d)\1{13}$/.test(cleanCNPJ)) return false;
+  
+  // Validação dos dígitos verificadores
+  let length = cleanCNPJ.length - 2;
+  let numbers = cleanCNPJ.substring(0, length);
+  const digits = cleanCNPJ.substring(length);
+  let sum = 0;
+  let pos = length - 7;
+  
+  for (let i = length; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(length - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  if (result !== parseInt(digits.charAt(0))) return false;
+  
+  length = length + 1;
+  numbers = cleanCNPJ.substring(0, length);
+  sum = 0;
+  pos = length - 7;
+  
+  for (let i = length; i >= 1; i--) {
+    sum += parseInt(numbers.charAt(length - i)) * pos--;
+    if (pos < 2) pos = 9;
+  }
+  
+  result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+  return result === parseInt(digits.charAt(1));
+};
+
+// Validação para telefone WhatsApp (formato brasileiro)
+const validateWhatsApp = (phone: string): boolean => {
+  // Remove caracteres não numéricos
+  const cleanPhone = phone.replace(/[^\d]/g, '');
+  
+  // Verifica se tem 12 ou 13 dígitos (com código do país)
+  // Formato: +55 (DDD) 9XXXX-XXXX = 13 dígitos
+  // Ou: (DDD) 9XXXX-XXXX = 11 dígitos
+  return cleanPhone.length === 11 || cleanPhone.length === 13;
+};
+
 // Validação para Etapa 1: Contexto da Empresa
 export const companyContextSchema = z.object({
   name: z
@@ -7,6 +58,16 @@ export const companyContextSchema = z.object({
     .trim()
     .min(2, "Nome da empresa deve ter pelo menos 2 caracteres")
     .max(100, "Nome da empresa deve ter no máximo 100 caracteres"),
+  cnpj: z
+    .string()
+    .trim()
+    .min(1, "CNPJ é obrigatório")
+    .refine(validateCNPJ, "CNPJ inválido. Use o formato: 00.000.000/0000-00"),
+  whatsapp_phone: z
+    .string()
+    .trim()
+    .min(1, "Telefone WhatsApp é obrigatório")
+    .refine(validateWhatsApp, "Telefone inválido. Use o formato: (00) 90000-0000"),
   segment: z
     .string()
     .trim()

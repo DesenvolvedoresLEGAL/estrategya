@@ -46,6 +46,8 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
+    cnpj: initialData?.cnpj || "",
+    whatsapp_phone: initialData?.whatsapp_phone || "",
     segment: initialData?.segment || "",
     model: initialData?.model || "",
     size_team: initialData?.size_team || "",
@@ -126,6 +128,8 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
 
       const sanitizedData = {
         name: formData.name.trim(),
+        cnpj: formData.cnpj.trim(),
+        whatsapp_phone: formData.whatsapp_phone.trim(),
         segment: formData.segment,
         model: formData.model,
         size_team: formData.size_team ? parseInt(formData.size_team) : null,
@@ -225,6 +229,66 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             {errors.name && (
               <p className="text-sm text-destructive">{errors.name}</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="cnpj">CNPJ *</Label>
+                <ContextualHelp
+                  label="CNPJ"
+                  description="CNPJ da empresa (obrigatório para validação)"
+                  examples={[
+                    "00.000.000/0000-00",
+                    "12.345.678/0001-90"
+                  ]}
+                />
+              </div>
+              <Input
+                id="cnpj"
+                value={formData.cnpj}
+                onChange={(e) => {
+                  setFormData({ ...formData, cnpj: e.target.value });
+                  if (errors.cnpj) setErrors({ ...errors, cnpj: "" });
+                }}
+                placeholder="00.000.000/0000-00"
+                className={errors.cnpj ? "border-destructive" : ""}
+                maxLength={18}
+                required
+              />
+              {errors.cnpj && (
+                <p className="text-sm text-destructive">{errors.cnpj}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="whatsapp_phone">Telefone WhatsApp *</Label>
+                <ContextualHelp
+                  label="WhatsApp"
+                  description="Telefone WhatsApp para contato (obrigatório)"
+                  examples={[
+                    "(11) 99999-9999",
+                    "+55 11 98765-4321"
+                  ]}
+                />
+              </div>
+              <Input
+                id="whatsapp_phone"
+                value={formData.whatsapp_phone}
+                onChange={(e) => {
+                  setFormData({ ...formData, whatsapp_phone: e.target.value });
+                  if (errors.whatsapp_phone) setErrors({ ...errors, whatsapp_phone: "" });
+                }}
+                placeholder="(00) 90000-0000"
+                className={errors.whatsapp_phone ? "border-destructive" : ""}
+                maxLength={20}
+                required
+              />
+              {errors.whatsapp_phone && (
+                <p className="text-sm text-destructive">{errors.whatsapp_phone}</p>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
