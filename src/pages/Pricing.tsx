@@ -112,7 +112,7 @@ export default function Pricing() {
     { name: "Colaboração em Tempo Real", free: false, pro: true, enterprise: true },
     { name: "Integrações Externas", free: false, pro: false, enterprise: true },
     { name: "Histórico e Audit Log", free: false, pro: false, enterprise: true },
-    { name: "Permissões Avançadas", free: false, pro: false, enterprise: true },
+    { name: "Permissões Avançadas por Role", free: false, pro: false, enterprise: true },
     { name: "Branding Personalizado", free: false, pro: false, enterprise: true },
     { name: "Suporte", free: "Email", pro: "Prioritário", enterprise: "Dedicado" },
   ];
