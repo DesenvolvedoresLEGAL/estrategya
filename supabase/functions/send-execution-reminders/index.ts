@@ -1,12 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.80.0';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.80.0";
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface ReminderData {
@@ -19,35 +19,34 @@ interface ReminderData {
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🔔 Verificando lembretes pendentes...');
+    console.log("🔔 Verificando lembretes pendentes...");
 
     // Buscar lembretes pendentes que devem ser enviados
     const now = new Date();
     const { data: reminders, error: remindersError } = await supabase
-      .from('execution_reminders')
-      .select('*')
-      .eq('sent', false)
-      .lte('scheduled_for', now.toISOString())
+      .from("execution_reminders")
+      .select("*")
+      .eq("sent", false)
+      .lte("scheduled_for", now.toISOString())
       .limit(50);
 
     if (remindersError) {
-      console.error('Erro ao buscar lembretes:', remindersError);
+      console.error("Erro ao buscar lembretes:", remindersError);
       throw remindersError;
     }
 
     if (!reminders || reminders.length === 0) {
-      console.log('✅ Nenhum lembrete pendente');
-      return new Response(
-        JSON.stringify({ message: 'Nenhum lembrete pendente', count: 0 }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      console.log("✅ Nenhum lembrete pendente");
+      return new Response(JSON.stringify({ message: "Nenhum lembrete pendente", count: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log(`📧 Processando ${reminders.length} lembrete(s)...`);
@@ -60,9 +59,9 @@ serve(async (req) => {
 
         // Buscar informações da empresa
         const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('name, owner_user_id')
-          .eq('id', reminder.company_id)
+          .from("companies")
+          .select("name, owner_user_id")
+          .eq("id", reminder.company_id)
           .single();
 
         if (companyError || !company) {
@@ -90,12 +89,12 @@ serve(async (req) => {
 
         // Marcar lembrete como enviado
         const { error: updateError } = await supabase
-          .from('execution_reminders')
+          .from("execution_reminders")
           .update({
             sent: true,
-            sent_at: new Date().toISOString()
+            sent_at: new Date().toISOString(),
           })
-          .eq('id', reminder.id);
+          .eq("id", reminder.id);
 
         if (updateError) {
           console.error(`Erro ao atualizar lembrete ${reminder.id}:`, updateError);
@@ -103,51 +102,46 @@ serve(async (req) => {
 
         results.push({
           reminder_id: reminder.id,
-          status: 'sent',
-          type: reminder.reminder_type
+          status: "sent",
+          type: reminder.reminder_type,
         });
-
       } catch (error) {
         console.error(`Erro ao processar lembrete ${reminder.id}:`, error);
         results.push({
           reminder_id: reminder.id,
-          status: 'error',
-          error: error instanceof Error ? error.message : 'Erro desconhecido'
+          status: "error",
+          error: error instanceof Error ? error.message : "Erro desconhecido",
         });
       }
     }
 
-    console.log(`✅ Processamento concluído: ${results.filter(r => r.status === 'sent').length} enviados`);
+    console.log(`✅ Processamento concluído: ${results.filter((r) => r.status === "sent").length} enviados`);
 
     return new Response(
       JSON.stringify({
-        message: 'Lembretes processados',
+        message: "Lembretes processados",
         total: reminders.length,
-        sent: results.filter(r => r.status === 'sent').length,
-        errors: results.filter(r => r.status === 'error').length,
-        results
+        sent: results.filter((r) => r.status === "sent").length,
+        errors: results.filter((r) => r.status === "error").length,
+        results,
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
-
   } catch (error: any) {
-    console.error('❌ Erro geral:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    console.error("❌ Erro geral:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
 
 function generateReminderContent(reminder: ReminderData, companyName: string) {
   switch (reminder.reminder_type) {
-    case 'weekly_checkin':
+    case "weekly_checkin":
       return {
         subject: `⏰ Lembrete: Check-in Semanal WBR - ${companyName}`,
         html: `
@@ -162,13 +156,13 @@ function generateReminderContent(reminder: ReminderData, companyName: string) {
             <li>✅ Identificar bloqueios</li>
             <li>✅ Definir compromissos para próxima semana</li>
           </ul>
-          <p><a href="${supabaseUrl.replace('/functions/v1/', '')}/planejamento" style="display: inline-block; padding: 10px 20px; background: #0066FF; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Realizar Check-in Agora</a></p>
+          <p><a href="${supabaseUrl.replace("/functions/v1/", "")}/planejamento" style="display: inline-block; padding: 10px 20px; background: #0066FF; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Realizar Check-in Agora</a></p>
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
           <p style="color: #666; font-size: 12px;">Este é um lembrete automático do sistema Strategic Planner OS.</p>
-        `
+        `,
       };
 
-    case 'action_overdue':
+    case "action_overdue":
       return {
         subject: `⚠️ Ação Atrasada - ${companyName}`,
         html: `
@@ -176,16 +170,16 @@ function generateReminderContent(reminder: ReminderData, companyName: string) {
           <p>Olá!</p>
           <p>Uma ação do seu plano de execução está atrasada:</p>
           <div style="background: #FFF3CD; border-left: 4px solid #FF9800; padding: 15px; margin: 15px 0;">
-            <strong>Ação:</strong> ${reminder.metadata?.action_title || 'N/A'}<br>
-            <strong>Responsável:</strong> ${reminder.metadata?.owner || 'N/A'}<br>
-            <strong>Prazo:</strong> ${reminder.metadata?.deadline || 'N/A'}
+            <strong>Ação:</strong> ${reminder.metadata?.action_title || "N/A"}<br>
+            <strong>Responsável:</strong> ${reminder.metadata?.owner || "N/A"}<br>
+            <strong>Prazo:</strong> ${reminder.metadata?.deadline || "N/A"}
           </div>
           <p>Por favor, atualize o status ou redefina o prazo.</p>
-          <p><a href="${supabaseUrl.replace('/functions/v1/', '')}/planejamento" style="display: inline-block; padding: 10px 20px; background: #FF9800; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Atualizar Ação</a></p>
-        `
+          <p><a href="${supabaseUrl.replace("/functions/v1/", "")}/planejamento" style="display: inline-block; padding: 10px 20px; background: #FF9800; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Atualizar Ação</a></p>
+        `,
       };
 
-    case 'metric_update':
+    case "metric_update":
       return {
         subject: `📈 Lembrete: Atualizar Métricas - ${companyName}`,
         html: `
@@ -198,17 +192,17 @@ function generateReminderContent(reminder: ReminderData, companyName: string) {
             <li>Medidas de Resultado (Lag Measures)</li>
           </ul>
           <p>Manter o placar atualizado é fundamental para a execução eficaz da estratégia.</p>
-          <p><a href="${supabaseUrl.replace('/functions/v1/', '')}/planejamento" style="display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Atualizar Métricas</a></p>
-        `
+          <p><a href="${supabaseUrl.replace("/functions/v1/", "")}/planejamento" style="display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">Atualizar Métricas</a></p>
+        `,
       };
 
     default:
       return {
         subject: `Lembrete - ${companyName}`,
         html: `
-          <p>Você tem um lembrete pendente no Strategic Planner OS.</p>
-          <p><a href="${supabaseUrl.replace('/functions/v1/', '')}/planejamento">Acessar Sistema</a></p>
-        `
+          <p>Você tem um lembrete pendente no Estrategya Planner OS.</p>
+          <p><a href="${supabaseUrl.replace("/functions/v1/", "")}/planejamento">Acessar Sistema</a></p>
+        `,
       };
   }
 }
