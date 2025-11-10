@@ -22,53 +22,58 @@ import { StepTransition } from "@/components/wizard/StepTransition";
 import { SaveIndicator } from "@/components/wizard/SaveIndicator";
 
 const steps = [
-  { 
-    id: 1, 
-    title: "Contexto", 
+  {
+    id: 1,
+    title: "Contexto",
     description: "Empresa + MVV",
-    tooltip: "Defina o contexto da empresa, incluindo Missão, Visão e Valores. Opcionalmente, faça upload de dados históricos."
+    tooltip:
+      "Defina o contexto da empresa, incluindo Missão, Visão e Valores. Opcionalmente, faça upload de dados históricos.",
   },
-  { 
-    id: 2, 
-    title: "SWOT", 
+  {
+    id: 2,
+    title: "SWOT",
     description: "Diagnóstico",
-    tooltip: "Análise SWOT: identifique Forças, Fraquezas, Oportunidades e Ameaças do seu negócio."
+    tooltip: "Análise SWOT: identifique Forças, Fraquezas, Oportunidades e Ameaças do seu negócio.",
   },
-  { 
-    id: 3, 
-    title: "Análise IA", 
+  {
+    id: 3,
+    title: "Análise IA",
     description: "Leitura Estratégica",
-    tooltip: "A IA analisa seu contexto e SWOT, gerando uma leitura executiva e linhas estratégicas usando frameworks globais."
+    tooltip:
+      "A IA analisa seu contexto e SWOT, gerando uma leitura executiva e linhas estratégicas usando frameworks globais.",
   },
-  { 
-    id: 4, 
-    title: "OGSM", 
+  {
+    id: 4,
+    title: "OGSM",
     description: "Direcionamento",
-    tooltip: "Framework OGSM: Objective (objetivo), Goals (metas), Strategies (estratégias) e Measures (medidas)."
+    tooltip: "Framework OGSM: Objective (objetivo), Goals (metas), Strategies (estratégias) e Measures (medidas).",
   },
-  { 
-    id: 5, 
-    title: "OKRs + BSC", 
+  {
+    id: 5,
+    title: "OKRs + BSC",
     description: "Objetivos",
-    tooltip: "Transforme seus Goals em OKRs (Objectives and Key Results) e valide com as 4 perspectivas do Balanced Scorecard."
+    tooltip:
+      "Transforme seus Goals em OKRs (Objectives and Key Results) e valide com as 4 perspectivas do Balanced Scorecard.",
   },
-  { 
-    id: 6, 
-    title: "Priorização", 
+  {
+    id: 6,
+    title: "Priorização",
     description: "Matriz 2x2",
-    tooltip: "Matriz Impacto x Esforço: priorize iniciativas em 4 quadrantes (Fazer Agora, Planejar, Quick Wins, Evitar)."
+    tooltip:
+      "Matriz Impacto x Esforço: priorize iniciativas em 4 quadrantes (Fazer Agora, Planejar, Quick Wins, Evitar).",
   },
-  { 
-    id: 7, 
-    title: "Execução", 
+  {
+    id: 7,
+    title: "Execução",
     description: "Plano 4DX",
-    tooltip: "As 4 Disciplinas da Execução: foco no crucialmente importante, medidas de direção, placar visível e cadência de responsabilização."
+    tooltip:
+      "As 4 Disciplinas da Execução: foco no crucialmente importante, medidas de direção, placar visível e cadência de responsabilização.",
   },
-  { 
-    id: 8, 
-    title: "Métricas", 
+  {
+    id: 8,
+    title: "Métricas",
     description: "KPIs",
-    tooltip: "Defina métricas específicas (KPIs) para cada OKR, permitindo acompanhamento preciso do progresso."
+    tooltip: "Defina métricas específicas (KPIs) para cada OKR, permitindo acompanhamento preciso do progresso.",
   },
 ];
 
@@ -98,15 +103,18 @@ const Planejamento = () => {
   } = useWizardProgress(user?.id || null, companyData?.id || null);
 
   // Auto-save a cada 30 segundos (somente quando dados relevantes mudam)
-  const autoSaveData = useMemo(() => ({
-    companyData,
-    swotData,
-    analysisData,
-    ogsmData,
-    okrsBscData,
-    prioritizationData,
-    executionData,
-  }), [companyData, swotData, analysisData, ogsmData, okrsBscData, prioritizationData, executionData]);
+  const autoSaveData = useMemo(
+    () => ({
+      companyData,
+      swotData,
+      analysisData,
+      ogsmData,
+      okrsBscData,
+      prioritizationData,
+      executionData,
+    }),
+    [companyData, swotData, analysisData, ogsmData, okrsBscData, prioritizationData, executionData],
+  );
 
   const { isSaving } = useAutoSave({
     data: autoSaveData,
@@ -122,24 +130,28 @@ const Planejamento = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session) {
         navigate("/auth");
         return;
       }
-      
+
       setUser(session.user);
-      
+
       // Carregar dados existentes se houver
       await loadExistingData(session.user.id);
-      
+
       setLoading(false);
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
         navigate("/auth");
       }
@@ -155,33 +167,33 @@ const Planejamento = () => {
         const savedProgress = await loadProgress();
         if (savedProgress && savedProgress.currentStep > currentStep) {
           setCurrentStep(savedProgress.currentStep);
-          toast.success('Progresso restaurado!');
+          toast.success("Progresso restaurado!");
         }
       }
     };
-    
+
     restoreProgress();
   }, [companyData?.id, user?.id]);
 
   const loadExistingData = async (userId: string) => {
     try {
       const { data: companies } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('owner_user_id', userId)
-        .order('created_at', { ascending: false })
+        .from("companies")
+        .select("*")
+        .eq("owner_user_id", userId)
+        .order("created_at", { ascending: false })
         .limit(1);
 
       if (companies && companies.length > 0) {
         setCompanyData(companies[0]);
-        
+
         // Carregar contexto estratégico
         const { data: context } = await supabase
-          .from('strategic_context')
-          .select('*')
-          .eq('company_id', companies[0].id)
+          .from("strategic_context")
+          .select("*")
+          .eq("company_id", companies[0].id)
           .single();
-        
+
         if (context) {
           setSWOTData(context);
           if (context.ia_analysis) {
@@ -190,19 +202,15 @@ const Planejamento = () => {
         }
 
         // Carregar dados OGSM se houver
-        const { data: ogsm } = await supabase
-          .from('ogsm')
-          .select('*')
-          .eq('company_id', companies[0].id)
-          .maybeSingle();
-        
+        const { data: ogsm } = await supabase.from("ogsm").select("*").eq("company_id", companies[0].id).maybeSingle();
+
         if (ogsm) {
           setOgsmData(ogsm);
           setCurrentStep(5);
         }
       }
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error("Error loading data:", error);
     }
   };
 
@@ -214,7 +222,7 @@ const Planejamento = () => {
   const handleNext = async (data?: any) => {
     // Marcar etapa atual como concluída
     await markStepCompleted(currentStep);
-    
+
     if (currentStep === 1 && data) {
       setCompanyData(data);
     } else if (currentStep === 2 && data) {
@@ -230,11 +238,11 @@ const Planejamento = () => {
     } else if (currentStep === 7 && data) {
       setExecutionData(data);
     }
-    
+
     if (currentStep < 8) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
-      
+
       // Salvar progresso automaticamente
       if (companyData?.id) {
         await saveProgress(nextStep, {
@@ -257,7 +265,7 @@ const Planejamento = () => {
     if (currentStep > 1) {
       const prevStep = currentStep - 1;
       setCurrentStep(prevStep);
-      
+
       // Salvar progresso ao voltar
       if (companyData?.id) {
         await saveProgress(prevStep);
@@ -279,12 +287,12 @@ const Planejamento = () => {
         });
         setLastSavedAt(new Date());
       }
-      
-      toast.success('Progresso salvo com sucesso!');
-      navigate('/dashboard');
+
+      toast.success("Progresso salvo com sucesso!");
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error saving progress:', error);
-      toast.error('Erro ao salvar progresso');
+      console.error("Error saving progress:", error);
+      toast.error("Erro ao salvar progresso");
     }
   };
 
@@ -293,9 +301,7 @@ const Planejamento = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">
-            {progressLoading ? 'Carregando progresso...' : 'Carregando...'}
-          </p>
+          <p className="text-muted-foreground">{progressLoading ? "Carregando progresso..." : "Carregando..."}</p>
         </div>
       </div>
     );
@@ -304,31 +310,16 @@ const Planejamento = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header 
-        className="border-b border-border bg-card sticky top-0 z-10 backdrop-blur-sm bg-card/95"
-        role="banner"
-      >
+      <header className="border-b border-border bg-card sticky top-0 z-10 backdrop-blur-sm bg-card/95" role="banner">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">
-                Strategic Planner OS
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {user?.email}
-              </p>
+              <h1 className="text-2xl font-bold text-foreground">Estrategya Planner OS</h1>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
             <div className="flex items-center gap-2">
-              <SaveIndicator 
-                lastSavedAt={lastSavedAt}
-                isSaving={isSaving}
-              />
-              <Button 
-                variant="outline" 
-                onClick={handleLogout} 
-                size="sm"
-                aria-label="Sair da aplicação"
-              >
+              <SaveIndicator lastSavedAt={lastSavedAt} isSaving={isSaving} />
+              <Button variant="outline" onClick={handleLogout} size="sm" aria-label="Sair da aplicação">
                 <LogOut className="w-4 h-4 mr-2" />
                 Sair
               </Button>
@@ -338,12 +329,9 @@ const Planejamento = () => {
       </header>
 
       {/* Main Content */}
-      <main 
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-        role="main"
-      >
-        <Stepper 
-          steps={steps} 
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" role="main">
+        <Stepper
+          steps={steps}
           currentStep={currentStep}
           completedSteps={completedSteps}
           onStepClick={async (step) => {
