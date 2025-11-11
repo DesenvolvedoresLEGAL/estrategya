@@ -821,6 +821,50 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_validation_checks: {
+        Row: {
+          account_email: string
+          checked: boolean
+          company_id: string | null
+          created_at: string | null
+          expected_tier: string
+          id: string
+          test_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_email: string
+          checked?: boolean
+          company_id?: string | null
+          created_at?: string | null
+          expected_tier: string
+          id?: string
+          test_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_email?: string
+          checked?: boolean
+          company_id?: string | null
+          created_at?: string | null
+          expected_tier?: string
+          id?: string
+          test_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_validation_checks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       porter_analysis: {
         Row: {
           buyer_power_analysis: string | null

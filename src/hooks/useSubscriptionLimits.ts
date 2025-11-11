@@ -152,6 +152,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
       return null;
     },
     enabled: !!companyId,
+    retry: 1,
   });
 
   const { data: currentUsage } = useQuery({
@@ -228,9 +229,10 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   const pdfExportMode = limits.pdf_export_mode || "watermark";
 
   const isFallbackFromQuery = Boolean((subscription as any)?.isFallback);
+  const hasSubscriptionData = Boolean(subscription?.plan);
   const dataSource: SubscriptionData["dataSource"] = !companyId
     ? "unknown"
-    : isFallbackFromQuery || !subscription?.plan
+    : isFallbackFromQuery || !hasSubscriptionData
       ? "fallback"
       : "database";
   const isUsingFallbackPlan = dataSource !== "database";
@@ -313,8 +315,8 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   return {
     limits,
     pdfExportMode,
-    tier: subscription?.plan?.tier || (companyId ? "free" : "unknown"),
-    status: subscription?.status || (companyId ? "active" : "unknown"),
+    tier: subscription?.plan?.tier || (hasSubscriptionData ? "free" : companyId ? "unknown" : "unknown"),
+    status: subscription?.status || (hasSubscriptionData ? "active" : "unknown"),
     isLoading,
     canCreateCompany,
     canCreatePlan,

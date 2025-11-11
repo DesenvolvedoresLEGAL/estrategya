@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Card,
@@ -149,6 +150,7 @@ const pickBestCompanyWithSubscription = (companies: any[]) => {
 
 export default function PlanValidator() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [reloadingAccount, setReloadingAccount] = useState<string | null>(null);
   const defaultAccounts: TestAccount[] = useMemo(
@@ -176,6 +178,67 @@ export default function PlanValidator() {
     currentUsage,
     dataSource,
   } = useSubscriptionLimits(selectedAccount?.companyId);
+
+  // Fetch saved validation checks
+  const { data: savedChecks = [] } = useQuery({
+    queryKey: ['validation-checks', selectedAccount?.email],
+    queryFn: async () => {
+      if (!selectedAccount?.email) return [];
+      
+      const { data, error } = await supabase
+        .from('plan_validation_checks')
+        .select('*')
+        .eq('account_email', selectedAccount.email);
+      
+      if (error) {
+        console.error('Error fetching validation checks:', error);
+        return [];
+      }
+      return data || [];
+    },
+    enabled: !!selectedAccount?.email,
+  });
+
+  // Mutation to toggle check
+  const toggleCheckMutation = useMutation({
+    mutationFn: async ({ testId, checked }: { testId: string; checked: boolean }) => {
+      if (!selectedAccount?.email) throw new Error('No account selected');
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('plan_validation_checks')
+        .upsert({
+          user_id: user.id,
+          account_email: selectedAccount.email,
+          expected_tier: selectedAccount.expectedTier,
+          company_id: selectedAccount.companyId || null,
+          test_id: testId,
+          checked,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,account_email,test_id'
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['validation-checks'] });
+      toast({
+        title: "✅ Checklist atualizado",
+        description: "Sua marcação foi salva com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating check:', error);
+      toast({
+        title: "❌ Erro ao salvar",
+        description: "Não foi possível salvar a marcação.",
+        variant: "destructive",
+      });
+    },
+  });
 
   useEffect(() => {
     void loadTestAccountsData();
@@ -822,33 +885,59 @@ export default function PlanValidator() {
               <CardHeader>
                 <CardTitle>Checklist de Testes Manuais</CardTitle>
                 <CardDescription>
-                  Marque conforme testar cada funcionalidade manualmente
+                  Marque conforme testar cada funcionalidade manualmente. Suas marcações são salvas automaticamente.
+                  {savedChecks.length > 0 && (
+                    <span className="block mt-1 text-xs">
+                      ✓ {savedChecks.filter(c => c.checked).length} de {getTestsForTier(account.expectedTier).length} testes concluídos
+                    </span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {getTestsForTier(account.expectedTier).map((test) => (
-                    <div key={test.id} className="flex items-center space-x-3">
-                      <Checkbox
-                        id={test.id}
-                        checked={test.checked}
-                        onCheckedChange={(checked) => {
-                          // Update test state
-                          const updatedTests = getTestsForTier(account.expectedTier).map((t) =>
-                            t.id === test.id ? { ...t, checked: !!checked } : t
-                          );
-                          // Save to state (simplified for demo)
-                          console.log("Test updated:", test.id, checked);
-                        }}
-                      />
-                      <label
-                        htmlFor={test.id}
-                        className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {test.label}
-                      </label>
-                    </div>
-                  ))}
+                  {getTestsForTier(account.expectedTier).map((test) => {
+                    const savedCheck = savedChecks.find(c => c.test_id === test.id);
+                    const isChecked = savedCheck?.checked || false;
+                    
+                    return (
+                      <div key={test.id} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
+                        <Checkbox
+                          id={test.id}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            toggleCheckMutation.mutate({
+                              testId: test.id,
+                              checked: !!checked,
+                            });
+                          }}
+                          disabled={toggleCheckMutation.isPending}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1 space-y-1">
+                          <label
+                            htmlFor={test.id}
+                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer font-medium"
+                          >
+                            {test.label}
+                          </label>
+                          {savedCheck?.updated_at && (
+                            <p className="text-xs text-muted-foreground">
+                              Última atualização: {new Date(savedCheck.updated_at).toLocaleString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          )}
+                        </div>
+                        {isChecked && (
+                          <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
