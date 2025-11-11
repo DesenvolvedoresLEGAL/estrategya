@@ -1,13 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, X, RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Check,
+  X,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Info,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface TestAccount {
   email: string;
@@ -15,103 +30,339 @@ interface TestAccount {
   companyId?: string;
   companyName?: string;
   actualTier?: string;
+  subscriptionStatus?: string;
+  dataLoaded?: boolean;
+  statusMessage?: string;
+  lastSyncedAt?: string;
 }
+
+type SubscriptionRecord = {
+  id: string;
+  status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  plan?: {
+    tier?: string | null;
+    name?: string | null;
+    limits?: Record<string, unknown> | null;
+  } | null;
+};
+
+const SUBSCRIPTION_STATUS_PRIORITY = [
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+  "paused",
+  "cancelled",
+  "canceled",
+];
+
+const sortSubscriptionsByRelevance = (subscriptions: SubscriptionRecord[] = []) => {
+  return [...subscriptions].sort((a, b) => {
+    const statusA = a.status?.toLowerCase() ?? "";
+    const statusB = b.status?.toLowerCase() ?? "";
+    const statusIndexA = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusA);
+    const statusIndexB = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusB);
+    const normalizedStatusA = statusIndexA === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexA;
+    const normalizedStatusB = statusIndexB === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexB;
+
+    if (normalizedStatusA !== normalizedStatusB) {
+      return normalizedStatusA - normalizedStatusB;
+    }
+
+    const dateA = a.updated_at ?? a.created_at ?? null;
+    const dateB = b.updated_at ?? b.created_at ?? null;
+    const timeA = dateA ? new Date(dateA).getTime() : 0;
+    const timeB = dateB ? new Date(dateB).getTime() : 0;
+
+    return timeB - timeA;
+  });
+};
+
+const pickMostRelevantSubscription = (subscriptions: SubscriptionRecord[] = []) => {
+  const sorted = sortSubscriptionsByRelevance(subscriptions);
+  return sorted[0] ?? null;
+};
+
+const tierPriorityMap: Record<string, number> = {
+  enterprise: 3,
+  pro: 2,
+  free: 1,
+};
+
+const rankTier = (tier?: string | null) => {
+  if (!tier) return 0;
+  return tierPriorityMap[tier.toLowerCase()] ?? 0;
+};
+
+const pickBestCompanyWithSubscription = (companies: any[]) => {
+  const enriched = companies
+    .map(company => {
+      const subscriptions = Array.isArray(company?.company_subscriptions)
+        ? (company.company_subscriptions as SubscriptionRecord[])
+        : [];
+      const subscription = pickMostRelevantSubscription(subscriptions);
+      return { company, subscription };
+    })
+    .sort((a, b) => {
+      const tierDiff = rankTier(b.subscription?.plan?.tier ?? null) - rankTier(a.subscription?.plan?.tier ?? null);
+      if (tierDiff !== 0) {
+        return tierDiff;
+      }
+
+      const statusA = a.subscription?.status?.toLowerCase() ?? "";
+      const statusB = b.subscription?.status?.toLowerCase() ?? "";
+      const statusIndexA = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusA);
+      const statusIndexB = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusB);
+      const normalizedStatusA = statusIndexA === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexA;
+      const normalizedStatusB = statusIndexB === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexB;
+
+      if (normalizedStatusA !== normalizedStatusB) {
+        return normalizedStatusA - normalizedStatusB;
+      }
+
+      const dateA = a.subscription?.updated_at ?? a.subscription?.created_at ?? null;
+      const dateB = b.subscription?.updated_at ?? b.subscription?.created_at ?? null;
+      const timeA = dateA ? new Date(dateA).getTime() : 0;
+      const timeB = dateB ? new Date(dateB).getTime() : 0;
+
+      return timeB - timeA;
+    });
+
+  return enriched[0] ?? null;
+};
 
 export default function PlanValidator() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [testAccounts, setTestAccounts] = useState<TestAccount[]>([
-    { email: "wagsansevero@gmail.com", expectedTier: "enterprise" },
-    { email: "legaltest@openai.com", expectedTier: "pro" },
-    { email: "legaloperadora@gmail.com", expectedTier: "free" },
-  ]);
+  const [reloadingAccount, setReloadingAccount] = useState<string | null>(null);
+  const defaultAccounts: TestAccount[] = useMemo(
+    () => [
+      { email: "wagsansevero@gmail.com", expectedTier: "enterprise" },
+      { email: "legaltest@openai.com", expectedTier: "pro" },
+      { email: "legaloperadora@gmail.com", expectedTier: "free" },
+    ],
+    []
+  );
+  const [testAccounts, setTestAccounts] = useState<TestAccount[]>(defaultAccounts);
   const [currentUser, setCurrentUser] = useState<string>("");
-  const [selectedAccount, setSelectedAccount] = useState<TestAccount | null>(null);
-  
-  const { limits, tier, hasFeature, pdfExportMode, currentUsage } = useSubscriptionLimits(
-    selectedAccount?.companyId
+  const [activeTab, setActiveTab] = useState<string>(defaultAccounts[0]?.email ?? "");
+
+  const selectedAccount = useMemo(
+    () => testAccounts.find(account => account.email === activeTab) ?? null,
+    [activeTab, testAccounts]
   );
 
+  const {
+    limits,
+    tier,
+    hasFeature,
+    pdfExportMode,
+    currentUsage,
+    dataSource,
+  } = useSubscriptionLimits(selectedAccount?.companyId);
+
   useEffect(() => {
-    loadTestAccountsData();
+    void loadTestAccountsData();
   }, []);
 
-  const loadTestAccountsData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    if (!selectedAccount || !selectedAccount.dataLoaded || !tier) {
+      return;
+    }
+
+    setTestAccounts(prev =>
+      prev.map(account =>
+        account.email === selectedAccount.email && account.actualTier !== tier
+          ? { ...account, actualTier: tier }
+          : account
+      )
+    );
+  }, [tier, selectedAccount]);
+
+  const loadTestAccountsData = async (targetEmail?: string) => {
+    const isTargetedReload = Boolean(targetEmail);
+    if (isTargetedReload && targetEmail) {
+      setReloadingAccount(targetEmail);
+    } else {
+      setLoading(true);
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log("🔍 [PlanValidator] Current user:", user?.email, "| User ID:", user?.id);
-      
-      if (user?.email) {
-        setCurrentUser(user.email);
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("❌ [PlanValidator] Error fetching auth user:", userError);
+        throw userError;
       }
 
-      // Buscar empresas do usuário atual com LEFT JOIN para não perder dados
-      const { data: companiesData, error: companiesError } = await supabase
+      console.log("🔍 [PlanValidator] Current user:", user?.email, "| User ID:", user?.id);
+
+      if (!user?.email) {
+        throw new Error("Usuário não autenticado. Faça login para validar os planos.");
+      }
+
+      if (targetEmail && targetEmail !== user.email) {
+        console.warn(
+          "⚠️ [PlanValidator] Attempt to reload data for a different account blocked by RLS",
+          { targetEmail, currentUser: user.email }
+        );
+        toast({
+          title: "Conta protegida",
+          description: "Por segurança, só é possível recarregar os dados da conta logada.",
+        });
+        return;
+      }
+
+      setCurrentUser(user.email);
+
+      const { data: ownedCompanies, error: ownedCompaniesError } = await supabase
         .from("companies")
         .select(`
           id,
           name,
           owner_user_id,
-          company_subscriptions (
+          company_subscriptions:company_subscriptions!left (
             id,
             status,
-            plan:subscription_plans (
+            created_at,
+            updated_at,
+            plan:subscription_plans!left (
               tier,
-              name
+              name,
+              limits
             )
           )
         `)
-        .eq("owner_user_id", user?.id);
+        .eq("owner_user_id", user.id);
 
-      console.log("🔍 [PlanValidator] Companies query result:", {
-        data: companiesData,
-        error: companiesError,
-        count: companiesData?.length
+      console.log("🔍 [PlanValidator] Owned companies:", {
+        ownedCompanies,
+        ownedCompaniesError,
       });
 
-      if (companiesError) {
-        console.error("❌ [PlanValidator] Error fetching companies:", companiesError);
+      if (ownedCompaniesError) {
+        console.error("❌ [PlanValidator] Error fetching owned companies:", ownedCompaniesError);
       }
 
-      // Para simplificar, vamos apenas buscar para o usuário atual
-      const updatedAccounts = testAccounts.map((account) => {
-        // Se for a conta atual, buscar os dados
-        if (user?.email === account.email && companiesData && companiesData.length > 0) {
-          const company = companiesData[0];
-          const subscriptions = company.company_subscriptions;
-          const subscription = subscriptions?.[0];
-          
-          console.log("🔍 [PlanValidator] Processing account:", account.email, {
-            companyId: company.id,
-            companyName: company.name,
-            subscriptions: subscriptions,
-            subscription: subscription,
-            tier: subscription?.plan?.tier
-          });
-          
+      const { data: membershipCompanies, error: membershipError } = await supabase
+        .from("team_members")
+        .select(`
+          company:companies (
+            id,
+            name,
+            owner_user_id,
+            company_subscriptions:company_subscriptions!left (
+              id,
+              status,
+              created_at,
+              updated_at,
+              plan:subscription_plans!left (
+                tier,
+                name,
+                limits
+              )
+            )
+          )
+        `)
+        .eq("user_id", user.id);
+
+      console.log("🔍 [PlanValidator] Membership companies:", {
+        membershipCompanies,
+        membershipError,
+      });
+
+      if (membershipError) {
+        console.error("❌ [PlanValidator] Error fetching membership companies:", membershipError);
+      }
+
+      const flattenedMembershipCompanies = (membershipCompanies || [])
+        .map(entry => entry.company)
+        .filter((company): company is NonNullable<typeof company> => Boolean(company));
+
+      const combinedCompaniesMap = new Map<string, any>();
+      for (const company of [...(ownedCompanies || []), ...flattenedMembershipCompanies]) {
+        if (!company) continue;
+        combinedCompaniesMap.set(company.id, company);
+      }
+
+      const combinedCompanies = Array.from(combinedCompaniesMap.values());
+      console.log("🔍 [PlanValidator] Combined companies for user:", combinedCompanies);
+
+      const bestCompanyEntry = pickBestCompanyWithSubscription(combinedCompanies);
+      const targetCompany = bestCompanyEntry?.company;
+      const subscription = bestCompanyEntry?.subscription;
+      console.log("✅ [PlanValidator] Selected company and subscription:", {
+        targetCompany,
+        subscription,
+      });
+      const resolvedTier = subscription?.plan?.tier;
+      const fetchTimestamp = new Date().toISOString();
+
+      const updatedAccounts = testAccounts.map(account => {
+        const isCurrentUserAccount = account.email === user.email;
+
+        if (!isCurrentUserAccount) {
           return {
             ...account,
-            companyId: company.id,
-            companyName: company.name,
-            actualTier: subscription?.plan?.tier || "free",
+            actualTier: undefined,
+            companyId: undefined,
+            companyName: undefined,
+            dataLoaded: false,
+            statusMessage:
+              account.statusMessage ||
+              "Faça login com esta conta para ver os dados completos.",
           };
         }
-        
-        console.log("⚠️ [PlanValidator] No data for account:", account.email);
-        return account;
+
+        if (!targetCompany) {
+          console.warn(
+            "⚠️ [PlanValidator] No company associated with the current user",
+            { account: account.email }
+          );
+
+          return {
+            ...account,
+            companyId: undefined,
+            companyName: undefined,
+            actualTier: undefined,
+            subscriptionStatus: undefined,
+            dataLoaded: false,
+            statusMessage:
+              "Nenhuma empresa encontrada para esta conta. Crie uma empresa para carregar os dados.",
+            lastSyncedAt: fetchTimestamp,
+          };
+        }
+
+        console.log("✅ [PlanValidator] Company data resolved for account", {
+          email: account.email,
+          companyId: targetCompany.id,
+          companyName: targetCompany.name,
+          subscription,
+        });
+
+        return {
+          ...account,
+          companyId: targetCompany.id,
+          companyName: targetCompany.name,
+          actualTier: resolvedTier,
+          subscriptionStatus: subscription?.status,
+          dataLoaded: true,
+          statusMessage: undefined,
+          lastSyncedAt: fetchTimestamp,
+        };
       });
 
       console.log("🔍 [PlanValidator] Updated accounts:", updatedAccounts);
 
       setTestAccounts(updatedAccounts);
-      const currentAccount = updatedAccounts.find(a => a.email === user?.email);
-      console.log("🔍 [PlanValidator] Selected account:", currentAccount);
-      
-      if (currentAccount) {
-        setSelectedAccount(currentAccount);
-      } else if (updatedAccounts[0]) {
-        setSelectedAccount(updatedAccounts[0]);
+
+      if (user.email) {
+        setActiveTab(prev => (prev === user.email ? prev : user.email));
       }
     } catch (error) {
       console.error("❌ [PlanValidator] Error loading test accounts:", error);
@@ -121,7 +372,11 @@ export default function PlanValidator() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      if (isTargetedReload) {
+        setReloadingAccount(null);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -180,16 +435,30 @@ export default function PlanValidator() {
     ],
   };
 
-  const getTestsForTier = (tier: string) => {
-    return testCases[tier as keyof typeof testCases] || [];
+  const getTestsForTier = (tierKey: string) => {
+    return testCases[tierKey as keyof typeof testCases] || [];
   };
 
-  const checkAutoValidations = () => {
-    if (!selectedAccount) return;
-    
+  const getDataSourceLabel = (source: string | undefined) => {
+    switch (source) {
+      case "database":
+        return "Banco";
+      case "fallback":
+        return "Fallback";
+      default:
+        return "Indefinido";
+    }
+  };
+
+  const checkAutoValidations = (account: TestAccount) => {
+    if (!account) return null;
+
+    const normalizedTier = (tier || account.actualTier || "").toLowerCase();
+    const expectedTier = account.expectedTier.toLowerCase();
+
     const checks = {
-      tierMatch: selectedAccount.actualTier === selectedAccount.expectedTier,
-      hasCompany: !!selectedAccount.companyId,
+      tierMatch: normalizedTier === expectedTier && normalizedTier !== "",
+      hasCompany: !!account.companyId,
       limitsCorrect: {
         companies: limits.max_companies,
         plans: limits.max_plans,
@@ -210,12 +479,16 @@ export default function PlanValidator() {
         advanced_permissions: hasFeature('advanced_permissions'),
       },
       pdfMode: pdfExportMode,
+      dataSource: getDataSourceLabel(dataSource),
     };
 
     return checks;
   };
 
-  const autoChecks = selectedAccount ? checkAutoValidations() : null;
+  const autoChecks =
+    selectedAccount && selectedAccount.dataLoaded
+      ? checkAutoValidations(selectedAccount)
+      : null;
 
   if (loading) {
     return (
@@ -239,26 +512,103 @@ export default function PlanValidator() {
             Logado como: {currentUser}
           </Badge>
         )}
+        <Alert className="mt-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Como testar múltiplas contas</AlertTitle>
+          <AlertDescription>
+            Os dados completos são exibidos apenas para a conta atualmente autenticada.
+            Para validar outras contas de teste, faça login com cada email e utilize o botão de recarregar
+            dados na aba correspondente.
+          </AlertDescription>
+        </Alert>
       </div>
 
-      <Tabs defaultValue={testAccounts[0]?.email} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={value => setActiveTab(value)}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-3">
           {testAccounts.map((account) => (
             <TabsTrigger
               key={account.email}
               value={account.email}
-              onClick={() => setSelectedAccount(account)}
             >
               <div className="flex flex-col items-center gap-1">
-                <span className="text-xs">{account.expectedTier.toUpperCase()}</span>
+                <div className="flex items-center gap-1 text-xs">
+                  {account.dataLoaded ? (
+                    <Check className="h-3 w-3 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-3 w-3 text-amber-500" />
+                  )}
+                  <span>{account.expectedTier.toUpperCase()}</span>
+                </div>
                 <span className="text-xs truncate max-w-[120px]">{account.email}</span>
+                {account.email === currentUser && (
+                  <Badge variant="secondary" className="text-[10px]">
+                    Conta atual
+                  </Badge>
+                )}
               </div>
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {testAccounts.map((account) => (
-          <TabsContent key={account.email} value={account.email} className="space-y-6">
+        {testAccounts.map((account) => {
+          const isActiveAccount = account.email === activeTab;
+          const comparisonTier = (account.actualTier || (isActiveAccount ? tier : undefined) || "").toLowerCase();
+          const resolvedTierLabel = (account.actualTier || (isActiveAccount && tier !== "unknown" ? tier : undefined) || "N/A")
+            .toString()
+            .toUpperCase();
+          const tierMatchesExpectation =
+            comparisonTier !== "" && comparisonTier === account.expectedTier.toLowerCase();
+
+          return (
+            <TabsContent key={account.email} value={account.email} className="space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Última sincronização:{" "}
+                  {account.lastSyncedAt
+                    ? new Date(account.lastSyncedAt).toLocaleString()
+                    : "nunca"}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {account.dataLoaded ? (
+                  <Badge variant="outline" className="bg-green-500/10 text-green-600">
+                    Dados sincronizados
+                  </Badge>
+                ) : (
+                  <Badge variant="outline">Dados não carregados</Badge>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void loadTestAccountsData(account.email)}
+                  disabled={reloadingAccount === account.email}
+                >
+                  {reloadingAccount === account.email ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Recarregar dados
+                </Button>
+              </div>
+            </div>
+
+            {!account.dataLoaded && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Dados protegidos</AlertTitle>
+                <AlertDescription>
+                  {account.statusMessage ||
+                    "Faça login com esta conta para visualizar os dados deste plano."}
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Account Status Card */}
             <Card>
               <CardHeader>
@@ -285,11 +635,25 @@ export default function PlanValidator() {
                     <p className="text-sm font-medium mb-1">Plano Atual</p>
                     <Badge
                       variant={
-                        tier === account.expectedTier ? "default" : "destructive"
+                        tierMatchesExpectation
+                          ? "default"
+                          : account.actualTier || (isActiveAccount ? tier : undefined)
+                          ? "destructive"
+                          : "outline"
                       }
                     >
-                      {tier?.toUpperCase() || "N/A"}
+                      {resolvedTierLabel}
                     </Badge>
+                  </div>
+                  {account.subscriptionStatus && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">Status da Assinatura</p>
+                      <Badge variant="outline">{account.subscriptionStatus}</Badge>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium mb-1">Fonte dos dados</p>
+                    <Badge variant="outline">{getDataSourceLabel(dataSource)}</Badge>
                   </div>
                 </div>
 
@@ -320,6 +684,10 @@ export default function PlanValidator() {
                         <span className="text-sm">Modo PDF</span>
                         <Badge variant="outline">{autoChecks.pdfMode}</Badge>
                       </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm">Origem dos limites</span>
+                        <Badge variant="outline">{autoChecks.dataSource}</Badge>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -333,56 +701,62 @@ export default function PlanValidator() {
                 <CardDescription>Valores atuais no banco de dados</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-1">Empresas</p>
-                    <p className="text-2xl font-bold">
-                      {limits.max_companies >= 999999 ? "∞" : limits.max_companies}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Uso: {currentUsage.companies}
-                    </p>
+                {account.dataLoaded ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium mb-1">Empresas</p>
+                      <p className="text-2xl font-bold">
+                        {limits.max_companies >= 999999 ? "∞" : limits.max_companies}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Uso: {currentUsage.companies}
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium mb-1">Planos OGSM</p>
+                      <p className="text-2xl font-bold">
+                        {limits.max_plans >= 999999 ? "∞" : limits.max_plans}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Uso: {currentUsage.plans}
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium mb-1">Objetivos</p>
+                      <p className="text-2xl font-bold">
+                        {limits.max_objectives >= 999999 ? "∞" : limits.max_objectives}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Uso: {currentUsage.objectives}
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium mb-1">Iniciativas/Obj</p>
+                      <p className="text-2xl font-bold">
+                        {limits.max_initiatives_per_objective >= 999999
+                          ? "∞"
+                          : limits.max_initiatives_per_objective}
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium mb-1">Membros</p>
+                      <p className="text-2xl font-bold">
+                        {limits.max_team_members >= 999999 ? "∞" : limits.max_team_members}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Uso: {currentUsage.teamMembers}
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="text-sm font-medium mb-1">Modo PDF</p>
+                      <p className="text-xl font-bold">{pdfExportMode}</p>
+                    </div>
                   </div>
-                  <div className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-1">Planos OGSM</p>
-                    <p className="text-2xl font-bold">
-                      {limits.max_plans >= 999999 ? "∞" : limits.max_plans}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Uso: {currentUsage.plans}
-                    </p>
-                  </div>
-                  <div className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-1">Objetivos</p>
-                    <p className="text-2xl font-bold">
-                      {limits.max_objectives >= 999999 ? "∞" : limits.max_objectives}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Uso: {currentUsage.objectives}
-                    </p>
-                  </div>
-                  <div className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-1">Iniciativas/Obj</p>
-                    <p className="text-2xl font-bold">
-                      {limits.max_initiatives_per_objective >= 999999
-                        ? "∞"
-                        : limits.max_initiatives_per_objective}
-                    </p>
-                  </div>
-                  <div className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-1">Membros</p>
-                    <p className="text-2xl font-bold">
-                      {limits.max_team_members >= 999999 ? "∞" : limits.max_team_members}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Uso: {currentUsage.teamMembers}
-                    </p>
-                  </div>
-                  <div className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-1">Modo PDF</p>
-                    <p className="text-xl font-bold">{pdfExportMode}</p>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Dados indisponíveis para esta conta. Faça login com este email para carregar os limites reais.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -393,32 +767,38 @@ export default function PlanValidator() {
                 <CardDescription>Status de cada funcionalidade</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {[
-                    { key: "ice_score", label: "ICE Score" },
-                    { key: "five_w2h", label: "5W2H" },
-                    { key: "four_dx_wbr", label: "4DX/WBR" },
-                    { key: "basic_templates", label: "Templates Básicos" },
-                    { key: "custom_templates", label: "Templates Custom" },
-                    { key: "integrations", label: "Integrações" },
-                    { key: "collaboration", label: "Colaboração" },
-                    { key: "branding", label: "Branding" },
-                    { key: "audit_log", label: "Audit Log" },
-                    { key: "advanced_permissions", label: "Permissões Avançadas" },
-                  ].map((feature) => (
-                    <div
-                      key={feature.key}
-                      className="flex items-center justify-between border rounded-lg p-2"
-                    >
-                      <span className="text-sm">{feature.label}</span>
-                      {hasFeature(feature.key as any) ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <X className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {account.dataLoaded ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {[ 
+                      { key: "ice_score", label: "ICE Score" },
+                      { key: "five_w2h", label: "5W2H" },
+                      { key: "four_dx_wbr", label: "4DX/WBR" },
+                      { key: "basic_templates", label: "Templates Básicos" },
+                      { key: "custom_templates", label: "Templates Custom" },
+                      { key: "integrations", label: "Integrações" },
+                      { key: "collaboration", label: "Colaboração" },
+                      { key: "branding", label: "Branding" },
+                      { key: "audit_log", label: "Audit Log" },
+                      { key: "advanced_permissions", label: "Permissões Avançadas" },
+                    ].map((feature) => (
+                      <div
+                        key={feature.key}
+                        className="flex items-center justify-between border rounded-lg p-2"
+                      >
+                        <span className="text-sm">{feature.label}</span>
+                        {hasFeature(feature.key as any) ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    As features habilitadas só podem ser verificadas quando os dados da conta estiverem carregados.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -457,8 +837,9 @@ export default function PlanValidator() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        ))}
+            </TabsContent>
+          );
+        })}
       </Tabs>
 
       <Card className="mt-6">
@@ -489,8 +870,16 @@ export default function PlanValidator() {
               <li>• ICE Score, 5W2H e 4DX devem estar bloqueados no FREE</li>
             </ul>
           </div>
-          <Button onClick={loadTestAccountsData} className="w-full">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button
+            onClick={() => void loadTestAccountsData()}
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-2" />
+            )}
             Recarregar Dados
           </Button>
         </CardContent>
