@@ -98,39 +98,39 @@ Fraquezas: ${diagnostico.swot_resumido?.fraquezas?.join(', ') || 'Não especific
 Oportunidades: ${diagnostico.swot_resumido?.oportunidades?.join(', ') || 'Não especificado'}
 Ameaças: ${diagnostico.swot_resumido?.ameacas?.join(', ') || 'Não especificado'}
 
-PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA:
+PRODUZA UMA RESPOSTA JSON com esta estrutura EXATA (use nomes de campos em INGLÊS):
 {
   "objective": "UM objetivo estratégico central para os próximos 12 meses. Deve ser inspirador, claro e conectado ao desafio principal. Entre 15 e 25 palavras.",
   "goals": [
     {
-      "titulo": "Meta de negócio 1",
-      "descricao": "Descrição da meta",
-      "mensuravel": "Como medir (ex: aumentar receita recorrente de R$X para R$Y)"
-    }
-  ],
-  "strategies": [
-    {
-      "goal_id": 0,
-      "titulo": "Estratégia 1",
-      "descricao": "Como a empresa vai alcançar essa meta. Deve refletir o SWOT/PESTEL"
-    }
-  ],
-  "measures": [
-    {
-      "strategy_id": 0,
-      "nome": "Nome da métrica",
-      "o_que_medir": "Descrição do que será medido para saber se a estratégia está funcionando"
+      "title": "Meta de negócio 1",
+      "description": "Descrição da meta em 1-2 frases",
+      "mensuravel": "Como medir (ex: aumentar receita recorrente de R$X para R$Y)",
+      "strategies": [
+        {
+          "title": "Estratégia 1 para essa meta",
+          "description": "Como a empresa vai alcançar essa meta. Deve refletir o SWOT/PESTEL",
+          "measures": [
+            {
+              "name": "Nome da métrica",
+              "o_que_medir": "Descrição do que será medido",
+              "target": "Meta específica (ex: 80%, R$ 50K)"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
 
 IMPORTANTE:
 - Gere de 3 a 5 goals mensuráveis
-- Gere de 3 a 6 strategies que conectam aos goals
+- Para cada goal, gere 1 a 2 strategies
 - Para cada strategy, defina 1 ou 2 measures
-- Use goal_id e strategy_id como índices (0, 1, 2...) para criar relacionamentos
+- Use sempre "title" e "description" (em inglês)
 - Se a empresa quer crescer, priorize metas de aquisição, conversão, receita
-- Se a empresa quer eficiência, priorize metas de produtividade, custo, SLA`;
+- Se a empresa quer eficiência, priorize metas de produtividade, custo, SLA
+- A estrutura deve ser ANINHADA: goals contêm strategies, strategies contêm measures`;
 
     // Implementação de retry logic
     let retryCount = 0;
@@ -189,10 +189,18 @@ IMPORTANTE:
         
         const result = JSON.parse(content);
 
-        // Validação da estrutura do resultado
-        if (!result.objective || !result.goals || !result.strategies || !result.measures) {
+        // Validação da estrutura do resultado (agora esperamos estrutura aninhada)
+        if (!result.objective || !result.goals || !Array.isArray(result.goals)) {
           console.error('Missing required OGSM fields in AI response:', result);
           throw new Error('Resposta da IA incompleta');
+        }
+
+        // Validar que cada goal tem title
+        for (const goal of result.goals) {
+          if (!goal.title) {
+            console.error('Goal missing title:', goal);
+            throw new Error('Meta sem título na resposta da IA');
+          }
         }
 
         console.log('OGSM generated successfully');
