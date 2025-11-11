@@ -58,6 +58,20 @@ const SUBSCRIPTION_STATUS_PRIORITY = [
   "canceled",
 ];
 
+const normalizeSubscriptions = (
+  subscriptions: SubscriptionRecord[] | SubscriptionRecord | null | undefined
+): SubscriptionRecord[] => {
+  if (!subscriptions) {
+    return [];
+  }
+
+  if (Array.isArray(subscriptions)) {
+    return subscriptions.filter(Boolean) as SubscriptionRecord[];
+  }
+
+  return [subscriptions];
+};
+
 const sortSubscriptionsByRelevance = (subscriptions: SubscriptionRecord[] = []) => {
   return [...subscriptions].sort((a, b) => {
     const statusA = a.status?.toLowerCase() ?? "";
@@ -99,9 +113,9 @@ const rankTier = (tier?: string | null) => {
 const pickBestCompanyWithSubscription = (companies: any[]) => {
   const enriched = companies
     .map(company => {
-      const subscriptions = Array.isArray(company?.company_subscriptions)
-        ? (company.company_subscriptions as SubscriptionRecord[])
-        : [];
+      const subscriptions = normalizeSubscriptions(
+        company?.company_subscriptions as SubscriptionRecord[] | SubscriptionRecord | null | undefined
+      );
       const subscription = pickMostRelevantSubscription(subscriptions);
       return { company, subscription };
     })
