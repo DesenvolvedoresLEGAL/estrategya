@@ -1,6 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+type SubscriptionQueryResult = {
+  id: string;
+  status: string | null;
+  created_at: string | null;
+  updated_at?: string | null;
+  plan?: {
+    tier?: string | null;
+    limits?: Partial<SubscriptionLimits> | null;
+    pdf_export_mode?: SubscriptionLimits["pdf_export_mode"] | null;
+  } | null;
+};
 interface SubscriptionLimits {
   max_companies: number;
   max_plans: number;
@@ -77,40 +88,71 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
           plan:subscription_plans(*)
         `)
         .eq("company_id", companyId)
-        .single();
+        .order("created_at", { ascending: false })
+        .limit(10);
 
       console.log("🔍 [useSubscriptionLimits] Subscription query result:", {
         companyId,
         data,
         error,
-        tier: data?.plan?.tier,
-        limits: data?.plan?.limits
       });
 
       if (error) {
         console.log("⚠️ [useSubscriptionLimits] Subscription error, falling back to free plan:", error);
+      }
 
-        // If no subscription exists, return default free plan
-        const { data: freePlan } = await supabase
-          .from("subscription_plans")
-          .select("*")
-          .eq("tier", "free")
-          .single();
+      const subscriptionHistory = (data as SubscriptionQueryResult[] | null) ?? [];
 
-        console.log("🔍 [useSubscriptionLimits] Free plan fallback:", freePlan);
+      const prioritizedStatuses = ["active", "trialing", "past_due", "unpaid"];
+      const activeSubscription = subscriptionHistory.find((record) => {
+        if (!record?.status) return false;
+        return prioritizedStatuses.includes(record.status.toLowerCase());
+      });
 
-        if (freePlan) {
-          return {
-            plan: freePlan,
-            status: "active",
-            tier: "free",
-            isFallback: true,
-          };
-        }
+      const fallbackSubscription = subscriptionHistory[0] ?? null;
+      const selectedSubscription = activeSubscription ?? fallbackSubscription;
+
+      if (selectedSubscription) {
+        console.log("✅ [useSubscriptionLimits] Resolved subscription record:", {
+          companyId,
+          status: selectedSubscription.status,
+          tier: selectedSubscription.plan?.tier,
+          created_at: selectedSubscription.created_at,
+        });
+        return selectedSubscription;
+      }
+
+      console.log("⚠️ [useSubscriptionLimits] No subscription records found, loading free plan fallback");
+
+      const { data: freePlan } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("tier", "free")
+        .single();
+
+      console.log("🔍 [useSubscriptionLimits] Free plan fallback:", freePlan);
+
+      if (freePlan) {
+        return {
+          id: "fallback-free-plan",
+          plan: freePlan,
+          status: "active",
+          created_at: null,
+          updated_at: null,
+          tier: "free",
+          isFallback: true,
+        } as SubscriptionQueryResult & { isFallback: boolean; tier: string };
+      }
+
+      if (error) {
+        console.error("❌ [useSubscriptionLimits] Error loading subscription:", error);
         throw error;
       }
 
-      return data;
+        throw error;
+      }
+
+      return null;
     },
     enabled: !!companyId,
   });

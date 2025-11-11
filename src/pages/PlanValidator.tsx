@@ -36,6 +36,117 @@ interface TestAccount {
   lastSyncedAt?: string;
 }
 
+type SubscriptionRecord = {
+  id: string;
+  status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  plan?: {
+    tier?: string | null;
+    name?: string | null;
+    limits?: Record<string, unknown> | null;
+  } | null;
+};
+
+const SUBSCRIPTION_STATUS_PRIORITY = [
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+  "paused",
+  "cancelled",
+  "canceled",
+];
+
+const normalizeSubscriptions = (
+  subscriptions: SubscriptionRecord[] | SubscriptionRecord | null | undefined
+): SubscriptionRecord[] => {
+  if (!subscriptions) {
+    return [];
+  }
+
+  if (Array.isArray(subscriptions)) {
+    return subscriptions.filter(Boolean) as SubscriptionRecord[];
+  }
+
+  return [subscriptions];
+};
+
+const sortSubscriptionsByRelevance = (subscriptions: SubscriptionRecord[] = []) => {
+  return [...subscriptions].sort((a, b) => {
+    const statusA = a.status?.toLowerCase() ?? "";
+    const statusB = b.status?.toLowerCase() ?? "";
+    const statusIndexA = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusA);
+    const statusIndexB = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusB);
+    const normalizedStatusA = statusIndexA === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexA;
+    const normalizedStatusB = statusIndexB === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexB;
+
+    if (normalizedStatusA !== normalizedStatusB) {
+      return normalizedStatusA - normalizedStatusB;
+    }
+
+    const dateA = a.updated_at ?? a.created_at ?? null;
+    const dateB = b.updated_at ?? b.created_at ?? null;
+    const timeA = dateA ? new Date(dateA).getTime() : 0;
+    const timeB = dateB ? new Date(dateB).getTime() : 0;
+
+    return timeB - timeA;
+  });
+};
+
+const pickMostRelevantSubscription = (subscriptions: SubscriptionRecord[] = []) => {
+  const sorted = sortSubscriptionsByRelevance(subscriptions);
+  return sorted[0] ?? null;
+};
+
+const tierPriorityMap: Record<string, number> = {
+  enterprise: 3,
+  pro: 2,
+  free: 1,
+};
+
+const rankTier = (tier?: string | null) => {
+  if (!tier) return 0;
+  return tierPriorityMap[tier.toLowerCase()] ?? 0;
+};
+
+const pickBestCompanyWithSubscription = (companies: any[]) => {
+  const enriched = companies
+    .map(company => {
+      const subscriptions = normalizeSubscriptions(
+        company?.company_subscriptions as SubscriptionRecord[] | SubscriptionRecord | null | undefined
+      );
+      const subscription = pickMostRelevantSubscription(subscriptions);
+      return { company, subscription };
+    })
+    .sort((a, b) => {
+      const tierDiff = rankTier(b.subscription?.plan?.tier ?? null) - rankTier(a.subscription?.plan?.tier ?? null);
+      if (tierDiff !== 0) {
+        return tierDiff;
+      }
+
+      const statusA = a.subscription?.status?.toLowerCase() ?? "";
+      const statusB = b.subscription?.status?.toLowerCase() ?? "";
+      const statusIndexA = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusA);
+      const statusIndexB = SUBSCRIPTION_STATUS_PRIORITY.indexOf(statusB);
+      const normalizedStatusA = statusIndexA === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexA;
+      const normalizedStatusB = statusIndexB === -1 ? SUBSCRIPTION_STATUS_PRIORITY.length : statusIndexB;
+
+      if (normalizedStatusA !== normalizedStatusB) {
+        return normalizedStatusA - normalizedStatusB;
+      }
+
+      const dateA = a.subscription?.updated_at ?? a.subscription?.created_at ?? null;
+      const dateB = b.subscription?.updated_at ?? b.subscription?.created_at ?? null;
+      const timeA = dateA ? new Date(dateA).getTime() : 0;
+      const timeB = dateB ? new Date(dateB).getTime() : 0;
+
+      return timeB - timeA;
+    });
+
+  return enriched[0] ?? null;
+};
+
 export default function PlanValidator() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -132,9 +243,12 @@ export default function PlanValidator() {
           company_subscriptions:company_subscriptions!left (
             id,
             status,
+            created_at,
+            updated_at,
             plan:subscription_plans!left (
               tier,
-              name
+              name,
+              limits
             )
           )
         `)
@@ -159,9 +273,13 @@ export default function PlanValidator() {
             company_subscriptions:company_subscriptions!left (
               id,
               status,
-              plan:subscription_plans!left (
+              created_at,
+              updated_at,
+              plan: subscription_plans!left (
                 tier,
-                name
+                name,
+                limits
+              )
               )
             )
           )
@@ -190,8 +308,14 @@ export default function PlanValidator() {
       const combinedCompanies = Array.from(combinedCompaniesMap.values());
       console.log("🔍 [PlanValidator] Combined companies for user:", combinedCompanies);
 
-      const targetCompany = combinedCompanies[0];
-      const subscription = targetCompany?.company_subscriptions?.[0];
+      const bestCompanyEntry = pickBestCompanyWithSubscription(combinedCompanies);
+      const targetCompany = bestCompanyEntry?.company;
+      const subscription = bestCompanyEntry?.subscription;
+
+      console.log("✅ [PlanValidator] Selected company and subscription:", {
+        targetCompany,
+        subscription,
+      });
       const resolvedTier = subscription?.plan?.tier;
       const fetchTimestamp = new Date().toISOString();
 
@@ -229,7 +353,6 @@ export default function PlanValidator() {
             lastSyncedAt: fetchTimestamp,
           };
         }
-
         console.log("✅ [PlanValidator] Company data resolved for account", {
           email: account.email,
           companyId: targetCompany.id,
