@@ -140,7 +140,14 @@ REGRAS:
     }
 
     const data = await response.json();
-    const result = JSON.parse(data.choices[0].message.content);
+    
+    // Extract content and remove markdown code blocks if present
+    let content = data.choices[0].message.content;
+    
+    // Remove ```json and ``` if present
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    
+    const result = JSON.parse(content);
 
     console.log('Diagnosis generated successfully');
 
