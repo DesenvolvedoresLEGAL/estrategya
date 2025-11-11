@@ -275,10 +275,11 @@ export default function PlanValidator() {
               status,
               created_at,
               updated_at,
-              plan:subscription_plans!left (
+              plan: subscription_plans!left (
                 tier,
                 name,
                 limits
+              )
               )
             )
           )
@@ -310,6 +311,7 @@ export default function PlanValidator() {
       const bestCompanyEntry = pickBestCompanyWithSubscription(combinedCompanies);
       const targetCompany = bestCompanyEntry?.company;
       const subscription = bestCompanyEntry?.subscription;
+
       console.log("✅ [PlanValidator] Selected company and subscription:", {
         targetCompany,
         subscription,
@@ -351,7 +353,6 @@ export default function PlanValidator() {
             lastSyncedAt: fetchTimestamp,
           };
         }
-
         console.log("✅ [PlanValidator] Company data resolved for account", {
           email: account.email,
           companyId: targetCompany.id,

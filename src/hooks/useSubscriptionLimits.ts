@@ -12,7 +12,6 @@ type SubscriptionQueryResult = {
     pdf_export_mode?: SubscriptionLimits["pdf_export_mode"] | null;
   } | null;
 };
-
 interface SubscriptionLimits {
   max_companies: number;
   max_plans: number;
@@ -146,6 +145,10 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
       }
 
       if (error) {
+        console.error("❌ [useSubscriptionLimits] Error loading subscription:", error);
+        throw error;
+      }
+
         throw error;
       }
 
