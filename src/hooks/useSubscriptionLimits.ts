@@ -149,9 +149,6 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
         throw error;
       }
 
-        throw error;
-      }
-
       return null;
     },
     enabled: !!companyId,

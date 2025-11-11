@@ -296,8 +296,8 @@ export default function PlanValidator() {
       }
 
       const flattenedMembershipCompanies = (membershipCompanies || [])
-        .map(entry => entry.company)
-        .filter((company): company is NonNullable<typeof company> => Boolean(company));
+        .map((entry: any) => entry.company)
+        .filter((company: any): company is NonNullable<typeof company> => Boolean(company));
 
       const combinedCompaniesMap = new Map<string, any>();
       for (const company of [...(ownedCompanies || []), ...flattenedMembershipCompanies]) {
