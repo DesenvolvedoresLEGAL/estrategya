@@ -54,6 +54,17 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
   };
 
   const handleAnalyze = async () => {
+    // Validações
+    if (!companyData?.id) {
+      toast.error("Dados da empresa não encontrados. Por favor, volte e preencha os dados da empresa.");
+      return;
+    }
+
+    if (!swotData) {
+      toast.error("Dados da análise SWOT não encontrados. Por favor, volte e preencha a análise SWOT.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -66,28 +77,52 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
 
       if (error) throw error;
 
-      // Salvar análise no banco
-      const { error: updateError } = await supabase
-        .from('strategic_context')
-        .update({
-          ia_analysis: JSON.stringify(data),
-        })
-        .eq('id', swotData.id);
+      // Verificar se existe um registro de strategic_context
+      let contextId = swotData.id;
+      
+      if (!contextId) {
+        // Criar um novo registro se não existir
+        const { data: newContext, error: createError } = await supabase
+          .from('strategic_context')
+          .insert({
+            company_id: companyData.id,
+            strengths: swotData.strengths || [],
+            weaknesses: swotData.weaknesses || [],
+            opportunities: swotData.opportunities || [],
+            threats: swotData.threats || [],
+            ia_analysis: JSON.stringify(data),
+          })
+          .select()
+          .single();
 
-      if (updateError) throw updateError;
+        if (createError) throw createError;
+        contextId = newContext.id;
+      } else {
+        // Atualizar o registro existente
+        const { error: updateError } = await supabase
+          .from('strategic_context')
+          .update({
+            ia_analysis: JSON.stringify(data),
+          })
+          .eq('id', contextId);
+
+        if (updateError) throw updateError;
+      }
 
       setAnalysis(data);
       
       // Generate PESTEL if applicable
-      const pestelSegments = ['Eventos', 'Telecomunicações', 'Indústria'];
-      if (pestelSegments.includes(companyData.segment)) {
+      const pestelSegments = ['eventos', 'telecom', 'telecomunicações', 'indústria'];
+      const segmentLower = companyData.segment?.toLowerCase();
+      
+      if (pestelSegments.includes(segmentLower)) {
         await generatePestelAnalysis();
       }
       
       toast.success("Análise gerada com sucesso!");
     } catch (error: any) {
       console.error('Error generating analysis:', error);
-      toast.error("Erro ao gerar análise: " + error.message);
+      toast.error("Erro ao gerar análise: " + (error.message || "Erro desconhecido"));
     } finally {
       setLoading(false);
     }
