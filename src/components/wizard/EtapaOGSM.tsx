@@ -27,6 +27,17 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
   const { canCreatePlan } = useSubscriptionLimits(companyData?.id);
 
   const handleGenerate = async () => {
+    // Validações antes de gerar
+    if (!analysisData) {
+      toast.error("Por favor, complete a análise estratégica (etapa 3) antes de gerar o OGSM.");
+      return;
+    }
+
+    if (!companyData?.id) {
+      toast.error("Dados da empresa não encontrados. Por favor, volte e preencha as informações da empresa.");
+      return;
+    }
+
     // Verificar limite de planos antes de criar
     const canCreate = await canCreatePlan(companyData.id);
     if (!canCreate) {
@@ -40,7 +51,7 @@ export const EtapaOGSM = ({ companyData, analysisData, initialData, onNext, onBa
       const { data, error } = await supabase.functions.invoke('ai-ogsm', {
         body: {
           company: companyData,
-          diagnostic: analysisData,
+          diagnostico: analysisData, // Corrigido: era 'diagnostic', agora é 'diagnostico'
         },
       });
 
