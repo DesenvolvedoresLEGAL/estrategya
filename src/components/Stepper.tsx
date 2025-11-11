@@ -1,6 +1,7 @@
-import { Check, HelpCircle } from "lucide-react";
+import { Check, HelpCircle, Crown, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +14,7 @@ interface Step {
   title: string;
   description: string;
   tooltip?: string;
+  requiredPlan?: "free" | "pro" | "enterprise";
 }
 
 interface StepperProps {
@@ -185,6 +187,36 @@ export const Stepper = ({ steps, currentStep, completedSteps = [], onStepClick }
                     >
                       {step.title}
                     </p>
+                    {step.requiredPlan === "pro" && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="secondary" className="h-4 px-1 text-[9px] gap-0.5">
+                              <Crown className="w-2.5 h-2.5" />
+                              PRO
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Recurso exclusivo do plano PRO</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    {step.requiredPlan === "enterprise" && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge variant="secondary" className="h-4 px-1 text-[9px] gap-0.5">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              ENT
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Recurso exclusivo do plano Enterprise</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                     {step.tooltip && (
                       <TooltipProvider>
                         <Tooltip>
