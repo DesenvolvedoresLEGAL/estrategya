@@ -38,8 +38,14 @@ serve(async (req) => {
 
     const { company, goals } = await req.json();
     
-    if (!company || !goals) {
-      throw new Error('Dados incompletos');
+    console.log('Request body:', { company: company?.name, goalsCount: goals?.length });
+    
+    if (!company || !company.name) {
+      throw new Error('Dados da empresa incompletos');
+    }
+    
+    if (!goals || !Array.isArray(goals) || goals.length === 0) {
+      throw new Error('Goals do OGSM não fornecidos ou vazios');
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -56,9 +62,13 @@ REGRAS:
 - Use métricas de negócio reais: MRR, CAC, LTV, churn, NPS, conversão, etc.
 - Português do Brasil, linguagem executiva`;
 
-    const goalsText = goals.map((g: any, i: number) => 
-      `Goal ${i + 1}: ${g.titulo}\n${g.descricao}\nMensurável: ${g.mensuravel}`
-    ).join('\n\n');
+    const goalsText = goals.map((g: any, i: number) => {
+      const title = g.titulo || g.title || 'Sem título';
+      const description = g.descricao || g.description || '';
+      const measurable = g.mensuravel || '';
+      
+      return `Goal ${i + 1}: ${title}\n${description}\n${measurable ? `Mensurável: ${measurable}` : ''}`;
+    }).join('\n\n');
 
     const userPrompt = `Transforme os Goals abaixo em OKRs para a empresa ${company.name} (${company.segment}).
 

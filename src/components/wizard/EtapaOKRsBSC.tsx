@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,24 +27,66 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
   const [okrsData, setOkrsData] = useState<any>(null);
   const [bscData, setBscData] = useState<any>(null);
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [ogsmGoals, setOgsmGoals] = useState<any[]>([]);
   
   const { canCreateObjective, canCreateInitiative } = useSubscriptionLimits(companyData?.id);
   const { trackLimitReached, trackFeatureBlocked } = useAnalytics();
 
+  // Carregar goals do OGSM ao montar componente
+  useEffect(() => {
+    const loadOgsmGoals = async () => {
+      if (!ogsmData?.id) {
+        console.error('OGSM data not available');
+        return;
+      }
+
+      try {
+        const { data: goals, error } = await supabase
+          .from('ogsm_goals')
+          .select('*')
+          .eq('ogsm_id', ogsmData.id)
+          .order('order_position', { ascending: true });
+
+        if (error) throw error;
+
+        console.log('OGSM Goals loaded:', goals);
+        setOgsmGoals(goals || []);
+      } catch (error) {
+        console.error('Error loading OGSM goals:', error);
+        toast.error('Erro ao carregar goals do OGSM');
+      }
+    };
+
+    loadOgsmGoals();
+  }, [ogsmData]);
+
   const handleGenerateOKRs = async () => {
+    if (!companyData) {
+      toast.error("Dados da empresa não disponíveis");
+      return;
+    }
+
+    if (!ogsmGoals || ogsmGoals.length === 0) {
+      toast.error("Nenhum Goal do OGSM encontrado. Complete a etapa OGSM primeiro.");
+      return;
+    }
+
     setLoading(true);
 
     try {
+      console.log('Invoking ai-okrs with:', { company: companyData, goals: ogsmGoals });
+
       // Gerar OKRs a partir dos Goals do OGSM
       const { data: okrData, error: okrError } = await supabase.functions.invoke('ai-okrs', {
         body: {
           company: companyData,
-          goals: ogsmData.goals,
+          goals: ogsmGoals,
         },
       });
 
       if (okrError) throw okrError;
 
+      console.log('OKRs generated:', okrData);
       setOkrsData(okrData);
       setStep('okrs-generated');
       toast.success("OKRs gerados com sucesso!");
@@ -60,11 +102,21 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
     setLoading(true);
 
     try {
+      // Carregar strategies do OGSM
+      const { data: strategies, error: strategiesError } = await supabase
+        .from('ogsm_strategies')
+        .select('*')
+        .eq('ogsm_id', ogsmData.id);
+
+      if (strategiesError) {
+        console.error('Error loading strategies:', strategiesError);
+      }
+
       // Validar cobertura BSC
       const { data: bscCheckData, error: bscError } = await supabase.functions.invoke('ai-bsc-check', {
         body: {
           okrs: okrsData.okrs,
-          strategies: ogsmData.goals.flatMap((g: any) => g.strategies || []),
+          strategies: strategies || [],
         },
       });
 
@@ -171,9 +223,15 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
               </div>
               <h3 className="text-xl font-semibold mb-2">Vamos criar seus OKRs!</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Cada Goal do OGSM será transformado em um Objective com Key Results mensuráveis.
+                {ogsmGoals.length > 0 
+                  ? `${ogsmGoals.length} Goals do OGSM serão transformados em OKRs com Key Results mensuráveis.`
+                  : 'Carregando goals do OGSM...'}
               </p>
-              <Button onClick={handleGenerateOKRs} disabled={loading} size="lg">
+              <Button 
+                onClick={handleGenerateOKRs} 
+                disabled={loading || ogsmGoals.length === 0} 
+                size="lg"
+              >
                 {loading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -203,7 +261,7 @@ export const EtapaOKRsBSC = ({ companyData, ogsmData, initialData, onNext, onBac
                   <OKRCard 
                     key={index} 
                     okr={okr} 
-                    goalTitle={ogsmData.goals[index]?.title}
+                    goalTitle={ogsmGoals[index]?.title}
                   />
                 ))}
               </div>
