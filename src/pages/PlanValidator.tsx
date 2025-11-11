@@ -578,22 +578,44 @@ export default function PlanValidator() {
     );
   }
 
+  const getTierColor = (tier: string) => {
+    switch (tier.toLowerCase()) {
+      case 'enterprise':
+        return 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white';
+      case 'pro':
+        return 'bg-gradient-to-r from-blue-500 to-cyan-600 text-white';
+      case 'free':
+        return 'bg-gradient-to-r from-gray-400 to-gray-600 text-white';
+      default:
+        return 'bg-muted';
+    }
+  };
+
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Validador de Planos - Fase 4</h1>
-        <p className="text-muted-foreground">
-          Teste e valide os limites e features de cada plano de assinatura
-        </p>
-        {currentUser && (
-          <Badge variant="outline" className="mt-2">
-            Logado como: {currentUser}
-          </Badge>
-        )}
-        <Alert className="mt-4">
-          <Info className="h-4 w-4" />
-          <AlertTitle>Como testar múltiplas contas</AlertTitle>
-          <AlertDescription>
+    <div className="container mx-auto p-4 sm:p-6 max-w-7xl">
+      {/* Header Section with Gradient */}
+      <div className="mb-8 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Validador de Planos - Fase 4
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Teste e valide os limites e features de cada plano de assinatura
+            </p>
+          </div>
+          {currentUser && (
+            <Badge variant="outline" className="self-start sm:self-auto px-4 py-2 text-xs">
+              <Check className="h-3 w-3 mr-1" />
+              Logado como: {currentUser}
+            </Badge>
+          )}
+        </div>
+        
+        <Alert className="border-l-4 border-l-primary bg-primary/5">
+          <Info className="h-4 w-4 text-primary" />
+          <AlertTitle className="text-primary font-semibold">Como testar múltiplas contas</AlertTitle>
+          <AlertDescription className="text-sm">
             Os dados completos são exibidos apenas para a conta atualmente autenticada.
             Para validar outras contas de teste, faça login com cada email e utilize o botão de recarregar
             dados na aba correspondente.
@@ -606,25 +628,26 @@ export default function PlanValidator() {
         onValueChange={value => setActiveTab(value)}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50">
           {testAccounts.map((account) => (
             <TabsTrigger
               key={account.email}
               value={account.email}
+              className="data-[state=active]:bg-background data-[state=active]:shadow-md transition-all"
             >
-              <div className="flex flex-col items-center gap-1">
-                <div className="flex items-center gap-1 text-xs">
+              <div className="flex flex-col items-center gap-1.5 py-2">
+                <div className={`flex items-center gap-2 font-bold px-3 py-1 rounded-full text-xs ${getTierColor(account.expectedTier)}`}>
                   {account.dataLoaded ? (
-                    <Check className="h-3 w-3 text-green-500" />
+                    <CheckCircle className="h-3.5 w-3.5" />
                   ) : (
-                    <AlertCircle className="h-3 w-3 text-amber-500" />
+                    <AlertCircle className="h-3.5 w-3.5" />
                   )}
                   <span>{account.expectedTier.toUpperCase()}</span>
                 </div>
-                <span className="text-xs truncate max-w-[120px]">{account.email}</span>
+                <span className="text-xs truncate max-w-[120px] text-muted-foreground">{account.email}</span>
                 {account.email === currentUser && (
-                  <Badge variant="secondary" className="text-[10px]">
-                    Conta atual
+                  <Badge variant="secondary" className="text-[10px] px-2 py-0.5">
+                    Ativa
                   </Badge>
                 )}
               </div>
@@ -643,28 +666,40 @@ export default function PlanValidator() {
 
           return (
             <TabsContent key={account.email} value={account.email} className="space-y-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Última sincronização:{" "}
-                  {account.lastSyncedAt
-                    ? new Date(account.lastSyncedAt).toLocaleString()
-                    : "nunca"}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {account.dataLoaded ? (
-                  <Badge variant="outline" className="bg-green-500/10 text-green-600">
-                    Dados sincronizados
-                  </Badge>
-                ) : (
-                  <Badge variant="outline">Dados não carregados</Badge>
-                )}
+              {/* Sync Status Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-muted/30 rounded-lg border">
+                <div className="flex items-center gap-3">
+                  {account.dataLoaded ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      <div>
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          Sincronizado
+                        </Badge>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {account.lastSyncedAt
+                            ? new Date(account.lastSyncedAt).toLocaleString('pt-BR')
+                            : "Agora"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-amber-500" />
+                      <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Não carregado
+                      </Badge>
+                    </div>
+                  )}
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => void loadTestAccountsData(account.email)}
                   disabled={reloadingAccount === account.email}
+                  className="hover:bg-primary hover:text-primary-foreground transition-colors"
                 >
                   {reloadingAccount === account.email ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -674,13 +709,12 @@ export default function PlanValidator() {
                   Recarregar dados
                 </Button>
               </div>
-            </div>
 
             {!account.dataLoaded && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Dados protegidos</AlertTitle>
-                <AlertDescription>
+              <Alert className="border-l-4 border-l-amber-500 bg-amber-500/5">
+                <AlertCircle className="h-4 w-4 text-amber-500" />
+                <AlertTitle className="text-amber-700">Dados protegidos</AlertTitle>
+                <AlertDescription className="text-amber-600">
                   {account.statusMessage ||
                     "Faça login com esta conta para visualizar os dados deste plano."}
                 </AlertDescription>
@@ -688,30 +722,39 @@ export default function PlanValidator() {
             )}
 
             {/* Account Status Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Status da Conta</CardTitle>
-                <CardDescription>Informações e validações automáticas</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm font-medium mb-1">Email</p>
-                    <p className="text-sm text-muted-foreground">{account.email}</p>
+            <Card className="border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Info className="h-5 w-5 text-primary" />
+                    Status da Conta
+                  </CardTitle>
+                  <div className={`px-3 py-1 rounded-full text-xs font-bold ${getTierColor(account.expectedTier)}`}>
+                    {account.expectedTier.toUpperCase()}
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">Empresa</p>
-                    <p className="text-sm text-muted-foreground">
+                </div>
+                <CardDescription>Informações e validações automáticas do plano</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Email</p>
+                    <p className="text-sm font-medium truncate">{account.email}</p>
+                  </div>
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Empresa</p>
+                    <p className="text-sm font-medium truncate">
                       {account.companyName || "Sem empresa"}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">Plano Esperado</p>
-                    <Badge variant="outline">{account.expectedTier.toUpperCase()}</Badge>
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Plano Esperado</p>
+                    <Badge variant="outline" className="mt-1">{account.expectedTier.toUpperCase()}</Badge>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium mb-1">Plano Atual</p>
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Plano Atual</p>
                     <Badge
+                      className="mt-1"
                       variant={
                         tierMatchesExpectation
                           ? "default"
@@ -724,47 +767,69 @@ export default function PlanValidator() {
                     </Badge>
                   </div>
                   {account.subscriptionStatus && (
-                    <div>
-                      <p className="text-sm font-medium mb-1">Status da Assinatura</p>
-                      <Badge variant="outline">{account.subscriptionStatus}</Badge>
+                    <div className="p-3 bg-muted/30 rounded-lg">
+                      <p className="text-xs font-medium text-muted-foreground mb-1">Status da Assinatura</p>
+                      <Badge variant="outline" className="mt-1">{account.subscriptionStatus}</Badge>
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm font-medium mb-1">Fonte dos dados</p>
-                    <Badge variant="outline">{getDataSourceLabel(dataSource)}</Badge>
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Fonte dos dados</p>
+                    <Badge variant="outline" className="mt-1">{getDataSourceLabel(dataSource)}</Badge>
                   </div>
                 </div>
 
                 {autoChecks && (
-                  <div className="border-t pt-4 mt-4">
-                    <h4 className="font-semibold mb-3 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" />
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-4 flex items-center gap-2 text-primary">
+                      <CheckCircle className="h-5 w-5" />
                       Validações Automáticas
                     </h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Plano correto</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">Plano correto</span>
                         {autoChecks.tierMatch ? (
-                          <Check className="h-5 w-5 text-green-500" />
+                          <div className="flex items-center gap-1 text-green-600">
+                            <Check className="h-5 w-5" />
+                            <span className="text-xs font-bold">SIM</span>
+                          </div>
                         ) : (
-                          <X className="h-5 w-5 text-red-500" />
+                          <div className="flex items-center gap-1 text-red-600">
+                            <X className="h-5 w-5" />
+                            <span className="text-xs font-bold">NÃO</span>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Possui empresa</span>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">Possui empresa</span>
                         {autoChecks.hasCompany ? (
-                          <Check className="h-5 w-5 text-green-500" />
+                          <div className="flex items-center gap-1 text-green-600">
+                            <Check className="h-5 w-5" />
+                            <span className="text-xs font-bold">SIM</span>
+                          </div>
                         ) : (
-                          <X className="h-5 w-5 text-red-500" />
+                          <div className="flex items-center gap-1 text-red-600">
+                            <X className="h-5 w-5" />
+                            <span className="text-xs font-bold">NÃO</span>
+                          </div>
                         )}
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Modo PDF</span>
-                        <Badge variant="outline">{autoChecks.pdfMode}</Badge>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">Modo PDF</span>
+                        <Badge 
+                          variant={autoChecks.pdfMode === 'premium' ? 'default' : 'outline'}
+                          className="font-bold"
+                        >
+                          {autoChecks.pdfMode}
+                        </Badge>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm">Origem dos limites</span>
-                        <Badge variant="outline">{autoChecks.dataSource}</Badge>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                        <span className="text-sm font-medium">Origem</span>
+                        <Badge 
+                          variant={autoChecks.dataSource === 'Banco' ? 'default' : 'secondary'}
+                          className="font-bold"
+                        >
+                          {autoChecks.dataSource}
+                        </Badge>
                       </div>
                     </div>
                   </div>
@@ -773,80 +838,130 @@ export default function PlanValidator() {
             </Card>
 
             {/* Limits Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Limites Configurados</CardTitle>
-                <CardDescription>Valores atuais no banco de dados</CardDescription>
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3 border-b">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-primary" />
+                  Limites Configurados
+                </CardTitle>
+                <CardDescription>Valores máximos e uso atual do plano</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {account.dataLoaded ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium mb-1">Empresas</p>
-                      <p className="text-2xl font-bold">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="relative border-2 border-primary/20 rounded-xl p-4 bg-gradient-to-br from-primary/5 to-transparent hover:border-primary/40 transition-colors">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Empresas</p>
+                      <p className="text-3xl font-bold text-primary mb-2">
                         {limits.max_companies >= 999999 ? "∞" : limits.max_companies}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Uso: {currentUsage.companies}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex-1 bg-muted rounded-full h-1.5">
+                          <div 
+                            className="bg-primary h-1.5 rounded-full transition-all"
+                            style={{ 
+                              width: limits.max_companies >= 999999 ? '0%' : 
+                                `${Math.min((currentUsage.companies / limits.max_companies) * 100, 100)}%` 
+                            }}
+                          />
+                        </div>
+                        <span className="text-muted-foreground font-medium">{currentUsage.companies}</span>
+                      </div>
                     </div>
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium mb-1">Planos OGSM</p>
-                      <p className="text-2xl font-bold">
+                    
+                    <div className="relative border-2 border-blue-500/20 rounded-xl p-4 bg-gradient-to-br from-blue-500/5 to-transparent hover:border-blue-500/40 transition-colors">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Planos OGSM</p>
+                      <p className="text-3xl font-bold text-blue-600 mb-2">
                         {limits.max_plans >= 999999 ? "∞" : limits.max_plans}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Uso: {currentUsage.plans}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex-1 bg-muted rounded-full h-1.5">
+                          <div 
+                            className="bg-blue-500 h-1.5 rounded-full transition-all"
+                            style={{ 
+                              width: limits.max_plans >= 999999 ? '0%' : 
+                                `${Math.min((currentUsage.plans / limits.max_plans) * 100, 100)}%` 
+                            }}
+                          />
+                        </div>
+                        <span className="text-muted-foreground font-medium">{currentUsage.plans}</span>
+                      </div>
                     </div>
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium mb-1">Objetivos</p>
-                      <p className="text-2xl font-bold">
+                    
+                    <div className="relative border-2 border-purple-500/20 rounded-xl p-4 bg-gradient-to-br from-purple-500/5 to-transparent hover:border-purple-500/40 transition-colors">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Objetivos</p>
+                      <p className="text-3xl font-bold text-purple-600 mb-2">
                         {limits.max_objectives >= 999999 ? "∞" : limits.max_objectives}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Uso: {currentUsage.objectives}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex-1 bg-muted rounded-full h-1.5">
+                          <div 
+                            className="bg-purple-500 h-1.5 rounded-full transition-all"
+                            style={{ 
+                              width: limits.max_objectives >= 999999 ? '0%' : 
+                                `${Math.min((currentUsage.objectives / limits.max_objectives) * 100, 100)}%` 
+                            }}
+                          />
+                        </div>
+                        <span className="text-muted-foreground font-medium">{currentUsage.objectives}</span>
+                      </div>
                     </div>
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium mb-1">Iniciativas/Obj</p>
-                      <p className="text-2xl font-bold">
+                    
+                    <div className="relative border-2 border-cyan-500/20 rounded-xl p-4 bg-gradient-to-br from-cyan-500/5 to-transparent hover:border-cyan-500/40 transition-colors">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Iniciativas/Obj</p>
+                      <p className="text-3xl font-bold text-cyan-600">
                         {limits.max_initiatives_per_objective >= 999999
                           ? "∞"
                           : limits.max_initiatives_per_objective}
                       </p>
                     </div>
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium mb-1">Membros</p>
-                      <p className="text-2xl font-bold">
+                    
+                    <div className="relative border-2 border-green-500/20 rounded-xl p-4 bg-gradient-to-br from-green-500/5 to-transparent hover:border-green-500/40 transition-colors">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Membros</p>
+                      <p className="text-3xl font-bold text-green-600 mb-2">
                         {limits.max_team_members >= 999999 ? "∞" : limits.max_team_members}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Uso: {currentUsage.teamMembers}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs">
+                        <div className="flex-1 bg-muted rounded-full h-1.5">
+                          <div 
+                            className="bg-green-500 h-1.5 rounded-full transition-all"
+                            style={{ 
+                              width: limits.max_team_members >= 999999 ? '0%' : 
+                                `${Math.min((currentUsage.teamMembers / limits.max_team_members) * 100, 100)}%` 
+                            }}
+                          />
+                        </div>
+                        <span className="text-muted-foreground font-medium">{currentUsage.teamMembers}</span>
+                      </div>
                     </div>
-                    <div className="border rounded-lg p-3">
-                      <p className="text-sm font-medium mb-1">Modo PDF</p>
-                      <p className="text-xl font-bold">{pdfExportMode}</p>
+                    
+                    <div className="relative border-2 border-amber-500/20 rounded-xl p-4 bg-gradient-to-br from-amber-500/5 to-transparent hover:border-amber-500/40 transition-colors">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Modo PDF</p>
+                      <p className="text-2xl font-bold text-amber-600 capitalize">{pdfExportMode}</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Dados indisponíveis para esta conta. Faça login com este email para carregar os limites reais.
-                  </p>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Dados indisponíveis para esta conta. Faça login com este email para carregar os limites reais.
+                    </AlertDescription>
+                  </Alert>
                 )}
               </CardContent>
             </Card>
 
             {/* Features Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Features Habilitadas</CardTitle>
-                <CardDescription>Status de cada funcionalidade</CardDescription>
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3 border-b">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Check className="h-5 w-5 text-primary" />
+                  Features Habilitadas
+                </CardTitle>
+                <CardDescription>Status e disponibilidade de cada funcionalidade</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 {account.dataLoaded ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[ 
                       { key: "ice_score", label: "ICE Score" },
                       { key: "five_w2h", label: "5W2H" },
@@ -858,49 +973,79 @@ export default function PlanValidator() {
                       { key: "branding", label: "Branding" },
                       { key: "audit_log", label: "Audit Log" },
                       { key: "advanced_permissions", label: "Permissões Avançadas" },
-                    ].map((feature) => (
-                      <div
-                        key={feature.key}
-                        className="flex items-center justify-between border rounded-lg p-2"
-                      >
-                        <span className="text-sm">{feature.label}</span>
-                        {hasFeature(feature.key as any) ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <X className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    ))}
+                    ].map((feature) => {
+                      const enabled = hasFeature(feature.key as any);
+                      return (
+                        <div
+                          key={feature.key}
+                          className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                            enabled 
+                              ? 'bg-green-500/5 border-green-500/20 hover:border-green-500/40' 
+                              : 'bg-muted/30 border-muted hover:border-muted-foreground/20'
+                          }`}
+                        >
+                          <span className={`text-sm font-medium ${enabled ? 'text-green-700' : 'text-muted-foreground'}`}>
+                            {feature.label}
+                          </span>
+                          {enabled ? (
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <X className="h-5 w-5 text-muted-foreground/50" />
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    As features habilitadas só podem ser verificadas quando os dados da conta estiverem carregados.
-                  </p>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      As features habilitadas só podem ser verificadas quando os dados da conta estiverem carregados.
+                    </AlertDescription>
+                  </Alert>
                 )}
               </CardContent>
             </Card>
 
             {/* Manual Test Checklist */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Checklist de Testes Manuais</CardTitle>
-                <CardDescription>
-                  Marque conforme testar cada funcionalidade manualmente. Suas marcações são salvas automaticamente.
+            <Card className="shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3 border-b bg-gradient-to-r from-primary/5 to-transparent">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-primary" />
+                      Checklist de Testes Manuais
+                    </CardTitle>
+                    <CardDescription className="mt-2">
+                      Marque conforme testar cada funcionalidade manualmente. Suas marcações são salvas automaticamente.
+                    </CardDescription>
+                  </div>
                   {savedChecks.length > 0 && (
-                    <span className="block mt-1 text-xs">
-                      ✓ {savedChecks.filter(c => c.checked).length} de {getTestsForTier(account.expectedTier).length} testes concluídos
-                    </span>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-primary">
+                        {savedChecks.filter(c => c.checked).length}
+                        <span className="text-sm text-muted-foreground">/{getTestsForTier(account.expectedTier).length}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">concluídos</p>
+                    </div>
                   )}
-                </CardDescription>
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
+              <CardContent className="pt-6">
+                <div className="space-y-2">
                   {getTestsForTier(account.expectedTier).map((test) => {
                     const savedCheck = savedChecks.find(c => c.test_id === test.id);
                     const isChecked = savedCheck?.checked || false;
                     
                     return (
-                      <div key={test.id} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors">
+                      <div 
+                        key={test.id} 
+                        className={`flex items-start space-x-3 p-3 rounded-lg border-2 transition-all ${
+                          isChecked 
+                            ? 'bg-green-500/5 border-green-500/20' 
+                            : 'border-muted hover:bg-accent/30'
+                        }`}
+                      >
                         <Checkbox
                           id={test.id}
                           checked={isChecked}
@@ -911,21 +1056,23 @@ export default function PlanValidator() {
                             });
                           }}
                           disabled={toggleCheckMutation.isPending}
-                          className="mt-0.5"
+                          className="mt-1"
                         />
                         <div className="flex-1 space-y-1">
                           <label
                             htmlFor={test.id}
-                            className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer font-medium"
+                            className={`text-sm leading-snug cursor-pointer font-medium block ${
+                              isChecked ? 'text-green-700' : ''
+                            }`}
                           >
                             {test.label}
                           </label>
                           {savedCheck?.updated_at && (
-                            <p className="text-xs text-muted-foreground">
-                              Última atualização: {new Date(savedCheck.updated_at).toLocaleString('pt-BR', {
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Check className="h-3 w-3" />
+                              {new Date(savedCheck.updated_at).toLocaleString('pt-BR', {
                                 day: '2-digit',
                                 month: '2-digit',
-                                year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit'
                               })}
@@ -933,7 +1080,7 @@ export default function PlanValidator() {
                           )}
                         </div>
                         {isChecked && (
-                          <CheckCircle className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                          <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                         )}
                       </div>
                     );
@@ -946,46 +1093,85 @@ export default function PlanValidator() {
         })}
       </Tabs>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
+      {/* Instructions Card */}
+      <Card className="mt-6 border-t-4 border-t-primary shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Info className="h-6 w-6 text-primary" />
             Instruções de Teste
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h4 className="font-semibold mb-2">Como usar este validador:</h4>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Faça login com cada conta de teste nas abas acima</li>
-              <li>Verifique se as "Validações Automáticas" estão corretas</li>
-              <li>Confirme os "Limites Configurados" batem com o esperado</li>
-              <li>Revise as "Features Habilitadas" para cada plano</li>
-              <li>Execute os testes do "Checklist de Testes Manuais" um por um</li>
-              <li>Marque cada item conforme validar manualmente na aplicação</li>
-            </ol>
+        <CardContent className="space-y-6 pt-6">
+          <div className="grid sm:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CheckCircle className="h-4 w-4 text-primary" />
+                </div>
+                <h4 className="font-semibold text-lg">Como usar este validador</h4>
+              </div>
+              <ol className="space-y-2 text-sm">
+                {[
+                  "Faça login com cada conta de teste nas abas acima",
+                  "Verifique se as Validações Automáticas estão corretas",
+                  "Confirme se os Limites Configurados batem com o esperado",
+                  "Revise as Features Habilitadas para cada plano",
+                  "Execute os testes do Checklist de Testes Manuais",
+                  "Marque cada item conforme validar manualmente"
+                ].map((step, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="text-muted-foreground">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-8 w-8 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                </div>
+                <h4 className="font-semibold text-lg">Testes Críticos</h4>
+              </div>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Tentar criar além dos limites deve mostrar modal de upgrade",
+                  "Features bloqueadas devem exibir UpgradePrompt ao clicar",
+                  "PDF do FREE deve ter marca d'água, PRO e Enterprise não",
+                  "ICE Score, 5W2H e 4DX devem estar bloqueados no FREE"
+                ].map((critical, i) => (
+                  <li key={i} className="flex gap-2 items-start">
+                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
+                    <span className="text-muted-foreground">{critical}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
+          
           <div className="border-t pt-4">
-            <h4 className="font-semibold mb-2">Testes Críticos:</h4>
-            <ul className="space-y-1 text-sm text-muted-foreground">
-              <li>• Tentar criar além dos limites deve mostrar modal de upgrade</li>
-              <li>• Features bloqueadas devem exibir UpgradePrompt ao clicar</li>
-              <li>• PDF do FREE deve ter marca d'água, PRO e Enterprise não</li>
-              <li>• ICE Score, 5W2H e 4DX devem estar bloqueados no FREE</li>
-            </ul>
+            <Button
+              onClick={() => void loadTestAccountsData()}
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+              size="lg"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Carregando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-2" />
+                  Recarregar Todos os Dados
+                </>
+              )}
+            </Button>
           </div>
-          <Button
-            onClick={() => void loadTestAccountsData()}
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Recarregar Dados
-          </Button>
         </CardContent>
       </Card>
     </div>
