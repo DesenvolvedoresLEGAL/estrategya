@@ -166,7 +166,12 @@ Seja criativo mas realista. Foque em ações que fazem diferença real.`;
     }
 
     const data = await response.json();
-    const suggestions = JSON.parse(data.choices[0].message.content);
+    
+    // Extract content and remove markdown code blocks if present
+    let content = data.choices[0].message.content;
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    
+    const suggestions = JSON.parse(content);
 
     console.log('Smart suggestions generated successfully');
 

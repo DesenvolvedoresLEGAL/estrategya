@@ -116,7 +116,17 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
           }
         });
         setErrors(newErrors);
+        
+        // Scroll para o primeiro campo com erro
+        const firstErrorField = Object.keys(newErrors)[0];
+        const element = document.getElementById(firstErrorField);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.focus();
+        }
+        
         toast.error("Por favor, corrija os erros no formulário");
+        console.log("Validation errors:", newErrors);
         return;
       }
     }
@@ -341,10 +351,13 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
               </div>
               <Select
                 value={formData.model}
-                onValueChange={(value) => setFormData({ ...formData, model: value })}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, model: value });
+                  if (errors.model) setErrors({ ...errors, model: "" });
+                }}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className={errors.model ? "border-destructive" : ""}>
                   <SelectValue placeholder="Selecione o modelo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -355,6 +368,9 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
                   ))}
                 </SelectContent>
               </Select>
+              {errors.model && (
+                <p className="text-sm text-destructive">{errors.model}</p>
+              )}
             </div>
           </div>
 
@@ -372,9 +388,16 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
                 id="size_team"
                 type="number"
                 value={formData.size_team}
-                onChange={(e) => setFormData({ ...formData, size_team: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, size_team: e.target.value });
+                  if (errors.size_team) setErrors({ ...errors, size_team: "" });
+                }}
                 placeholder="Ex: 15"
+                className={errors.size_team ? "border-destructive" : ""}
               />
+              {errors.size_team && (
+                <p className="text-sm text-destructive">{errors.size_team}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -394,9 +417,16 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
               <Input
                 id="region"
                 value={formData.region}
-                onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, region: e.target.value });
+                  if (errors.region) setErrors({ ...errors, region: "" });
+                }}
                 placeholder="Ex: Sul do Brasil"
+                className={errors.region ? "border-destructive" : ""}
               />
+              {errors.region && (
+                <p className="text-sm text-destructive">{errors.region}</p>
+              )}
             </div>
           </div>
 
@@ -416,10 +446,17 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
             <Textarea
               id="main_challenge"
               value={formData.main_challenge}
-              onChange={(e) => setFormData({ ...formData, main_challenge: e.target.value })}
+              onChange={(e) => {
+                setFormData({ ...formData, main_challenge: e.target.value });
+                if (errors.main_challenge) setErrors({ ...errors, main_challenge: "" });
+              }}
               placeholder="Descreva o maior desafio que sua empresa enfrenta hoje..."
               rows={4}
+              className={errors.main_challenge ? "border-destructive" : ""}
             />
+            {errors.main_challenge && (
+              <p className="text-sm text-destructive">{errors.main_challenge}</p>
+            )}
           </div>
 
           <div className="border-t pt-6 space-y-4">
@@ -446,11 +483,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
               <Textarea
                 id="mission"
                 value={formData.mission}
-                onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, mission: e.target.value });
+                  if (errors.mission) setErrors({ ...errors, mission: "" });
+                }}
                 placeholder="Por que sua empresa existe? Qual é o propósito fundamental?"
                 rows={3}
                 maxLength={500}
+                className={errors.mission ? "border-destructive" : ""}
               />
+              {errors.mission && (
+                <p className="text-sm text-destructive">{errors.mission}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {formData.mission.length}/500 caracteres
               </p>
@@ -472,11 +516,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
               <Textarea
                 id="vision"
                 value={formData.vision}
-                onChange={(e) => setFormData({ ...formData, vision: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, vision: e.target.value });
+                  if (errors.vision) setErrors({ ...errors, vision: "" });
+                }}
                 placeholder="Onde sua empresa quer chegar? O que deseja se tornar?"
                 rows={3}
                 maxLength={500}
+                className={errors.vision ? "border-destructive" : ""}
               />
+              {errors.vision && (
+                <p className="text-sm text-destructive">{errors.vision}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {formData.vision.length}/500 caracteres
               </p>
@@ -498,11 +549,18 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
               <Textarea
                 id="values"
                 value={formData.values}
-                onChange={(e) => setFormData({ ...formData, values: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, values: e.target.value });
+                  if (errors.values) setErrors({ ...errors, values: "" });
+                }}
                 placeholder="Quais são os princípios que guiam as decisões e comportamentos?"
                 rows={3}
                 maxLength={500}
+                className={errors.values ? "border-destructive" : ""}
               />
+              {errors.values && (
+                <p className="text-sm text-destructive">{errors.values}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 {formData.values.length}/500 caracteres
               </p>

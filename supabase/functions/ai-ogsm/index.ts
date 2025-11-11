@@ -183,7 +183,11 @@ IMPORTANTE:
           throw new Error('Resposta da IA inválida');
         }
 
-        const result = JSON.parse(data.choices[0].message.content);
+        // Extract content and remove markdown code blocks if present
+        let content = data.choices[0].message.content;
+        content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+        
+        const result = JSON.parse(content);
 
         // Validação da estrutura do resultado
         if (!result.objective || !result.goals || !result.strategies || !result.measures) {

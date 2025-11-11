@@ -179,7 +179,12 @@ Seja crítico e realista. Identifique problemas reais e sugira ações concretas
     }
 
     const data = await response.json();
-    const analysis = JSON.parse(data.choices[0].message.content);
+    
+    // Extract content and remove markdown code blocks if present
+    let content = data.choices[0].message.content;
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    
+    const analysis = JSON.parse(content);
 
     console.log('Progress analysis generated successfully');
 

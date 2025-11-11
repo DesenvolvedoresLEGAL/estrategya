@@ -112,7 +112,12 @@ Gere 3 novas iniciativas que não repitam as existentes.`;
     }
 
     const data = await response.json();
-    const result = JSON.parse(data.choices[0].message.content);
+    
+    // Extract content and remove markdown code blocks if present
+    let content = data.choices[0].message.content;
+    content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+    
+    const result = JSON.parse(content);
 
     console.log('Additional initiatives generated successfully');
 
