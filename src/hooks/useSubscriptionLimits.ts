@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 interface SubscriptionLimits {
   max_companies: number;
@@ -54,18 +53,20 @@ interface SubscriptionData {
     objectives: number;
     teamMembers: number;
   };
+  dataSource: "database" | "fallback" | "unknown";
+  isUsingFallbackPlan: boolean;
 }
 
 export const useSubscriptionLimits = (companyId: string | undefined): SubscriptionData => {
   console.log("🔍 [useSubscriptionLimits] Hook called with companyId:", companyId);
-  
+
   const { data: subscription, isLoading } = useQuery({
     queryKey: ["subscription", companyId],
     queryFn: async () => {
       console.log("🔍 [useSubscriptionLimits] Query function running for companyId:", companyId);
-      
+
       if (!companyId) {
-        console.log("⚠️ [useSubscriptionLimits] No companyId provided, returning null");
+        console.log("⚠️ [useSubscriptionLimits] No companyId provided, skipping subscription fetch");
         return null;
       }
 
@@ -88,7 +89,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
 
       if (error) {
         console.log("⚠️ [useSubscriptionLimits] Subscription error, falling back to free plan:", error);
-        
+
         // If no subscription exists, return default free plan
         const { data: freePlan } = await supabase
           .from("subscription_plans")
@@ -103,6 +104,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
             plan: freePlan,
             status: "active",
             tier: "free",
+            isFallback: true,
           };
         }
         throw error;
@@ -117,6 +119,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     queryKey: ["subscription-usage", companyId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("🔍 [useSubscriptionLimits] Usage query user:", user?.id);
       if (!user) return { companies: 0, plans: 0, objectives: 0, teamMembers: 0 };
 
       // Count companies owned by user
@@ -142,6 +145,14 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
         .from("team_members")
         .select("*", { count: "exact", head: true })
         .eq("company_id", companyId) : { count: 0 };
+
+      console.log("🔍 [useSubscriptionLimits] Usage counters:", {
+        companyId,
+        companiesCount,
+        plansCount,
+        objectivesCount,
+        teamMembersCount,
+      });
 
       return {
         companies: companiesCount || 0,
@@ -176,6 +187,23 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   const limits: SubscriptionLimits = { ...defaultLimits, ...planLimits };
 
   const pdfExportMode = limits.pdf_export_mode || "watermark";
+
+  const isFallbackFromQuery = Boolean((subscription as any)?.isFallback);
+  const dataSource: SubscriptionData["dataSource"] = !companyId
+    ? "unknown"
+    : isFallbackFromQuery || !subscription?.plan
+      ? "fallback"
+      : "database";
+  const isUsingFallbackPlan = dataSource !== "database";
+
+  console.log("🔍 [useSubscriptionLimits] Final computed values:", {
+    companyId,
+    tier: subscription?.plan?.tier,
+    dataSource,
+    isUsingFallbackPlan,
+    limits,
+    pdfExportMode,
+  });
 
   const canCreateCompany = async (): Promise<boolean> => {
     if (limits.max_companies >= 999999) return true;
@@ -246,8 +274,8 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
   return {
     limits,
     pdfExportMode,
-    tier: subscription?.plan?.tier || "free",
-    status: subscription?.status || "active",
+    tier: subscription?.plan?.tier || (companyId ? "free" : "unknown"),
+    status: subscription?.status || (companyId ? "active" : "unknown"),
     isLoading,
     canCreateCompany,
     canCreatePlan,
@@ -259,5 +287,7 @@ export const useSubscriptionLimits = (companyId: string | undefined): Subscripti
     hasPremiumPDF,
     hasFeature,
     currentUsage: currentUsage || { companies: 0, plans: 0, objectives: 0, teamMembers: 0 },
+    dataSource,
+    isUsingFallbackPlan,
   };
 };
