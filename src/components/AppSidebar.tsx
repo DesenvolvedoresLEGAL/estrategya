@@ -1,15 +1,15 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Target, 
-  TrendingUp, 
-  Lightbulb, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Target,
+  TrendingUp,
+  Lightbulb,
+  FileText,
   Settings,
   LogOut,
   Users,
   Sparkles,
-  Shield
+  Shield,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,19 +63,20 @@ export function AppSidebar() {
         title: "Logout realizado",
         description: "Até logo!",
       });
-      navigate('/auth');
+      navigate("/auth");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
       toast({
         title: "Erro ao fazer logout",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
 
   return (
     <Sidebar className={open ? "w-64" : "w-16"} collapsible="icon">
-      <SidebarContent className="pt-2">{/* Reduced top padding for mobile */}
+      <SidebarContent className="pt-2">
+        {/* Reduced top padding for mobile */}
         {/* Logo/Brand - Optimized for mobile */}
         <div className="p-3 sm:p-4 mb-1 sm:mb-2">
           {open ? (
@@ -84,7 +85,7 @@ export function AppSidebar() {
                 <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h2 className="font-bold text-base sm:text-lg truncate">Estratégia IA</h2>
+                <h2 className="font-bold text-base sm:text-lg truncate">Estrategya Planner</h2>
                 <p className="text-xs text-muted-foreground truncate hidden sm:block">Planejamento Inteligente</p>
               </div>
             </div>
@@ -105,9 +106,9 @@ export function AppSidebar() {
               {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="touch-target">
-                    <NavLink 
-                      to={item.url} 
-                      end 
+                    <NavLink
+                      to={item.url}
+                      end
                       className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
@@ -131,9 +132,9 @@ export function AppSidebar() {
               {planningItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="touch-target">
-                    <NavLink 
-                      to={item.url} 
-                      end 
+                    <NavLink
+                      to={item.url}
+                      end
                       className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
@@ -157,9 +158,9 @@ export function AppSidebar() {
               {adminItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="touch-target">
-                    <NavLink 
-                      to={item.url} 
-                      end 
+                    <NavLink
+                      to={item.url}
+                      end
                       className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
@@ -179,9 +180,9 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="touch-target">
-              <NavLink 
-                to="/pricing" 
-                end 
+              <NavLink
+                to="/pricing"
+                end
                 className="hover:bg-primary/10 hover:text-primary transition-colors min-h-[44px] flex items-center"
                 activeClassName="bg-primary/10 text-primary font-medium"
               >
@@ -191,7 +192,10 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleLogout} className="hover:bg-destructive/10 hover:text-destructive touch-target min-h-[44px]">
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="hover:bg-destructive/10 hover:text-destructive touch-target min-h-[44px]"
+            >
               <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               {open && <span className="text-sm sm:text-base truncate">Sair</span>}
             </SidebarMenuButton>
