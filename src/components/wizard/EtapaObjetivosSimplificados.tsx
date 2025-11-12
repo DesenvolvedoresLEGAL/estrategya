@@ -118,7 +118,7 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
               title: obj.title,
               description: obj.description || null,
               horizon: 'H1',
-              perspective: 'Financeira',
+              perspective: 'financeira',
               priority: 1,
             }])
             .select()
