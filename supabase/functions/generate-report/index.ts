@@ -25,20 +25,25 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    // Read Authorization header (case-insensitive) and extract token
+    const rawAuth = req.headers.get('Authorization') || req.headers.get('authorization');
+    if (!rawAuth || !rawAuth.toLowerCase().startsWith('bearer ')) {
+      console.warn('Missing or malformed Authorization header');
+      throw new Error('Unauthorized');
     }
+    const jwt = rawAuth.substring(7).trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: `Bearer ${jwt}` } } }
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Explicitly pass the JWT to avoid environment/session issues
+    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
 
     if (authError || !user) {
+      console.warn('Auth failed in generate-report', { authError });
       throw new Error("Unauthorized");
     }
 
@@ -312,9 +317,10 @@ serve(async (req) => {
     });
   } catch (error: any) {
     console.error("Error generating report:", error);
+    const status = error?.message === 'Unauthorized' ? 401 : 400;
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
+      status,
     });
   }
 });
