@@ -478,14 +478,25 @@ const Planejamento = () => {
               )}
 
               {currentStep === 4 && (
-                <EtapaOGSM
-                  companyData={companyData}
-                  analysisData={analysisData}
-                  initialData={ogsmData}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                  onSaveAndExit={handleSaveAndExit}
-                />
+                tier === "free" ? (
+                  <EtapaObjetivosSimplificados
+                    companyData={companyData}
+                    analysisData={analysisData}
+                    initialData={null}
+                    onNext={handleNext}
+                    onBack={handleBack}
+                    onSaveAndExit={handleSaveAndExit}
+                  />
+                ) : (
+                  <EtapaOGSM
+                    companyData={companyData}
+                    analysisData={analysisData}
+                    initialData={ogsmData}
+                    onNext={handleNext}
+                    onBack={handleBack}
+                    onSaveAndExit={handleSaveAndExit}
+                  />
+                )
               )}
 
               {currentStep === 5 && (
@@ -530,16 +541,6 @@ const Planejamento = () => {
                 />
               )}
 
-              {currentStep === 4 && tier === "free" && (
-                <EtapaObjetivosSimplificados
-                  companyData={companyData}
-                  analysisData={analysisData}
-                  initialData={null}
-                  onNext={handleNext}
-                  onBack={handleBack}
-                  onSaveAndExit={handleSaveAndExit}
-                />
-              )}
             </StepTransition>
           </ErrorBoundary>
         </div>
