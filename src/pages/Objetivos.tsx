@@ -14,7 +14,7 @@ export default function Objetivos() {
   const [loading, setLoading] = useState(true);
   const [objectives, setObjectives] = useState<any[]>([]);
   const [filteredObjectives, setFilteredObjectives] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState('todos');
+  const [activeTab, setActiveTab] = useState("todos");
 
   useEffect(() => {
     loadObjectives();
@@ -22,32 +22,35 @@ export default function Objetivos() {
 
   const loadObjectives = async () => {
     setLoading(true);
-    
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
-        navigate('/auth');
+        navigate("/auth");
         return;
       }
 
       // Get company
       const { data: companies } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('owner_user_id', user.id)
+        .from("companies")
+        .select("id")
+        .eq("owner_user_id", user.id)
         .limit(1)
         .single();
 
       if (!companies) {
-        navigate('/');
+        navigate("/");
         return;
       }
 
       // Get objectives with all related data
       const { data: objectivesData, error } = await supabase
-        .from('strategic_objectives')
-        .select(`
+        .from("strategic_objectives")
+        .select(
+          `
           *,
           initiatives (
             id,
@@ -73,29 +76,30 @@ export default function Objetivos() {
             created_at,
             updated_by
           )
-        `)
-        .eq('company_id', companies.id)
-        .order('priority', { ascending: true });
+        `,
+        )
+        .eq("company_id", companies.id)
+        .order("priority", { ascending: true });
 
       if (error) throw error;
 
       // Sort updates by date (newest first)
-      const formattedData = objectivesData?.map(obj => ({
-        ...obj,
-        objective_updates: obj.objective_updates?.sort((a: any, b: any) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-      })) || [];
+      const formattedData =
+        objectivesData?.map((obj) => ({
+          ...obj,
+          objective_updates: obj.objective_updates?.sort(
+            (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+          ),
+        })) || [];
 
       setObjectives(formattedData);
       setFilteredObjectives(formattedData);
-
     } catch (error: any) {
-      console.error('Error loading objectives:', error);
+      console.error("Error loading objectives:", error);
       toast({
         title: "Erro ao carregar objetivos",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -103,16 +107,16 @@ export default function Objetivos() {
   };
 
   const filterObjectives = (status?: string) => {
-    if (!status || status === 'todos') {
+    if (!status || status === "todos") {
       setFilteredObjectives(objectives);
       return;
     }
 
-    const filtered = objectives.filter(obj => {
+    const filtered = objectives.filter((obj) => {
       const latestUpdate = obj.objective_updates?.[0];
       return latestUpdate?.status === status;
     });
-    
+
     setFilteredObjectives(filtered);
   };
 
@@ -120,8 +124,8 @@ export default function Objetivos() {
     let filtered = [...objectives];
 
     // Apply status filter from activeTab
-    if (activeTab !== 'todos') {
-      filtered = filtered.filter(obj => {
+    if (activeTab !== "todos") {
+      filtered = filtered.filter((obj) => {
         const latestUpdate = obj.objective_updates?.[0];
         return latestUpdate?.status === activeTab;
       });
@@ -130,55 +134,47 @@ export default function Objetivos() {
     // Apply search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(obj => 
-        obj.title?.toLowerCase().includes(searchLower) ||
-        obj.description?.toLowerCase().includes(searchLower) ||
-        obj.initiatives?.some((ini: any) => 
-          ini.title?.toLowerCase().includes(searchLower)
-        )
+      filtered = filtered.filter(
+        (obj) =>
+          obj.title?.toLowerCase().includes(searchLower) ||
+          obj.description?.toLowerCase().includes(searchLower) ||
+          obj.initiatives?.some((ini: any) => ini.title?.toLowerCase().includes(searchLower)),
       );
     }
 
     // Apply ICE Score range filter (filter initiatives)
-    filtered = filtered.map(obj => ({
+    filtered = filtered.map((obj) => ({
       ...obj,
-      initiatives: obj.initiatives?.filter((ini: any) => 
-        !ini.ice_score || (
-          ini.ice_score >= filters.iceMin &&
-          ini.ice_score <= filters.iceMax
-        )
-      )
+      initiatives: obj.initiatives?.filter(
+        (ini: any) => !ini.ice_score || (ini.ice_score >= filters.iceMin && ini.ice_score <= filters.iceMax),
+      ),
     }));
 
     // Apply Who filter
     if (filters.who) {
       const whoLower = filters.who.toLowerCase();
-      filtered = filtered.map(obj => ({
+      filtered = filtered.map((obj) => ({
         ...obj,
-        initiatives: obj.initiatives?.filter((ini: any) => 
-          ini.who?.toLowerCase().includes(whoLower)
-        )
+        initiatives: obj.initiatives?.filter((ini: any) => ini.who?.toLowerCase().includes(whoLower)),
       }));
     }
 
     // Apply 5W2H status filter
-    if (filters.has5W2H !== 'all') {
-      filtered = filtered.map(obj => ({
+    if (filters.has5W2H !== "all") {
+      filtered = filtered.map((obj) => ({
         ...obj,
         initiatives: obj.initiatives?.filter((ini: any) => {
           const has5W2H = ini.what && ini.why && ini.who;
-          return filters.has5W2H === 'complete' ? has5W2H : !has5W2H;
-        })
+          return filters.has5W2H === "complete" ? has5W2H : !has5W2H;
+        }),
       }));
     }
 
     // Apply quadrant filter
-    if (filters.quadrant !== 'all') {
-      filtered = filtered.map(obj => ({
+    if (filters.quadrant !== "all") {
+      filtered = filtered.map((obj) => ({
         ...obj,
-        initiatives: obj.initiatives?.filter((ini: any) => 
-          ini.priority_quadrant === filters.quadrant
-        )
+        initiatives: obj.initiatives?.filter((ini: any) => ini.priority_quadrant === filters.quadrant),
       }));
     }
 
@@ -190,9 +186,9 @@ export default function Objetivos() {
   }, [activeTab, objectives]);
 
   const getStatusCount = (status: string) => {
-    if (status === 'todos') return objectives.length;
-    
-    return objectives.filter(obj => {
+    if (status === "todos") return objectives.length;
+
+    return objectives.filter((obj) => {
       const latestUpdate = obj.objective_updates?.[0];
       return latestUpdate?.status === status;
     }).length;
@@ -215,7 +211,7 @@ export default function Objetivos() {
         {/* Page Title */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Gestão de Objetivos</h1>
+            <h1 className="text-3xl font-bold">Gestão de OKRs</h1>
             <p className="text-muted-foreground">Acompanhe e atualize seus objetivos estratégicos</p>
           </div>
           <Button onClick={loadObjectives}>
@@ -231,39 +227,27 @@ export default function Objetivos() {
           <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
             <TabsTrigger value="todos" className="gap-2">
               Todos
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                {getStatusCount('todos')}
-              </span>
+              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">{getStatusCount("todos")}</span>
             </TabsTrigger>
             <TabsTrigger value="em_andamento" className="gap-2">
               Em Andamento
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                {getStatusCount('em_andamento')}
-              </span>
+              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">{getStatusCount("em_andamento")}</span>
             </TabsTrigger>
             <TabsTrigger value="em_risco" className="gap-2">
               Em Risco
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                {getStatusCount('em_risco')}
-              </span>
+              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">{getStatusCount("em_risco")}</span>
             </TabsTrigger>
             <TabsTrigger value="concluido" className="gap-2">
               Concluídos
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                {getStatusCount('concluido')}
-              </span>
+              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">{getStatusCount("concluido")}</span>
             </TabsTrigger>
             <TabsTrigger value="pausado" className="gap-2">
               Pausados
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                {getStatusCount('pausado')}
-              </span>
+              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">{getStatusCount("pausado")}</span>
             </TabsTrigger>
             <TabsTrigger value="nao_iniciado" className="gap-2">
               Não Iniciados
-              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                {getStatusCount('nao_iniciado')}
-              </span>
+              <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full">{getStatusCount("nao_iniciado")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -273,15 +257,12 @@ export default function Objetivos() {
                 <Target className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
                 <h3 className="text-lg font-semibold mb-2">Nenhum objetivo encontrado</h3>
                 <p className="text-muted-foreground">
-                  {activeTab === 'todos' 
-                    ? 'Crie seu primeiro planejamento estratégico para começar'
-                    : 'Nenhum objetivo com este status no momento'}
+                  {activeTab === "todos"
+                    ? "Crie seu primeiro planejamento estratégico para começar"
+                    : "Nenhum objetivo com este status no momento"}
                 </p>
-                {activeTab === 'todos' && (
-                  <Button 
-                    className="mt-4"
-                    onClick={() => navigate('/planejamento')}
-                  >
+                {activeTab === "todos" && (
+                  <Button className="mt-4" onClick={() => navigate("/planejamento")}>
                     Criar Planejamento
                   </Button>
                 )}
@@ -289,11 +270,7 @@ export default function Objetivos() {
             ) : (
               <div className="grid gap-4">
                 {filteredObjectives.map((objective) => (
-                  <ObjectiveDetailCard
-                    key={objective.id}
-                    objective={objective}
-                    onUpdate={loadObjectives}
-                  />
+                  <ObjectiveDetailCard key={objective.id} objective={objective} onUpdate={loadObjectives} />
                 ))}
               </div>
             )}
