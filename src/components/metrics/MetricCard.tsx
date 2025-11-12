@@ -12,14 +12,19 @@ interface MetricCardProps {
 
 export const MetricCard = ({ metric, objective, onUpdate }: MetricCardProps) => {
   const hasUpdates = metric.metric_updates && metric.metric_updates.length > 0;
-  const latestUpdate = hasUpdates ? metric.metric_updates[0] : null;
+  const sortedUpdates = hasUpdates 
+    ? [...metric.metric_updates].sort((a, b) => 
+        new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime()
+      )
+    : [];
+  const latestUpdate = sortedUpdates[0] || null;
   
   // Calcular tendência
   const getTrend = () => {
-    if (!hasUpdates || metric.metric_updates.length < 2) return 'neutral';
+    if (!hasUpdates || sortedUpdates.length < 2) return 'neutral';
     
-    const latest = parseFloat(metric.metric_updates[0].value);
-    const previous = parseFloat(metric.metric_updates[1].value);
+    const latest = parseFloat(sortedUpdates[0].value);
+    const previous = parseFloat(sortedUpdates[1].value);
     
     if (isNaN(latest) || isNaN(previous)) return 'neutral';
     
@@ -92,8 +97,8 @@ export const MetricCard = ({ metric, objective, onUpdate }: MetricCardProps) => 
         </div>
 
         {/* Gráfico de Evolução */}
-        {hasUpdates && metric.metric_updates.length > 1 && (
-          <MetricChart updates={metric.metric_updates} target={metric.target} />
+        {hasUpdates && sortedUpdates.length > 1 && (
+          <MetricChart updates={sortedUpdates} target={metric.target} />
         )}
 
         {!hasUpdates && (

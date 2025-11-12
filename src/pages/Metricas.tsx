@@ -63,10 +63,7 @@ const Metricas = () => {
           *,
           metrics (
             *,
-            metric_updates (
-              *,
-              order: recorded_at.desc
-            )
+            metric_updates (*)
           )
         `)
         .eq('company_id', companies[0].id)
