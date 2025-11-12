@@ -21,14 +21,28 @@ import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
 import { useAnalytics } from "@/hooks/useAnalytics";
 
 const segmentos = [
-  "Eventos",
-  "Telecom",
-  "Serviços",
-  "SaaS",
-  "Indústria",
+  "Agronegócio",
+  "Alimentos e Bebidas",
+  "Automobilística",
+  "Comércio (Varejo/Atacado)",
+  "Construção Civil",
+  "Contabilidade",
+  "E-Commerce",
   "Educação",
+  "Energia",
+  "Eventos",
+  "Financeiro",
+  "Imobiliário",
+  "Jurídico",
+  "Logística",
+  "RH",
   "Saúde",
-  "Varejo",
+  "Serviços",
+  "Tecnologia",
+  "Telecom",
+  "Têxtil/Vestuário",
+  "Transporte",
+  "Turismo",
   "Outro"
 ];
 

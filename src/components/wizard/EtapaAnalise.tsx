@@ -111,8 +111,16 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
 
       setAnalysis(data);
       
-      // Generate PESTEL if applicable
-      const pestelSegments = ['eventos', 'telecom', 'telecomunicações', 'indústria'];
+      // Generate PESTEL for all segments
+      const pestelSegments = [
+        'agronegócio', 'alimentos e bebidas', 'automobilística', 
+        'comércio', 'varejo', 'atacado', 'construção civil', 'contabilidade',
+        'e-commerce', 'educação', 'energia', 'eventos', 
+        'financeiro', 'imobiliário', 'jurídico', 'logística',
+        'rh', 'recursos humanos', 'saúde', 'serviços', 'tecnologia', 
+        'telecom', 'telecomunicações', 'têxtil', 'vestuário', 
+        'transporte', 'turismo', 'indústria'
+      ];
       const segmentLower = companyData.segment?.toLowerCase();
       
       if (pestelSegments.includes(segmentLower)) {
