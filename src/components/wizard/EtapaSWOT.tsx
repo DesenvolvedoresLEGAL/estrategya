@@ -38,6 +38,18 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
     }
   }, [companyData?.segment]);
 
+  // Sincronizar com initialData quando mudar
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        strengths: initialData?.strengths?.join("\n") || "",
+        weaknesses: initialData?.weaknesses?.join("\n") || "",
+        opportunities: initialData?.opportunities?.join("\n") || "",
+        threats: initialData?.threats?.join("\n") || "",
+      });
+    }
+  }, [initialData]);
+
   const loadSegmentExamples = async () => {
     try {
       const { data, error } = await supabase
