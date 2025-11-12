@@ -126,7 +126,7 @@ export function AppSidebar() {
 
         {/* Planning Navigation - Touch-friendly */}
         <SidebarGroup>
-          {open && <SidebarGroupLabel className="text-xs sm:text-sm px-3 sm:px-4">Planejamento</SidebarGroupLabel>}
+          {open && <SidebarGroupLabel className="text-xs sm:text-sm px-3 sm:px-4">Configuração</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {planningItems.map((item) => (
