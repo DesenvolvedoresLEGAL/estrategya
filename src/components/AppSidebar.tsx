@@ -85,8 +85,8 @@ export function AppSidebar() {
                 <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
               </div>
               <div className="min-w-0">
-                <h2 className="font-bold text-base sm:text-lg truncate">Estrategya Planner</h2>
-                <p className="text-xs text-muted-foreground truncate hidden sm:block">Planejamento Inteligente</p>
+                <h2 className="font-bold text-base sm:text-lg truncate">Estrategya</h2>
+                <p className="text-xs text-muted-foreground truncate hidden sm:block">Smart Planner</p>
               </div>
             </div>
           ) : (
