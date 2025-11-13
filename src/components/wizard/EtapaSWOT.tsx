@@ -112,14 +112,26 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
         threats: formData.threats.split("\n").filter(s => s.trim()),
       };
 
-      if (initialData?.id) {
+      let savedData;
+      
+      // Verificar se existe registro pelo company_id
+      const { data: existingContext } = await supabase
+        .from('strategic_context')
+        .select('id')
+        .eq('company_id', companyData.id)
+        .maybeSingle();
+
+      if (existingContext) {
         // Atualizar SWOT existente
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('strategic_context')
           .update(swotArray)
-          .eq('id', initialData.id);
+          .eq('company_id', companyData.id)
+          .select()
+          .single();
 
         if (error) throw error;
+        savedData = data;
       } else {
         // Criar novo SWOT
         const { data, error } = await supabase
@@ -132,10 +144,11 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
           .single();
 
         if (error) throw error;
+        savedData = data;
       }
 
       toast.success("Análise SWOT salva com sucesso!");
-      onNext(swotArray);
+      onNext(savedData);
     } catch (error: any) {
       console.error('Error saving SWOT:', error);
       toast.error(error.message || "Erro ao salvar análise SWOT");

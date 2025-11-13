@@ -105,12 +105,22 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
       return;
     }
 
+    // Validar limite de objetivos do plano
+    if (validObjectives.length > maxObjectives) {
+      toast.error(`Você atingiu o limite de ${maxObjectives} objetivos do seu plano. Remova ${validObjectives.length - maxObjectives} objetivo(s) ou faça upgrade.`);
+      setShowUpgradePrompt(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
+      // Limitar aos primeiros maxObjectives objetivos válidos
+      const objectivesToSave = validObjectives.slice(0, maxObjectives);
+      
       // Salvar objetivos no banco
       const savedObjectives = await Promise.all(
-        validObjectives.map(async (obj) => {
+        objectivesToSave.map(async (obj) => {
           const { data: savedObj, error: objError } = await supabase
             .from('strategic_objectives')
             .insert([{
