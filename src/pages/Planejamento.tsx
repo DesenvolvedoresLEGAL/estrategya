@@ -57,56 +57,56 @@ const wizardFlows = {
       title: "Contexto",
       description: "Empresa + MVV",
       tooltip: "Defina o contexto da empresa, incluindo Missão, Visão e Valores.",
-      requiredPlan: "free"
+      requiredPlan: "free",
     },
     {
       id: 2,
       title: "SWOT",
       description: "Diagnóstico",
       tooltip: "Análise SWOT: identifique Forças, Fraquezas, Oportunidades e Ameaças.",
-      requiredPlan: "free"
+      requiredPlan: "free",
     },
     {
       id: 3,
       title: "Análise IA",
       description: "Leitura Estratégica",
       tooltip: "A IA analisa seu contexto e SWOT usando frameworks globais.",
-      requiredPlan: "free"
+      requiredPlan: "free",
     },
     {
       id: 4,
       title: "OGSM",
       description: "Direcionamento",
       tooltip: "Framework OGSM: Objective, Goals, Strategies e Measures.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 5,
       title: "OKRs + BSC",
       description: "Objetivos",
       tooltip: "Transforme Goals em OKRs e valide com Balanced Scorecard.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 6,
       title: "Priorização",
       description: "Matriz 2x2",
       tooltip: "Matriz Impacto x Esforço para priorizar iniciativas.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 7,
       title: "Execução",
       description: "Plano 4DX",
       tooltip: "As 4 Disciplinas da Execução para implementação eficaz.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 8,
       title: "Métricas",
       description: "KPIs",
       tooltip: "Defina métricas específicas (KPIs) para acompanhamento.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
   ],
   enterprise: [
@@ -115,58 +115,58 @@ const wizardFlows = {
       title: "Contexto",
       description: "Empresa + MVV",
       tooltip: "Defina o contexto da empresa, incluindo Missão, Visão e Valores.",
-      requiredPlan: "free"
+      requiredPlan: "free",
     },
     {
       id: 2,
       title: "SWOT",
       description: "Diagnóstico",
       tooltip: "Análise SWOT: identifique Forças, Fraquezas, Oportunidades e Ameaças.",
-      requiredPlan: "free"
+      requiredPlan: "free",
     },
     {
       id: 3,
       title: "Análise IA",
       description: "Leitura Estratégica",
       tooltip: "A IA analisa seu contexto e SWOT usando frameworks globais.",
-      requiredPlan: "free"
+      requiredPlan: "free",
     },
     {
       id: 4,
       title: "OGSM",
       description: "Direcionamento",
       tooltip: "Framework OGSM: Objective, Goals, Strategies e Measures.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 5,
       title: "OKRs + BSC",
       description: "Objetivos",
       tooltip: "Transforme Goals em OKRs e valide com Balanced Scorecard.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 6,
       title: "Priorização",
       description: "Matriz 2x2",
       tooltip: "Matriz Impacto x Esforço para priorizar iniciativas.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 7,
       title: "Execução",
       description: "Plano 4DX",
       tooltip: "As 4 Disciplinas da Execução para implementação eficaz.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
     {
       id: 8,
       title: "Métricas",
       description: "KPIs",
       tooltip: "Defina métricas específicas (KPIs) para acompanhamento.",
-      requiredPlan: "pro"
+      requiredPlan: "pro",
     },
-  ]
+  ],
 };
 
 const Planejamento = () => {
@@ -413,7 +413,7 @@ const Planejamento = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Estrategya Planner OS</h1>
+              <h1 className="text-2xl font-bold text-foreground">Planejamento Estratégico</h1>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -477,8 +477,8 @@ const Planejamento = () => {
                 />
               )}
 
-              {currentStep === 4 && (
-                tier === "free" ? (
+              {currentStep === 4 &&
+                (tier === "free" ? (
                   <EtapaObjetivosSimplificados
                     companyData={companyData}
                     analysisData={analysisData}
@@ -496,8 +496,7 @@ const Planejamento = () => {
                     onBack={handleBack}
                     onSaveAndExit={handleSaveAndExit}
                   />
-                )
-              )}
+                ))}
 
               {currentStep === 5 && (
                 <EtapaOKRsBSC
@@ -540,7 +539,6 @@ const Planejamento = () => {
                   onSaveAndExit={handleSaveAndExit}
                 />
               )}
-
             </StepTransition>
           </ErrorBoundary>
         </div>
