@@ -157,6 +157,80 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
     }
   };
 
+  // Salvar e sair: persiste no banco antes de sair
+  const handleSaveAndExitClick = async () => {
+    setErrors({});
+
+    if (!companyData?.id) {
+      toast.error("Dados da empresa não encontrados");
+      return;
+    }
+
+    try {
+      swotSchema.parse(formData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(newErrors);
+        toast.error("Por favor, preencha todos os campos corretamente");
+        return;
+      }
+    }
+
+    setLoading(true);
+
+    try {
+      const swotArray = {
+        strengths: formData.strengths.split("\n").filter((s) => s.trim()),
+        weaknesses: formData.weaknesses.split("\n").filter((s) => s.trim()),
+        opportunities: formData.opportunities.split("\n").filter((s) => s.trim()),
+        threats: formData.threats.split("\n").filter((s) => s.trim()),
+      };
+
+      // Verificar se existe registro pelo company_id
+      const { data: existingContext } = await supabase
+        .from("strategic_context")
+        .select("id")
+        .eq("company_id", companyData.id)
+        .maybeSingle();
+
+      let savedData;
+      if (existingContext) {
+        const { data, error } = await supabase
+          .from("strategic_context")
+          .update(swotArray)
+          .eq("company_id", companyData.id)
+          .select()
+          .single();
+        if (error) throw error;
+        savedData = data;
+      } else {
+        const { data, error } = await supabase
+          .from("strategic_context")
+          .insert({ ...swotArray, company_id: companyData.id })
+          .select()
+          .single();
+        if (error) throw error;
+        savedData = data;
+      }
+
+      toast.success("Análise SWOT salva com sucesso!");
+      // Atualiza o estado no pai para que o progresso seja salvo corretamente
+      onNext(savedData);
+      await onSaveAndExit?.();
+    } catch (error: any) {
+      console.error("Error saving SWOT (save & exit):", error);
+      toast.error(error.message || "Erro ao salvar análise SWOT");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Card className="max-w-3xl mx-auto">
       <CardHeader>
@@ -340,7 +414,7 @@ export const EtapaSWOT = ({ companyData, initialData, onNext, onBack, onSaveAndE
                 <Button 
                   type="button"
                   variant="ghost" 
-                  onClick={onSaveAndExit}
+                  onClick={handleSaveAndExitClick}
                   disabled={loading}
                   className="w-full sm:w-auto touch-target"
                 >

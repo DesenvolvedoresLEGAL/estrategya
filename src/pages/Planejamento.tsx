@@ -291,7 +291,7 @@ const Planejamento = () => {
           .from("strategic_context")
           .select("*")
           .eq("company_id", companies[0].id)
-          .single();
+          .maybeSingle();
 
         if (context) {
           setSWOTData(context);
