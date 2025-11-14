@@ -60,10 +60,12 @@ export const useWizardProgress = (userId: string | null, companyId: string | nul
     if (!userId || !companyId) return;
 
     try {
-      // Update completed steps
+      // Update completed steps - mark all steps before current as completed
+      // If we're on step 3, steps 1 and 2 should be marked as completed
+      const allPreviousSteps = Array.from({ length: currentStep - 1 }, (_, i) => i + 1);
       const newCompletedSteps = Array.from(
-        new Set([...completedSteps, currentStep - 1])
-      ).filter(step => step > 0);
+        new Set([...completedSteps, ...allPreviousSteps])
+      ).filter(step => step > 0).sort((a, b) => a - b);
 
       const progressData = {
         user_id: userId,
