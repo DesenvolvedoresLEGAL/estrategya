@@ -375,8 +375,8 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
           )}
 
           {!isPlanningCompleted && objectives.length >= maxObjectives && (
-            <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
-              <p className="text-sm text-warning-foreground">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
+              <p className="text-sm text-foreground">
                 Você atingiu o limite de {maxObjectives} objetivos do plano Free.{" "}
                 <button
                   onClick={() => setShowUpgradePrompt(true)}
