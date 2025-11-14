@@ -295,8 +295,40 @@ const Planejamento = () => {
 
         if (context) {
           setSWOTData(context);
+          
+          // Carregar análise IA se existir
           if (context.ia_analysis) {
-            setCurrentStep(3);
+            try {
+              const iaAnalysis = typeof context.ia_analysis === 'string' 
+                ? JSON.parse(context.ia_analysis) 
+                : context.ia_analysis;
+              
+              // Carregar dados PESTEL separadamente
+              const { data: pestelData } = await supabase
+                .from("pestel_analysis")
+                .select("*")
+                .eq("company_id", companies[0].id)
+                .maybeSingle();
+              
+              // Combinar análise IA com PESTEL
+              const analysisWithPestel = {
+                ...iaAnalysis,
+                pestel: pestelData ? {
+                  politico: pestelData.political,
+                  economico: pestelData.economic,
+                  social: pestelData.social,
+                  tecnologico: pestelData.technological,
+                  ambiental: pestelData.environmental,
+                  legal: pestelData.legal,
+                } : null,
+                company_id: companies[0].id,
+              };
+              
+              setAnalysisData(analysisWithPestel);
+              setCurrentStep(3);
+            } catch (error) {
+              console.error("Error parsing IA analysis:", error);
+            }
           }
         }
 

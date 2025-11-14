@@ -19,15 +19,25 @@ interface Props {
 export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBack, onSaveAndExit }: Props) => {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(initialData);
-  const [pestelData, setPestelData] = useState<any>(null);
+  const [pestelData, setPestelData] = useState<any>(initialData?.pestel || null);
   const [loadingPestel, setLoadingPestel] = useState(false);
 
   useEffect(() => {
-    // Load existing PESTEL analysis if available
-    if (companyData?.id) {
+    // Inicializar com dados existentes se disponíveis
+    if (initialData) {
+      setAnalysis(initialData);
+      if (initialData.pestel) {
+        setPestelData(initialData.pestel);
+      }
+    }
+  }, [initialData]);
+
+  useEffect(() => {
+    // Load existing PESTEL analysis if available and not already loaded
+    if (companyData?.id && !pestelData && !initialData?.pestel) {
       loadPestelAnalysis();
     }
-  }, [companyData?.id]);
+  }, [companyData?.id, pestelData, initialData]);
 
   const loadPestelAnalysis = async () => {
     try {
