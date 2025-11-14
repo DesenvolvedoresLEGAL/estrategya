@@ -139,40 +139,40 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
   const generatePestelAnalysis = async () => {
     setLoadingPestel(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-segment-customization', {
+      console.log('Gerando análise PESTEL para empresa:', companyData.id);
+      
+      const { data, error } = await supabase.functions.invoke('ai-pestel', {
         body: {
-          action: 'analyze_pestel',
-          segment: companyData.segment,
-          company_context: companyData,
+          companyId: companyData.id,
+          swotData: swotData,
+          companyInfo: `Empresa: ${companyData.name}, Segmento: ${companyData.segment}, Região: ${companyData.region || 'Brasil'}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao invocar ai-pestel:', error);
+        throw error;
+      }
 
-      if (data.pestel) {
-        // Save PESTEL analysis
-        const { error: pestelError } = await supabase
-          .from('pestel_analysis')
-          .upsert({
-            company_id: companyData.id,
-            political: data.pestel.politico,
-            economic: data.pestel.economico,
-            social: data.pestel.social,
-            technological: data.pestel.tecnologico,
-            environmental: data.pestel.ambiental,
-            legal: data.pestel.legal,
-          }, {
-            onConflict: 'company_id'
-          });
+      if (data) {
+        console.log('PESTEL data recebida:', data);
+        
+        // Converter para formato do frontend
+        const pestelFormatted = {
+          politico: data.political,
+          economico: data.economic,
+          social: data.social,
+          tecnologico: data.technological,
+          ambiental: data.environmental,
+          legal: data.legal,
+        };
 
-        if (pestelError) throw pestelError;
-
-        setPestelData(data.pestel);
-        toast.success("Análise PESTEL gerada!");
+        setPestelData(pestelFormatted);
+        toast.success("Análise PESTEL gerada e salva com sucesso!");
       }
     } catch (error: any) {
-      console.error('Error generating PESTEL:', error);
-      // Don't show error to user, PESTEL is optional
+      console.error('Erro ao gerar PESTEL:', error);
+      toast.error("Erro ao gerar análise PESTEL: " + (error.message || "Erro desconhecido"));
     } finally {
       setLoadingPestel(false);
     }
@@ -183,7 +183,27 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
       toast.error("Por favor, gere a análise estratégica antes de continuar");
       return;
     }
-    onNext(analysis);
+    
+    // Garantir que passamos todos os dados, incluindo PESTEL
+    const dataToPass = { 
+      ...analysis, 
+      pestel: pestelData,
+      company_id: companyData.id 
+    };
+    
+    onNext(dataToPass);
+  };
+
+  const handleSaveAndExitClick = async () => {
+    if (!analysis) {
+      toast.error("Por favor, gere a análise antes de sair.");
+      return;
+    }
+
+    // Garantir que os dados estão salvos antes de sair
+    if (onSaveAndExit) {
+      await onSaveAndExit();
+    }
   };
 
   return (
@@ -288,7 +308,7 @@ export const EtapaAnalise = ({ companyData, swotData, initialData, onNext, onBac
           {onSaveAndExit && (
             <Button 
               variant="ghost" 
-              onClick={onSaveAndExit}
+              onClick={handleSaveAndExitClick}
             >
               <Save className="w-4 h-4 mr-2" />
               Salvar e Sair
