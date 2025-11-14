@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { UpdateMetricModal } from "@/components/metrics/UpdateMetricModal";
 import { AddMetricModal } from "@/components/metrics/AddMetricModal";
+import { BSC_PERSPECTIVES, BSC_PERSPECTIVE_LABELS, PERSPECTIVE_VARIATIONS } from "@/lib/constants/perspectives";
 
 const Metricas = () => {
   const navigate = useNavigate();
@@ -117,8 +118,11 @@ const Metricas = () => {
   // Filtrar métricas por perspectiva
   const getFilteredObjectives = () => {
     if (activeTab === "all") return objectives;
+    
+    // Normalizar a perspectiva usando o mapeamento de variações
+    const validValues = PERSPECTIVE_VARIATIONS[activeTab] || [activeTab];
     return objectives.filter(obj => 
-      obj.perspective?.toLowerCase() === activeTab.toLowerCase()
+      validValues.some(v => obj.perspective?.toLowerCase() === v.toLowerCase())
     );
   };
 
@@ -210,10 +214,10 @@ const Metricas = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="all">Todas</TabsTrigger>
-            <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-            <TabsTrigger value="clientes">Clientes</TabsTrigger>
-            <TabsTrigger value="processos">Processos</TabsTrigger>
-            <TabsTrigger value="crescimento">Crescimento</TabsTrigger>
+            <TabsTrigger value={BSC_PERSPECTIVES.FINANCEIRA}>{BSC_PERSPECTIVE_LABELS[BSC_PERSPECTIVES.FINANCEIRA]}</TabsTrigger>
+            <TabsTrigger value={BSC_PERSPECTIVES.CLIENTES}>{BSC_PERSPECTIVE_LABELS[BSC_PERSPECTIVES.CLIENTES]}</TabsTrigger>
+            <TabsTrigger value={BSC_PERSPECTIVES.PROCESSOS}>{BSC_PERSPECTIVE_LABELS[BSC_PERSPECTIVES.PROCESSOS]}</TabsTrigger>
+            <TabsTrigger value={BSC_PERSPECTIVES.APRENDIZADO}>{BSC_PERSPECTIVE_LABELS[BSC_PERSPECTIVES.APRENDIZADO]}</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-6">
@@ -221,18 +225,32 @@ const Metricas = () => {
               <Card className="p-12">
                 <div className="text-center">
                   <TrendingUp className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    Nenhuma métrica encontrada
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {activeTab === "all" 
-                      ? "Complete o planejamento estratégico para criar métricas"
-                      : "Nenhuma métrica nesta perspectiva"}
-                  </p>
-                  <Button onClick={() => navigate("/planejamento")}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Criar Planejamento
-                  </Button>
+                  {activeTab === "all" ? (
+                    <>
+                      <h3 className="text-lg font-semibold mb-2">
+                        Nenhum objetivo criado
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Comece criando seu planejamento estratégico para definir objetivos e métricas.
+                      </p>
+                      <Button onClick={() => navigate("/planejamento")}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Criar Planejamento
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-semibold mb-2">
+                        Nenhum objetivo na perspectiva {BSC_PERSPECTIVE_LABELS[activeTab as keyof typeof BSC_PERSPECTIVE_LABELS]}
+                      </h3>
+                      <p className="text-muted-foreground mb-4">
+                        Adicione objetivos nesta perspectiva durante o planejamento estratégico.
+                      </p>
+                      <Button onClick={() => navigate("/objetivos")}>
+                        Ver Objetivos
+                      </Button>
+                    </>
+                  )}
                 </div>
               </Card>
             ) : (

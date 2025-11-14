@@ -7,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BSC_PERSPECTIVE_LABELS } from "@/lib/constants/perspectives";
 
 interface AddMetricModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   objectiveId: string;
   objectiveTitle: string;
+  objectivePerspective?: string;
   onSuccess: () => void;
 }
 
@@ -21,6 +23,7 @@ export const AddMetricModal = ({
   onOpenChange,
   objectiveId,
   objectiveTitle,
+  objectivePerspective,
   onSuccess
 }: AddMetricModalProps) => {
   const [loading, setLoading] = useState(false);
@@ -83,9 +86,18 @@ export const AddMetricModal = ({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Adicionar Métrica</DialogTitle>
-          <p className="text-sm text-muted-foreground mt-1">
-            Para o objetivo: <span className="font-medium">{objectiveTitle}</span>
-          </p>
+          <div className="space-y-1 mt-2">
+            <p className="text-sm text-muted-foreground">
+              Objetivo: <span className="font-medium">{objectiveTitle}</span>
+            </p>
+            {objectivePerspective && (
+              <p className="text-sm text-muted-foreground">
+                Perspectiva: <span className="font-medium">
+                  {BSC_PERSPECTIVE_LABELS[objectivePerspective as keyof typeof BSC_PERSPECTIVE_LABELS] || objectivePerspective}
+                </span>
+              </p>
+            )}
+          </div>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
