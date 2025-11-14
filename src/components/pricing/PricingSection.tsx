@@ -46,25 +46,28 @@ export const PricingSection = () => {
       return;
     }
 
+    if (!company?.id) {
+      toast.error("Empresa não encontrada. Por favor, complete o cadastro.");
+      return;
+    }
+
     try {
-      const { data: plans } = await supabase
-        .from("subscription_plans")
-        .select("id")
-        .eq("tier", "pro")
-        .single();
+      const { data, error } = await supabase.functions.invoke("create-abacatepay-checkout", {
+        body: { 
+          planTier: "pro",
+          companyId: company.id
+        },
+      });
 
-      if (plans) {
-        const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-          body: { planId: plans.id, billingPeriod: "monthly" },
-        });
+      if (error) {
+        console.error("Error creating checkout:", error);
+        throw error;
+      }
 
-        if (error) throw error;
-
-        if (data?.url) {
-          window.location.href = data.url;
-        } else {
-          toast.info("Funcionalidade de pagamento em desenvolvimento");
-        }
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast.error("Erro ao gerar link de pagamento. Tente novamente.");
       }
     } catch (error) {
       console.error("Error creating checkout:", error);
