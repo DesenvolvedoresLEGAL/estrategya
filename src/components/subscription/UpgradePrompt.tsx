@@ -141,7 +141,7 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
     return config;
   };
 
-  const handleUpgrade = (planId: string, tier: string, planName: string) => {
+  const handleUpgrade = async (planId: string, tier: string, planName: string) => {
     trackUpgradeClicked(currentTier, feature || limitType || "unknown", "upgrade_modal");
 
     if (tier === "enterprise") {
@@ -149,17 +149,44 @@ export const UpgradePrompt = ({ open, onOpenChange, feature, limitType }: Upgrad
       return;
     }
 
-    supabase.functions.invoke("create-checkout-session", {
-      body: { planId },
-    }).then(({ data, error }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        onOpenChange(false);
+        navigate("/auth");
+        return;
+      }
+
+      const { data: companies } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .limit(1)
+        .single();
+
+      if (!companies?.id) {
+        console.error("Company not found");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-abacatepay-checkout", {
+        body: { 
+          planTier: tier,
+          companyId: companies.id
+        },
+      });
+
       if (error) {
         console.error("Error creating checkout session:", error);
         return;
       }
-      if (data?.url) {
-        window.location.href = data.url;
+      
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
       }
-    });
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    }
   };
 
   const handleViewPricing = () => {
