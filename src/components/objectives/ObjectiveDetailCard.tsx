@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/dashboard/StatusBadge";
-import { ChevronDown, ChevronUp, Edit, Target, Zap, TrendingUp, ExternalLink, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, Edit, Target, Zap, TrendingUp, ExternalLink, Sparkles, Plus } from "lucide-react";
 import { UpdateObjectiveModal } from "./UpdateObjectiveModal";
 import { ObjectiveHistoryList } from "./ObjectiveHistoryList";
+import { AddInitiativeModal } from "./AddInitiativeModal";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 
 interface Initiative {
   id: string;
@@ -40,6 +42,7 @@ interface ObjectiveDetailCardProps {
     description: string | null;
     perspective: string | null;
     priority: number | null;
+    company_id?: string;
     initiatives?: Initiative[];
     metrics?: Metric[];
     objective_updates?: ObjectiveUpdate[];
@@ -58,6 +61,11 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [addInitiativeModalOpen, setAddInitiativeModalOpen] = useState(false);
+  
+  // Get subscription limits for initiatives
+  const subscriptionData = useSubscriptionLimits(objective.company_id || '');
+  const maxInitiativesPerObjective = subscriptionData.limits?.max_initiatives_per_objective || 5;
 
   const latestUpdate = objective.objective_updates?.[0];
   const status = latestUpdate?.status || 'nao_iniciado';
@@ -150,46 +158,67 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
           {expanded && (
             <div className="pt-4 border-t space-y-4">
               {/* Initiatives */}
-              {objective.initiatives && objective.initiatives.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
                     <Zap className="h-4 w-4" />
                     Iniciativas
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      Clique para ver ICE Score e 5W2H
+                    <Badge variant="outline" className="text-xs">
+                      {objective.initiatives?.length || 0}/{maxInitiativesPerObjective}
                     </Badge>
                   </h4>
-                  <div className="space-y-2">
-                    {objective.initiatives.map((initiative) => (
-                      <button
-                        key={initiative.id}
-                        onClick={() => navigate(`/iniciativa/${initiative.id}`)}
-                        className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-accent transition-colors border border-transparent hover:border-primary/50 cursor-pointer group"
-                      >
-                        <div className="flex items-center gap-2 flex-1">
-                          <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                          <span className="text-sm font-medium group-hover:text-primary transition-colors">
-                            {initiative.title}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {initiative.ice_score && (
-                            <Badge variant="secondary" className="text-xs">
-                              <Sparkles className="h-3 w-3 mr-1" />
-                              ICE: {initiative.ice_score}
-                            </Badge>
-                          )}
-                          {initiative.priority_quadrant && (
-                            <Badge variant="outline" className="text-xs">
-                              {initiative.priority_quadrant}
-                            </Badge>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAddInitiativeModalOpen(true)}
+                    disabled={(objective.initiatives?.length || 0) >= maxInitiativesPerObjective}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar
+                  </Button>
                 </div>
-              )}
+                
+                {objective.initiatives && objective.initiatives.length > 0 ? (
+                  <>
+                    <Badge variant="secondary" className="mb-3 text-xs">
+                      Clique para ver ICE Score e 5W2H
+                    </Badge>
+                    <div className="space-y-2">
+                      {objective.initiatives.map((initiative) => (
+                        <button
+                          key={initiative.id}
+                          onClick={() => navigate(`/iniciativa/${initiative.id}`)}
+                          className="w-full flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-accent transition-colors border border-transparent hover:border-primary/50 cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-2 flex-1">
+                            <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="text-sm font-medium group-hover:text-primary transition-colors">
+                              {initiative.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {initiative.ice_score && (
+                              <Badge variant="secondary" className="text-xs">
+                                <Sparkles className="h-3 w-3 mr-1" />
+                                ICE: {initiative.ice_score}
+                              </Badge>
+                            )}
+                            {initiative.priority_quadrant && (
+                              <Badge variant="outline" className="text-xs">
+                                {initiative.priority_quadrant}
+                              </Badge>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-3 text-center border border-dashed rounded-lg">
+                    Nenhuma iniciativa adicionada. Clique em "Adicionar" para criar a primeira.
+                  </p>
+                )}
+              </div>
 
               {/* Metrics */}
               {objective.metrics && objective.metrics.length > 0 && (
@@ -237,6 +266,15 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
           current_progress: progress
         }}
         onSuccess={onUpdate}
+      />
+
+      <AddInitiativeModal
+        open={addInitiativeModalOpen}
+        onOpenChange={setAddInitiativeModalOpen}
+        objectiveId={objective.id}
+        onSuccess={onUpdate}
+        currentInitiativesCount={objective.initiatives?.length || 0}
+        maxInitiatives={maxInitiativesPerObjective}
       />
     </>
   );

@@ -52,6 +52,7 @@ export default function Objetivos() {
         .select(
           `
           *,
+          company_id,
           initiatives (
             id,
             title,
