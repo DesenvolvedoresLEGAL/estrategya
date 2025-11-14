@@ -106,8 +106,8 @@ serve(async (req) => {
     const priceInCents = Math.round(parseFloat(plan.price_monthly) * 100);
     
     const billingData = {
-      frequency: "RECURRING",
-      methods: ["PIX", "CARD"],
+      frequency: "ONE_TIME",
+      methods: ["PIX"],
       products: [
         {
           externalId: `plan-${plan.tier}-${Date.now()}`,
