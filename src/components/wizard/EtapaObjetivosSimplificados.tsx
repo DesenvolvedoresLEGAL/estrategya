@@ -45,6 +45,24 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
   const maxObjectives = limits?.max_objectives || 3;
   const maxInitiativesPerObjective = 5;
 
+  // Verificar se o planejamento já foi concluído (objetivos já salvos)
+  const [isPlanningCompleted, setIsPlanningCompleted] = useState(false);
+
+  useEffect(() => {
+    const checkIfCompleted = async () => {
+      if (companyData?.id) {
+        const { data: existingObjectives } = await supabase
+          .from('strategic_objectives')
+          .select('id')
+          .eq('company_id', companyData.id);
+        
+        setIsPlanningCompleted(existingObjectives && existingObjectives.length > 0);
+      }
+    };
+    
+    checkIfCompleted();
+  }, [companyData?.id]);
+
   useEffect(() => {
     if (initialData && Array.isArray(initialData) && initialData.length > 0) {
       setObjectives(initialData);
@@ -115,6 +133,20 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
     setLoading(true);
 
     try {
+      // Verificar se já existem objetivos salvos
+      const { data: existingObjectives } = await supabase
+        .from('strategic_objectives')
+        .select('id')
+        .eq('company_id', companyData.id);
+
+      // Se já existem objetivos, significa que o planejamento já foi concluído
+      // Neste caso, apenas navegar para a próxima etapa sem duplicar
+      if (existingObjectives && existingObjectives.length > 0) {
+        toast.success("Objetivos já foram salvos anteriormente");
+        onNext(objectives);
+        return;
+      }
+
       // Limitar aos primeiros maxObjectives objetivos válidos
       const objectivesToSave = validObjectives.slice(0, maxObjectives);
       
@@ -136,8 +168,11 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
 
           if (objError) throw objError;
 
-          // Salvar iniciativas
-          const validInitiatives = obj.initiatives.filter(init => init.title.trim() !== "");
+          // Salvar iniciativas (limitar a maxInitiativesPerObjective)
+          const validInitiatives = obj.initiatives
+            .filter(init => init.title.trim() !== "")
+            .slice(0, maxInitiativesPerObjective);
+            
           if (validInitiatives.length > 0) {
             const { error: initError } = await supabase
               .from('initiatives')
@@ -193,25 +228,41 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Info Banner */}
-          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-            <div className="flex gap-3">
-              <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-              <div className="flex-1 space-y-1">
-                <p className="text-sm font-medium text-foreground">
-                  Plano Free: Crie seus objetivos manualmente
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Quer que a IA gere objetivos automaticamente com base no seu diagnóstico? 
-                  <button
-                    onClick={() => setShowUpgradePrompt(true)}
-                    className="text-primary hover:underline ml-1"
-                  >
-                    Faça upgrade para PRO
-                  </button>
-                </p>
+          {isPlanningCompleted ? (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <div className="flex gap-3">
+                <Target className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    Planejamento Concluído
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Seus objetivos já foram salvos. Para fazer alterações, acesse a página de Objetivos no menu principal.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+              <div className="flex gap-3">
+                <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    Plano Free: Crie seus objetivos manualmente
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Quer que a IA gere objetivos automaticamente com base no seu diagnóstico? 
+                    <button
+                      onClick={() => setShowUpgradePrompt(true)}
+                      className="text-primary hover:underline ml-1"
+                    >
+                      Faça upgrade para PRO
+                    </button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Objectives List */}
           <div className="space-y-6">
@@ -222,7 +273,7 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
                     <div className="flex-1 space-y-3">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">Objetivo {objIndex + 1}</Badge>
-                        {objectives.length > 1 && (
+                        {objectives.length > 1 && !isPlanningCompleted && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -238,12 +289,14 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
                         value={objective.title}
                         onChange={(e) => updateObjective(objIndex, "title", e.target.value)}
                         className="font-medium"
+                        disabled={isPlanningCompleted}
                       />
                       <Textarea
                         placeholder="Descreva como você pretende alcançar este objetivo (opcional)"
                         value={objective.description}
                         onChange={(e) => updateObjective(objIndex, "description", e.target.value)}
                         rows={2}
+                        disabled={isPlanningCompleted}
                       />
                     </div>
                   </div>
@@ -251,15 +304,17 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">Iniciativas</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addInitiative(objIndex)}
-                      disabled={objective.initiatives.length >= maxInitiativesPerObjective}
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Adicionar
-                    </Button>
+                    {!isPlanningCompleted && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addInitiative(objIndex)}
+                        disabled={objective.initiatives.length >= maxInitiativesPerObjective}
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Adicionar
+                      </Button>
+                    )}
                   </div>
                   {objective.initiatives.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-2">
@@ -276,6 +331,7 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
                                 value={initiative.title}
                                 onChange={(e) => updateInitiative(objIndex, initIndex, "title", e.target.value)}
                                 className="h-8 text-sm"
+                                disabled={isPlanningCompleted}
                               />
                               <Textarea
                                 placeholder="Descrição (opcional)"
@@ -283,16 +339,19 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
                                 onChange={(e) => updateInitiative(objIndex, initIndex, "description", e.target.value)}
                                 rows={1}
                                 className="text-sm"
+                                disabled={isPlanningCompleted}
                               />
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeInitiative(objIndex, initIndex)}
-                              className="h-6 px-2 shrink-0"
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
+                            {!isPlanningCompleted && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeInitiative(objIndex, initIndex)}
+                                className="h-6 px-2 shrink-0"
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -304,7 +363,7 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
           </div>
 
           {/* Add Objective Button */}
-          {objectives.length < maxObjectives && (
+          {!isPlanningCompleted && objectives.length < maxObjectives && (
             <Button
               variant="outline"
               onClick={addObjective}
@@ -315,7 +374,7 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
             </Button>
           )}
 
-          {objectives.length >= maxObjectives && (
+          {!isPlanningCompleted && objectives.length >= maxObjectives && (
             <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
               <p className="text-sm text-warning-foreground">
                 Você atingiu o limite de {maxObjectives} objetivos do plano Free.{" "}
@@ -354,6 +413,11 @@ export const EtapaObjetivosSimplificados = ({ companyData, analysisData, initial
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 Salvando...
+              </>
+            ) : isPlanningCompleted ? (
+              <>
+                Avançar
+                <ArrowRight className="ml-2 w-4 h-4" />
               </>
             ) : (
               <>

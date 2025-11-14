@@ -180,6 +180,7 @@ const Planejamento = () => {
   const [companyData, setCompanyData] = useState<any>(null);
   const [swotData, setSWOTData] = useState<any>(null);
   const [analysisData, setAnalysisData] = useState<any>(null);
+  const [objectivesData, setObjectivesData] = useState<any>(null);
   const [ogsmData, setOgsmData] = useState<any>(null);
   const [okrsBscData, setOkrsBscData] = useState<any>(null);
   const [prioritizationData, setPrioritizationData] = useState<any>(null);
@@ -207,12 +208,13 @@ const Planejamento = () => {
       companyData,
       swotData,
       analysisData,
+      objectivesData,
       ogsmData,
       okrsBscData,
       prioritizationData,
       executionData,
     }),
-    [companyData, swotData, analysisData, ogsmData, okrsBscData, prioritizationData, executionData],
+    [companyData, swotData, analysisData, objectivesData, ogsmData, okrsBscData, prioritizationData, executionData],
   );
 
   const { isSaving } = useAutoSave({
@@ -332,6 +334,32 @@ const Planejamento = () => {
           }
         }
 
+        // Carregar objetivos estratégicos se houver
+        const { data: objectives } = await supabase
+          .from("strategic_objectives")
+          .select(`
+            *,
+            initiatives:initiatives(*)
+          `)
+          .eq("company_id", companies[0].id)
+          .order("created_at", { ascending: true });
+
+        if (objectives && objectives.length > 0) {
+          // Mapear para o formato esperado pelo componente
+          const formattedObjectives = objectives.map(obj => ({
+            id: obj.id,
+            title: obj.title,
+            description: obj.description || "",
+            initiatives: obj.initiatives?.map((init: any) => ({
+              id: init.id,
+              title: init.title,
+              description: init.description || ""
+            })) || []
+          }));
+          setObjectivesData(formattedObjectives);
+          setCurrentStep(4);
+        }
+
         // Carregar dados OGSM se houver
         const { data: ogsm } = await supabase.from("ogsm").select("*").eq("company_id", companies[0].id).maybeSingle();
 
@@ -399,7 +427,16 @@ const Planejamento = () => {
 
       // Salvar progresso ao voltar
       if (companyData?.id) {
-        await saveProgress(prevStep);
+        await saveProgress(prevStep, {
+          companyData,
+          swotData,
+          analysisData,
+          objectivesData,
+          ogsmData,
+          okrsBscData,
+          prioritizationData,
+          executionData,
+        });
       }
     }
   };
@@ -411,6 +448,7 @@ const Planejamento = () => {
           companyData,
           swotData,
           analysisData,
+          objectivesData,
           ogsmData,
           okrsBscData,
           prioritizationData,
@@ -514,7 +552,7 @@ const Planejamento = () => {
                   <EtapaObjetivosSimplificados
                     companyData={companyData}
                     analysisData={analysisData}
-                    initialData={null}
+                    initialData={objectivesData}
                     onNext={handleNext}
                     onBack={handleBack}
                     onSaveAndExit={handleSaveAndExit}
