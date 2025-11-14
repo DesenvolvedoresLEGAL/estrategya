@@ -9,6 +9,7 @@ import { ChevronDown, ChevronUp, Edit, Target, Zap, TrendingUp, ExternalLink, Sp
 import { UpdateObjectiveModal } from "./UpdateObjectiveModal";
 import { ObjectiveHistoryList } from "./ObjectiveHistoryList";
 import { AddInitiativeModal } from "./AddInitiativeModal";
+import { AddMetricModal } from "@/components/metrics/AddMetricModal";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 
 interface Initiative {
@@ -62,6 +63,7 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [addInitiativeModalOpen, setAddInitiativeModalOpen] = useState(false);
+  const [addMetricModalOpen, setAddMetricModalOpen] = useState(false);
   
   // Get subscription limits for initiatives
   const subscriptionData = useSubscriptionLimits(objective.company_id || '');
@@ -221,31 +223,46 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
               </div>
 
               {/* Metrics */}
-              {objective.metrics && objective.metrics.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-semibold flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
                     Métricas
+                    <Badge variant="outline" className="text-xs">
+                      {objective.metrics?.length || 0}/5
+                    </Badge>
                   </h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAddMetricModalOpen(true)}
+                    disabled={(objective.metrics?.length || 0) >= 5}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adicionar
+                  </Button>
+                </div>
+
+                {objective.metrics && objective.metrics.length > 0 ? (
                   <div className="space-y-2">
                     {objective.metrics.map((metric) => (
                       <div 
                         key={metric.id}
-                        className="p-2 rounded-lg bg-muted/50"
+                        className="p-3 bg-muted/50 rounded-lg"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{metric.name}</span>
-                          {metric.current_value && metric.target && (
-                            <span className="text-xs text-muted-foreground">
-                              {metric.current_value} / {metric.target}
-                            </span>
-                          )}
-                        </div>
+                        <p className="font-medium text-sm">{metric.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Atual: {metric.current_value || "Não definido"} | Meta: {metric.target || "Não definida"}
+                        </p>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground py-3 text-center border border-dashed rounded-lg">
+                    Nenhuma métrica adicionada. Clique em "Adicionar" para criar a primeira.
+                  </p>
+                )}
+              </div>
 
               {/* History */}
               {objective.objective_updates && objective.objective_updates.length > 0 && (
@@ -275,6 +292,14 @@ export const ObjectiveDetailCard = ({ objective, onUpdate }: ObjectiveDetailCard
         onSuccess={onUpdate}
         currentInitiativesCount={objective.initiatives?.length || 0}
         maxInitiatives={maxInitiativesPerObjective}
+      />
+
+      <AddMetricModal
+        open={addMetricModalOpen}
+        onOpenChange={setAddMetricModalOpen}
+        objectiveId={objective.id}
+        objectiveTitle={objective.title}
+        onSuccess={onUpdate}
       />
     </>
   );

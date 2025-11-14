@@ -10,6 +10,7 @@ import { LogOut, TrendingUp, Target, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { MetricCard } from "@/components/metrics/MetricCard";
 import { UpdateMetricModal } from "@/components/metrics/UpdateMetricModal";
+import { AddMetricModal } from "@/components/metrics/AddMetricModal";
 
 const Metricas = () => {
   const navigate = useNavigate();
@@ -18,7 +19,10 @@ const Metricas = () => {
   const [objectives, setObjectives] = useState<any[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<any>(null);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
+  const [addMetricModalOpen, setAddMetricModalOpen] = useState(false);
+  const [selectedObjective, setSelectedObjective] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [companyId, setCompanyId] = useState<string>("");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,6 +60,8 @@ const Metricas = () => {
 
       if (!companies || companies.length === 0) return;
 
+      setCompanyId(companies[0].id);
+
       // Buscar objetivos com métricas e histórico de atualizações
       const { data, error } = await supabase
         .from('strategic_objectives')
@@ -90,6 +96,19 @@ const Metricas = () => {
   const handleUpdateComplete = async () => {
     setUpdateModalOpen(false);
     setSelectedMetric(null);
+    if (user) {
+      await loadMetrics(user.id);
+    }
+  };
+
+  const handleAddMetric = (objective: any) => {
+    setSelectedObjective(objective);
+    setAddMetricModalOpen(true);
+  };
+
+  const handleAddMetricComplete = async () => {
+    setAddMetricModalOpen(false);
+    setSelectedObjective(null);
     if (user) {
       await loadMetrics(user.id);
     }
@@ -221,13 +240,29 @@ const Metricas = () => {
                 <Card key={objective.id}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="mb-2">{objective.title}</CardTitle>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Target className="h-5 w-5 text-primary" />
+                          <CardTitle>{objective.title}</CardTitle>
+                        </div>
                         <CardDescription>{objective.description}</CardDescription>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline">
+                            {objective.perspective || 'Geral'}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">
+                            {objective.metrics?.length || 0}/5 métricas
+                          </span>
+                        </div>
                       </div>
-                      <Badge variant="outline">
-                        {objective.perspective || 'Geral'}
-                      </Badge>
+                      <Button
+                        size="sm"
+                        onClick={() => handleAddMetric(objective)}
+                        disabled={objective.metrics?.length >= 5}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Adicionar Métrica
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -260,6 +295,17 @@ const Metricas = () => {
           onOpenChange={setUpdateModalOpen}
           metric={selectedMetric}
           onUpdateComplete={handleUpdateComplete}
+        />
+      )}
+
+      {/* Add Metric Modal */}
+      {selectedObjective && (
+        <AddMetricModal
+          open={addMetricModalOpen}
+          onOpenChange={setAddMetricModalOpen}
+          objectiveId={selectedObjective.id}
+          objectiveTitle={selectedObjective.title}
+          onSuccess={handleAddMetricComplete}
         />
       )}
     </div>
