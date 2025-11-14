@@ -31,7 +31,7 @@ serve(async (req) => {
       }
     );
 
-    // Parse JWT to get user ID
+    // Parse JWT to get user ID and email
     const token = authHeader.replace('Bearer ', '');
     const parseJwt = (t: string) => {
       const base64 = t.split('.')[1];
@@ -40,9 +40,11 @@ serve(async (req) => {
     };
 
     let userId: string | null = null;
+    let userEmail: string | null = null;
     try {
       const payload = parseJwt(token);
       userId = payload?.sub ?? null;
+      userEmail = payload?.email ?? null;
     } catch (e) {
       console.error('JWT parse error:', e);
       return new Response(
@@ -51,9 +53,9 @@ serve(async (req) => {
       );
     }
 
-    if (!userId) {
+    if (!userId || !userEmail) {
       return new Response(
-        JSON.stringify({ error: 'Token de autenticação inválido' }),
+        JSON.stringify({ error: 'Token de autenticação inválido ou email não encontrado' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -81,17 +83,6 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Plano não encontrado' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get user email
-    const { data: userData } = await supabaseClient.auth.getUser();
-    const userEmail = userData?.user?.email;
-
-    if (!userEmail) {
-      return new Response(
-        JSON.stringify({ error: 'Email do usuário não encontrado' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
