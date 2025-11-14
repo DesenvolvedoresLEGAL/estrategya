@@ -64,7 +64,7 @@ export const EtapaContexto = ({ initialData, onNext, onSaveAndExit, userId }: Pr
     whatsapp_phone: initialData?.whatsapp_phone || "",
     segment: initialData?.segment || "",
     model: initialData?.model || "",
-    size_team: initialData?.size_team || "",
+    size_team: initialData?.size_team ? String(initialData.size_team) : "",
     region: initialData?.region || "",
     main_challenge: initialData?.main_challenge || "",
     mission: initialData?.mission || "",
