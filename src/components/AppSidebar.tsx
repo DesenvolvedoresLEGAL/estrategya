@@ -10,6 +10,7 @@ import {
   Users,
   Sparkles,
   Shield,
+  PanelLeft,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -80,18 +82,24 @@ export function AppSidebar() {
         {/* Logo/Brand - Optimized for mobile */}
         <div className="p-3 sm:p-4 mb-1 sm:mb-2">
           {open ? (
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-bold text-base sm:text-lg truncate">Estrategya</h2>
+                  <p className="text-xs text-muted-foreground truncate hidden sm:block">Smart Planner</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h2 className="font-bold text-base sm:text-lg truncate">Estrategya</h2>
-                <p className="text-xs text-muted-foreground truncate hidden sm:block">Smart Planner</p>
-              </div>
+              <SidebarTrigger className="shrink-0 h-8 w-8" />
             </div>
           ) : (
-            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center mx-auto">
-              <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+            <div className="flex flex-col items-center gap-2">
+              <SidebarTrigger className="h-8 w-8" />
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+              </div>
             </div>
           )}
         </div>
