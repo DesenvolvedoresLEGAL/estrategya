@@ -143,6 +143,9 @@ Gere uma análise PESTEL completa e prática para esta empresa.`;
           technological: pestelAnalysis.technological,
           environmental: pestelAnalysis.environmental,
           legal: pestelAnalysis.legal,
+          key_impacts: pestelAnalysis.key_impacts || [],
+          opportunities: pestelAnalysis.opportunities || [],
+          threats: pestelAnalysis.threats || [],
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingAnalysis.id);
@@ -159,6 +162,9 @@ Gere uma análise PESTEL completa e prática para esta empresa.`;
           technological: pestelAnalysis.technological,
           environmental: pestelAnalysis.environmental,
           legal: pestelAnalysis.legal,
+          key_impacts: pestelAnalysis.key_impacts || [],
+          opportunities: pestelAnalysis.opportunities || [],
+          threats: pestelAnalysis.threats || [],
         });
 
       if (insertError) throw insertError;

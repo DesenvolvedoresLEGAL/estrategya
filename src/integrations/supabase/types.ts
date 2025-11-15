@@ -789,10 +789,13 @@ export type Database = {
           economic: string | null
           environmental: string | null
           id: string
+          key_impacts: string[] | null
           legal: string | null
+          opportunities: string[] | null
           political: string | null
           social: string | null
           technological: string | null
+          threats: string[] | null
           updated_at: string
         }
         Insert: {
@@ -801,10 +804,13 @@ export type Database = {
           economic?: string | null
           environmental?: string | null
           id?: string
+          key_impacts?: string[] | null
           legal?: string | null
+          opportunities?: string[] | null
           political?: string | null
           social?: string | null
           technological?: string | null
+          threats?: string[] | null
           updated_at?: string
         }
         Update: {
@@ -813,10 +819,13 @@ export type Database = {
           economic?: string | null
           environmental?: string | null
           id?: string
+          key_impacts?: string[] | null
           legal?: string | null
+          opportunities?: string[] | null
           political?: string | null
           social?: string | null
           technological?: string | null
+          threats?: string[] | null
           updated_at?: string
         }
         Relationships: []
