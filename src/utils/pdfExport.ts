@@ -297,9 +297,12 @@ const addLogoWatermark = (pdf: jsPDF, logoPath: string, watermark: boolean) => {
   const pageHeight = pdf.internal.pageSize.getHeight();
   
   if (watermark) {
-    // Add as semi-transparent watermark in center
+    // Add as semi-transparent watermark in center with 15% opacity
     try {
+      pdf.saveGraphicsState();
+      pdf.setGState({ opacity: 0.15 });
       pdf.addImage(logoPath, 'PNG', pageWidth / 2 - 30, pageHeight / 2 - 30, 60, 60, undefined, 'NONE');
+      pdf.restoreGraphicsState();
     } catch (e) {
       console.log('Could not add watermark logo');
     }
@@ -350,6 +353,7 @@ export const exportStrategicPlanToPDF = async (
     // Helper to add section title
     const addSectionTitle = (sectionTitle: string) => {
       checkNewPage(20);
+      pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(16);
       pdf.setTextColor(37, 99, 235);
       pdf.text(sectionTitle, margin, yPos);
@@ -360,7 +364,8 @@ export const exportStrategicPlanToPDF = async (
     };
 
     // Helper to add normal text
-    const addText = (text: string, fontSize = 10, color: [number, number, number] = [60, 60, 60]) => {
+    const addText = (text: string, fontSize = 10, color: [number, number, number] = [60, 60, 60], bold = false) => {
+      pdf.setFont('helvetica', bold ? 'bold' : 'normal');
       pdf.setFontSize(fontSize);
       pdf.setTextColor(...color);
       const lines = pdf.splitTextToSize(text, contentWidth);
@@ -385,16 +390,19 @@ export const exportStrategicPlanToPDF = async (
       console.log('Logo not available for cover');
     }
 
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(28);
     pdf.setTextColor(37, 99, 235);
     pdf.text(title, pageWidth / 2, yPos, { align: 'center' });
     yPos += 15;
 
+    pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(20);
     pdf.setTextColor(60, 60, 60);
     pdf.text(data.company.name, pageWidth / 2, yPos, { align: 'center' });
     yPos += 15;
 
+    pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(12);
     pdf.setTextColor(120, 120, 120);
     pdf.text(
