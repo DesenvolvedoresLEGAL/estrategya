@@ -208,40 +208,92 @@ export const PESTELAnalysis = ({ companyId }: PESTELAnalysisProps) => {
             </TabsContent>
 
             <TabsContent value="summary" className="mt-6 space-y-6">
-              <Card className="border-2 border-green-200 dark:border-green-900">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                    <TrendingUp className="h-5 w-5" />
-                    Principais Oportunidades
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Identifique oportunidades estratégicas baseadas nos fatores externos analisados acima.
-                  </p>
-                </CardContent>
-              </Card>
+              {pestelData.key_impacts && pestelData.key_impacts.length > 0 && (
+                <Card className="border-2 border-blue-200 dark:border-blue-900">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                      <AlertCircle className="h-5 w-5" />
+                      Impactos Críticos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      {pestelData.key_impacts.map((impact, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <Badge variant="outline" className="mt-0.5 shrink-0">{index + 1}</Badge>
+                          <span className="text-sm text-muted-foreground">{impact}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Card className="border-2 border-red-200 dark:border-red-900">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
-                    <AlertTriangle className="h-5 w-5" />
-                    Principais Ameaças
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Monitore ameaças externas que podem impactar o negócio baseadas nos fatores PESTEL.
-                  </p>
-                </CardContent>
-              </Card>
+              {pestelData.opportunities && pestelData.opportunities.length > 0 && (
+                <Card className="border-2 border-green-200 dark:border-green-900">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                      <TrendingUp className="h-5 w-5" />
+                      Oportunidades Identificadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      {pestelData.opportunities.map((opportunity, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 mt-0.5 shrink-0">
+                            {index + 1}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">{opportunity}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
 
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Dica:</strong> Use esta análise PESTEL junto com a análise SWOT para criar estratégias mais robustas e fundamentadas.
-                </AlertDescription>
-              </Alert>
+              {pestelData.threats && pestelData.threats.length > 0 && (
+                <Card className="border-2 border-red-200 dark:border-red-900">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
+                      <AlertTriangle className="h-5 w-5" />
+                      Ameaças Identificadas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-3">
+                      {pestelData.threats.map((threat, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 mt-0.5 shrink-0">
+                            {index + 1}
+                          </Badge>
+                          <span className="text-sm text-muted-foreground">{threat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              )}
+
+              {(!pestelData.key_impacts || pestelData.key_impacts.length === 0) &&
+               (!pestelData.opportunities || pestelData.opportunities.length === 0) &&
+               (!pestelData.threats || pestelData.threats.length === 0) && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Clique em "Atualizar Análise" para gerar o resumo executivo com impactos críticos, oportunidades e ameaças identificadas pela IA.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {(pestelData.key_impacts || pestelData.opportunities || pestelData.threats) && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Dica:</strong> Use esta análise PESTEL junto com a análise SWOT para criar estratégias mais robustas e fundamentadas.
+                  </AlertDescription>
+                </Alert>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
