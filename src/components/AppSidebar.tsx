@@ -120,7 +120,7 @@ export function AppSidebar() {
                       className="hover:bg-accent/50 transition-all duration-200 min-h-[44px] flex items-center group"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
                       {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -146,7 +146,7 @@ export function AppSidebar() {
                       className="hover:bg-accent/50 transition-all duration-200 min-h-[44px] flex items-center group"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
                       {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -172,7 +172,7 @@ export function AppSidebar() {
                       className="hover:bg-accent/50 transition-all duration-200 min-h-[44px] flex items-center group"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
                       {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -204,7 +204,7 @@ export function AppSidebar() {
               onClick={handleLogout}
               className="hover:bg-destructive/10 hover:text-destructive transition-all duration-200 touch-target min-h-[44px] group"
             >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:translate-x-0.5" />
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
               {open && <span className="text-sm sm:text-base truncate">Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
