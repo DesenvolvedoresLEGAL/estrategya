@@ -42,13 +42,8 @@ const AppLayout = () => {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         
-        <div className="flex-1 flex flex-col">
-          <header className="h-14 border-b bg-background flex items-center px-4 sticky top-0 z-10">
-            <SidebarTrigger />
-          </header>
-
-          <main className="flex-1">
-            <Routes>
+        <main className="flex-1">
+          <Routes>
               <Route path="/planejamento" element={<Planejamento />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/objetivos" element={<Objetivos />} />
@@ -60,9 +55,8 @@ const AppLayout = () => {
               <Route path="/admin" element={<Admin />} />
               <Route path="/plan-validator" element={<PlanValidator />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-        </div>
+          </Routes>
+        </main>
       </div>
     </SidebarProvider>
   );
