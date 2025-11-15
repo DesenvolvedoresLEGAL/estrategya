@@ -80,25 +80,25 @@ export function AppSidebar() {
       <SidebarContent className="pt-2">
         {/* Reduced top padding for mobile */}
         {/* Logo/Brand - Optimized for mobile */}
-        <div className="p-3 sm:p-4 mb-1 sm:mb-2">
+        <div className="p-3 sm:p-4 mb-1 sm:mb-2 transition-all duration-300">
           {open ? (
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2 animate-fade-in">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center shrink-0 transition-transform duration-300 hover:scale-110 hover:rotate-12">
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground transition-transform duration-300" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-bold text-base sm:text-lg truncate">Estrategya</h2>
                   <p className="text-xs text-muted-foreground truncate hidden sm:block">Smart Planner</p>
                 </div>
               </div>
-              <SidebarTrigger className="shrink-0 h-8 w-8" />
+              <SidebarTrigger className="shrink-0 h-8 w-8 transition-transform duration-200 hover:scale-110" />
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
-              <SidebarTrigger className="h-8 w-8" />
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+            <div className="flex flex-col items-center gap-2 animate-fade-in">
+              <SidebarTrigger className="h-8 w-8 transition-transform duration-200 hover:scale-110" />
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-primary flex items-center justify-center transition-transform duration-300 hover:scale-110 hover:rotate-12">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground transition-transform duration-300" />
               </div>
             </div>
           )}
@@ -117,10 +117,10 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
+                      className="hover:bg-accent/50 transition-all duration-200 min-h-[44px] flex items-center group"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                       {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -143,10 +143,10 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
+                      className="hover:bg-accent/50 transition-all duration-200 min-h-[44px] flex items-center group"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                       {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -169,10 +169,10 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-accent/50 transition-colors min-h-[44px] flex items-center"
+                      className="hover:bg-accent/50 transition-all duration-200 min-h-[44px] flex items-center group"
                       activeClassName="bg-accent text-accent-foreground font-medium"
                     >
-                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:-translate-y-0.5" />
                       {open && <span className="text-sm sm:text-base truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -191,10 +191,10 @@ export function AppSidebar() {
               <NavLink
                 to="/pricing"
                 end
-                className="hover:bg-primary/10 hover:text-primary transition-colors min-h-[44px] flex items-center"
+                className="hover:bg-primary/10 hover:text-primary transition-all duration-200 min-h-[44px] flex items-center group"
                 activeClassName="bg-primary/10 text-primary font-medium"
               >
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-12" />
                 {open && <span className="text-sm sm:text-base truncate">Ver Planos</span>}
               </NavLink>
             </SidebarMenuButton>
@@ -202,9 +202,9 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className="hover:bg-destructive/10 hover:text-destructive touch-target min-h-[44px]"
+              className="hover:bg-destructive/10 hover:text-destructive transition-all duration-200 touch-target min-h-[44px] group"
             >
-              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-transform duration-200 group-hover:scale-110 group-hover:translate-x-0.5" />
               {open && <span className="text-sm sm:text-base truncate">Sair</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
