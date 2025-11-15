@@ -25,6 +25,9 @@ export default {
       '2xl': '1536px',
     },
     extend: {
+      fontFamily: {
+        'neue-haas': ['Familjen Grotesk', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
