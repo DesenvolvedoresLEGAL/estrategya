@@ -10,7 +10,8 @@ import { BSCBalance } from "@/components/planning/BSCBalance";
 import { MatrizImpactoEsforco } from "@/components/planning/MatrizImpactoEsforco";
 import { WBRPlan } from "@/components/planning/WBRPlan";
 import { PESTELDisplay } from "@/components/planning/PESTELDisplay";
-import { ArrowLeft, RefreshCw, FileText, Download, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, RefreshCw, FileText, Download, Trash2, TrendingUp, AlertTriangle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { UpgradePrompt } from "@/components/subscription/UpgradePrompt";
@@ -234,12 +235,17 @@ export default function PlanoEstrategico() {
 
       if (pestel) {
         setPestelData({
-          political: pestel.political,
-          economic: pestel.economic,
+          // Mapear para as chaves esperadas pelo PESTELDisplay (português)
+          politico: pestel.political,
+          economico: pestel.economic,
           social: pestel.social,
-          technological: pestel.technological,
-          environmental: pestel.environmental,
-          legal: pestel.legal
+          tecnologico: pestel.technological,
+          ambiental: pestel.environmental,
+          legal: pestel.legal,
+          // Guardar também os resumos executivos para exibir abaixo
+          key_impacts: pestel.key_impacts || [],
+          opportunities: pestel.opportunities || [],
+          threats: pestel.threats || [],
         });
       }
 
