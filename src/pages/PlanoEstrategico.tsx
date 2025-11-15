@@ -276,29 +276,66 @@ export default function PlanoEstrategico() {
       trackExportUsed('pdf', 'plano_estrategico');
 
       toast({
-        title: "Gerando PDF...",
-        description: "Aguarde enquanto preparamos seu relatório",
+        title: "Gerando PDF completo...",
+        description: "Aguarde enquanto preparamos seu relatório detalhado",
       });
 
-      const { exportToPDF } = await import('@/utils/pdfExport');
-      await exportToPDF('plano-content', {
+      // Fetch complete data including insights
+      const { data: insights } = await supabase
+        .from('ai_insights')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Fetch objectives with related data
+      const { data: fullObjectives } = await supabase
+        .from('strategic_objectives')
+        .select(`
+          *,
+          initiatives (*),
+          metrics (*)
+        `)
+        .eq('company_id', companyId)
+        .order('priority', { ascending: true });
+
+      // Fetch company details
+      const { data: company } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('id', companyId)
+        .single();
+
+      // Prepare comprehensive data structure
+      const planData = {
+        company: {
+          name: companyName,
+          mission: company?.mission || undefined,
+          vision: company?.vision || undefined,
+          values: company?.values || undefined,
+        },
+        ogsm: ogsmData,
+        okrs: okrData,
+        bsc: bscData,
+        matriz: matrizData,
+        pestel: pestelData,
+        wbr: wbrData,
+        objectives: fullObjectives || objetivos,
+        insights: insights || []
+      };
+
+      const { exportStrategicPlanToPDF } = await import('@/utils/pdfExport');
+      await exportStrategicPlanToPDF(planData, {
         filename: `plano-estrategico-${companyName.toLowerCase().replace(/\s/g, '-')}.pdf`,
         title: `Plano Estratégico - ${companyName}`,
-        subtitle: new Date().toLocaleDateString('pt-BR', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }),
         orientation: 'portrait',
         watermark: shouldApplyWatermark(),
-        watermarkText: shouldApplyWatermark()
-          ? "Criado com Estratégia IA - Faça upgrade para remover"
-          : undefined,
-        canExport: true // We already checked above
+        companyLogo: '/legal-logo.png',
+        canExport: true
       });
 
       toast({
-        title: "✓ PDF gerado com sucesso!",
+        title: "✓ PDF completo gerado com sucesso!",
         description: (() => {
           if (pdfExportMode === 'watermark') {
             return "Faça upgrade para remover a marca d'água.";
